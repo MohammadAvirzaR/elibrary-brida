@@ -97,7 +97,9 @@
 
 <script lang="ts" setup>
 import { ref, computed } from "vue";
+import { useSearch } from '@/composables/useSearch'
 
+const { searchQuery } = useSearch()
 const activeTab = ref("unggulan");
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
@@ -206,7 +208,21 @@ const books = ref({
 });
 
 const filteredBooks = computed(() => {
-  return books.value[activeTab.value as keyof typeof books.value] || [];
+  const tabBooks = books.value[activeTab.value as keyof typeof books.value] || [];
+
+  // Filter berdasarkan search query
+  if (!searchQuery.value) {
+    return tabBooks;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return tabBooks.filter((book) => {
+    return (
+      book.title.toLowerCase().includes(query) ||
+      book.author.toLowerCase().includes(query) ||
+      book.year.toString().includes(query)
+    );
+  });
 });
 
 const scrollContainer = (direction: "left" | "right") => {

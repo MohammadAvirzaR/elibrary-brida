@@ -11,15 +11,43 @@
       />
       <input
         type="text"
+        v-model="localSearch"
+        @input="handleSearch"
+        @keyup.enter="scrollToCatalog"
         placeholder="Cari buku digital..."
         class="bg-neutral-200 placeholder-neutral-400 text-neutral-950 rounded-full px-6 py-3 w-full focus:outline-none hover:bg-neutral-300 transition"
       />
     </div>
 
     <button
+      @click="scrollToCatalog"
       class="bg-neutral-800 text-white font-body px-8 py-3 rounded-md hover:bg-neutral-950 transition"
     >
       Advanced Search
     </button>
   </section>
 </template>
+
+<script lang="ts" setup>
+import { ref, watch } from 'vue'
+import { useSearch } from '@/composables/useSearch'
+
+const { searchQuery, setSearchQuery } = useSearch()
+const localSearch = ref(searchQuery.value)
+
+// Sinkronisasi dengan global search state
+watch(searchQuery, (newValue) => {
+  localSearch.value = newValue
+})
+
+const handleSearch = () => {
+  setSearchQuery(localSearch.value)
+}
+
+const scrollToCatalog = () => {
+  const catalogElement = document.getElementById('catalog')
+  if (catalogElement) {
+    catalogElement.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+</script>

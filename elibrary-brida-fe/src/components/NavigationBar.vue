@@ -14,7 +14,9 @@
           <!-- Input -->
           <input
             type="text"
-            placeholder="hinted search text"
+            v-model="localSearch"
+            @input="handleSearch"
+            placeholder="Cari buku digital..."
             class="bg-neutral-200 rounded-full pl-4 pr-12 py-2 text-sm placeholder-neutral-400 text-neutral-950 hover:bg-neutral-300 transition w-60 focus:outline-none"
           />
         </div>
@@ -40,3 +42,20 @@
     </div>
   </nav>
 </template>
+
+<script lang="ts" setup>
+import { ref, watch } from 'vue'
+import { useSearch } from '@/composables/useSearch'
+
+const { searchQuery, setSearchQuery } = useSearch()
+const localSearch = ref(searchQuery.value)
+
+// Sinkronisasi dengan global search state
+watch(searchQuery, (newValue) => {
+  localSearch.value = newValue
+})
+
+const handleSearch = () => {
+  setSearchQuery(localSearch.value)
+}
+</script>
