@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+# === FRONTEND ===
+elibrary-brida-fe/node_modules/
+elibrary-brida-fe/dist/
+elibrary-brida-fe/.env
+elibrary-brida-fe/.vite/
+elibrary-brida-fe/.output/
+
+# === BACKEND (future) ===
+elibrary-brida-be/vendor/
+elibrary-brida-be/storage/
+elibrary-brida-be/.env
+elibrary-brida-be/public/storage/
+elibrary-brida-be/bootstrap/cache/
+
+# === SYSTEM ===
+.DS_Store
+.vscode/
+.idea/
+node_modules/
+
+
