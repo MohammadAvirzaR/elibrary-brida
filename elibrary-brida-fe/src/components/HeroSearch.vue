@@ -8,7 +8,29 @@
     <div class="relative w-full">
       <i-lucide-search
         class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 text-neutral-400"
+        v-if="!isLoading"
       />
+      <svg
+        v-if="isLoading"
+        class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-neutral-400"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
       <input
         type="text"
         v-model="localSearch"
@@ -31,8 +53,11 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
 import { useSearch } from '@/composables/useSearch'
+import { useDocumentSearch } from '@/composables/useDocumentSearch'
+import { useDebounceFn } from '@vueuse/core'
 
 const { searchQuery, setSearchQuery } = useSearch()
+const { searchDocuments, isLoading } = useDocumentSearch()
 const localSearch = ref(searchQuery.value)
 
 // Sinkronisasi dengan global search state
@@ -40,11 +65,23 @@ watch(searchQuery, (newValue) => {
   localSearch.value = newValue
 })
 
+// Debounce search untuk menghindari terlalu banyak API calls
+const debouncedSearch = useDebounceFn(async (query: string) => {
+  setSearchQuery(query)
+  await searchDocuments(query)
+}, 500)
+
 const handleSearch = () => {
-  setSearchQuery(localSearch.value)
+  debouncedSearch(localSearch.value)
 }
 
-const scrollToCatalog = () => {
+const scrollToCatalog = async () => {
+  // Trigger search jika ada query
+  if (localSearch.value.trim()) {
+    setSearchQuery(localSearch.value)
+    await searchDocuments(localSearch.value)
+  }
+
   const catalogElement = document.getElementById('catalog')
   if (catalogElement) {
     catalogElement.scrollIntoView({ behavior: 'smooth' })

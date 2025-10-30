@@ -3,6 +3,13 @@
     id="catalog"
     class="container mx-auto my-16 px-6 min-h-screen scroll-mt-20 pt-5"
   >
+    <!-- Search Results Info -->
+    <div v-if="searchQuery && totalResults > 0" class="mb-4 text-center">
+      <p class="text-gray-600">
+        Ditemukan <span class="font-semibold">{{ totalResults }}</span> hasil untuk "<span class="font-semibold">{{ searchQuery }}</span>"
+      </p>
+    </div>
+
     <!-- Tabs -->
     <div class="flex justify-center space-x-6 border-b pb-2 text-gray-600 mb-8">
       <button
@@ -98,8 +105,10 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import { useSearch } from '@/composables/useSearch'
+import { useDocumentSearch } from '@/composables/useDocumentSearch'
 
 const { searchQuery } = useSearch()
+const { searchResults, totalResults } = useDocumentSearch()
 const activeTab = ref("unggulan");
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
@@ -208,9 +217,21 @@ const books = ref({
 });
 
 const filteredBooks = computed(() => {
+  // Jika ada hasil search dari API, gunakan itu
+  if (searchQuery.value && searchResults.value.length > 0) {
+    return searchResults.value.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      author: doc.author || 'Unknown Author',
+      year: doc.published_date ? new Date(doc.published_date).getFullYear() : '',
+      image: doc.cover_image || 'https://via.placeholder.com/192x256?text=No+Cover',
+    }));
+  }
+
+  // Jika tidak ada search, tampilkan data tab
   const tabBooks = books.value[activeTab.value as keyof typeof books.value] || [];
 
-  // Filter berdasarkan search query
+  // Filter berdasarkan search query di data lokal (fallback)
   if (!searchQuery.value) {
     return tabBooks;
   }
@@ -251,6 +272,7 @@ const scrollContainer = (direction: "left" | "right") => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

@@ -1,13 +1,31 @@
 <template id="login-view">
   <AuthLayout>
-    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
-      <div class="grid md:grid-cols-2">
-        <!-- Left Section - Login Form -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-8 md:p-12 flex flex-col justify-center">
-          <!-- Header -->
-          <div class="bg-white rounded-lg p-6 mb-8">
-            <h1 class="text-base font-bold text-neutral-950">E-Library</h1>
-            <p class="text-base font-bold text-neutral-950">
+    <div class="min-h-screen bg-gray-100 flex items-center justify-center p-4 relative">
+      <!-- Back Button - Fixed to left side -->
+      <button
+        @click="router.push('/')"
+        class="fixed left-8 top-8 w-12 h-12 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg z-10"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="w-full max-w-md">
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+          <!-- Logo and Title -->
+          <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+              <img
+                src="@/assets/brin-logo-trans.png"
+                alt="Digital Library Logo"
+                class="h-24 object-contain"
+                @error="handleImageError"
+              />
+            </div>
+            <h1 class="text-xl font-bold text-gray-900 mb-1">E-Library</h1>
+            <p class="text-sm font-semibold text-gray-900">
               Badan Riset dan Inovasi Daerah<br />Sulawesi Tenggara
             </p>
           </div>
@@ -20,7 +38,7 @@
                 v-model="formData.username"
                 type="text"
                 placeholder="Username"
-                class="w-full px-4 py-3 rounded bg-white border-none text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
               />
             </div>
@@ -31,7 +49,7 @@
                 v-model="formData.password"
                 type="password"
                 placeholder="Password"
-                class="w-full px-4 py-3 rounded bg-white border-none text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
               />
             </div>
@@ -40,7 +58,7 @@
             <button
               type="submit"
               :disabled="isLoading"
-              class="w-full py-3 bg-blue-900 hover:bg-blue-950 text-white font-bold rounded  transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {{ isLoading ? 'Loading...' : 'Log in' }}
             </button>
@@ -52,9 +70,8 @@
 
             <!-- OR Divider -->
             <div class="relative my-6">
-
               <div class="relative flex justify-center text-sm">
-                <span class="px-4  from-blue-500 to-blue-600 text-neutral-800 font-bold">
+                <span class="px-4 bg-white text-gray-600 font-semibold text-[11px]">
                   OR
                 </span>
               </div>
@@ -65,44 +82,26 @@
               type="button"
               @click="handleSSO"
               :disabled="isLoading"
-              class="w-full py-3 bg-secondary hover:bg-secondary-dark text-white font-bold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               SSO
             </button>
           </form>
 
           <!-- Bottom Links -->
-          <div class="mt-6 space-y-2 text-sm">
+          <div class="mt-6 space-y-2 text-center text-sm">
             <router-link
               to="/forgot-password"
-              class="block text-neutral-900 hover:text-neutral-800 font-semibold transition"
+              class="block text-gray-900 hover:text-gray-700 font-semibold transition"
             >
               Forgot password?
             </router-link>
             <router-link
               to="/register"
-              class="block text-neutral-900 hover:text-neutral-800 font-semibold transition"
+              class="block text-gray-900 hover:text-gray-700 font-semibold transition"
             >
               Don't have any accounts?
             </router-link>
-          </div>
-        </div>
-
-        <!-- Right Section - Branding -->
-        <div class="hidden md:flex flex-col items-center justify-center p-12 bg-white">
-          <div class="text-center">
-            <!-- Logo -->
-            <div class="mb-8 flex justify-center">
-              <img
-                    src="@/assets/brin-logo-trans.png"
-                    alt="Digital Library Logo"
-                    class=" h-120 object-contain"
-                    @error="handleImageError"
-                  />
-            </div>
-
-            <!-- Title -->
-
           </div>
         </div>
       </div>
@@ -126,46 +125,46 @@ const formData = reactive({
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-// const handleLogin = async () => {
-//   isLoading.value = true
-//   errorMessage.value = ''
+const handleLogin = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
 
-//   try {
-//     // TODO: Replace with your actual API call
-//     // Example:
-//     // const response = await fetch('/api/auth/login', {
-//     //   method: 'POST',
-//     //   headers: { 'Content-Type': 'application/json' },
-//     //   body: JSON.stringify(formData)
-//     // })
-//     // const data = await response.json()
+  try {
+    // TODO: Replace with your actual API call
+    // Example:
+    // const response = await fetch('/api/auth/login', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(formData)
+    // })
+    // const data = await response.json()
 
-//     // Simulate API call
-//     await new Promise(resolve => setTimeout(resolve, 1000))
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-//     // Mock success - Replace with actual logic
-//     if (formData.username && formData.password) {
-//       // Store token (example)
-//       localStorage.setItem('auth_token', 'mock_token_12345')
+    // Mock success - Replace with actual logic
+    if (formData.username && formData.password) {
+      // Store token (example)
+      localStorage.setItem('auth_token', 'mock_token_12345')
 
-//       // Optional: Store user data
-//       localStorage.setItem('user', JSON.stringify({
-//         username: formData.username,
-//         name: 'User Name'
-//       }))
+      // Optional: Store user data
+      localStorage.setItem('user', JSON.stringify({
+        username: formData.username,
+        name: 'User Name'
+      }))
 
-//       // Get redirect path or default to dashboard
-//       const redirectPath = (route.query.redirect as string) || '/dashboard'
-//       router.push(redirectPath)
-//     } else {
-//       throw new Error('Invalid credentials')
-//     }
-//   } catch (error: any) {
-//     errorMessage.value = error.message || 'Login failed. Please try again.'
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
+      // Get redirect path or default to dashboard
+      const redirectPath = (route.query.redirect as string) || '/dashboard'
+      router.push(redirectPath)
+    } else {
+      throw new Error('Invalid credentials')
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Login failed. Please try again.'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const handleSSO = () => {
   // TODO: Implement SSO login logic
