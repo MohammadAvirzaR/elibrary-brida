@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('license_name');
             $table->text('description')->nullable();
             $table->string('license_url')->nullable();
+            $table->timestamps();
         });
     }
 

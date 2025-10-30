@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
         // Jalankan seeder role terlebih dahulu
         $this->call([
             RoleSeeder::class,
+            SubjectsSeeder::class,
+            TypesSeeder::class,
+            LicensesSeeder::class,
+            UnitsSeeder::class,
         ]);
 
         // Ambil role super_admin (id = 1)

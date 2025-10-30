@@ -10,12 +10,34 @@ class DocumentController extends Controller
 {
     public function search(Request $request)
     {
-           $keyword = $request->input('q');
+           $query = Document::query();
 
-    $documents = Document::search($keyword)
-        ->where('status', 'approved') 
-        ->paginate(10);
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%$search%")
+                    ->orWhere('author', 'like', "%$search%")
+                    ->orWhere('keywords', 'like', "%$search%")
+                    ->orWhere('abstract', 'like', "%$search%");
+                });
+            }
 
-    return response()->json($documents);
+            if ($request->filled('type_id')) {
+                $query->where('type_id', $request->type_id);
+            }
+
+            if ($request->filled('year')) {
+                $query->where('year_published', $request->year);
+            }
+            
+            if ($request->filled('access_right')) {
+                $query->where('access_right', $request->access_right);
+            }
+
+            if ($request->filled('access_right')) {
+                $query->where('access_right', $request->access_right);
+            }
+
+            return $query->paginate(10);
     }
 }
