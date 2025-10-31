@@ -79,7 +79,20 @@
         class="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
         style="scrollbar-width: none; -ms-overflow-style: none"
       >
+        <!-- Loading State -->
+        <div v-if="isLoadingDocs" class="flex gap-6 w-full justify-center items-center py-16">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p class="text-gray-600">Memuat data...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="filteredBooks.length === 0" class="w-full text-center py-16">
+          <p class="text-gray-500">Tidak ada buku ditemukan</p>
+        </div>
+
+        <!-- Book Cards -->
         <div
+          v-else
           v-for="book in filteredBooks"
           :key="book.id"
           class="flex-shrink-0 w-48 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer"
@@ -103,118 +116,41 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useSearch } from '@/composables/useSearch'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
+import { useDocuments } from '@/composables/useDocuments'
 
 const { searchQuery } = useSearch()
 const { searchResults, totalResults } = useDocumentSearch()
+const { documents, fetchDocuments, isLoading: isLoadingDocs } = useDocuments()
 const activeTab = ref("unggulan");
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
 const tabs = [
-  { label: "Unggulan", value: "unggulan" },
-  { label: "Terbaru", value: "terbaru" },
-  { label: "Paling Banyak Diunduh", value: "paling-banyak-diunduh" },
+  { label: "Unggulan", value: "unggulan", filter: "is_featured" as const },
+  { label: "Terbaru", value: "terbaru", filter: "upload_date" as const },
+  { label: "Paling Banyak Diunduh", value: "paling-banyak-diunduh", filter: "download_count" as const },
 ];
 
-// Contoh data - nanti bisa diganti dengan data dari API
-const books = ref({
-  unggulan: [
-    {
-      id: 1,
-      year: 2021,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/21/The_Universe_in_a_Nutshell_%28cover%29.jpg",
-      title: "The Universe in a Nutshell",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 2,
-      year: 2021,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/21/The_Universe_in_a_Nutshell_%28cover%29.jpg",
-      title: "The Universe in a Nutshell",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 3,
-      year: 2021,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/21/The_Universe_in_a_Nutshell_%28cover%29.jpg",
-      title: "The Universe in a Nutshell",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 4,
-      year: 2021,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/21/The_Universe_in_a_Nutshell_%28cover%29.jpg",
-      title: "The Universe in a Nutshell",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 5,
-      year: 1859,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/7/7a/Origin_of_Species_title_page.jpg",
-      title: "The Origin of Species",
-      author: "Charles Darwin",
-    },
-  ],
-  terbaru: [
-    {
-      id: 6,
-      year: 1988,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/3/3c/BriefHistoryTime.jpg",
-      title: "A Brief History of Time",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 7,
-      year: 1988,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/3/3c/BriefHistoryTime.jpg",
-      title: "A Brief History of Time",
-      author: "Stephen Hawking",
-    },
-    {
-      id: 8,
-      year: 1988,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/3/3c/BriefHistoryTime.jpg",
-      title: "A Brief History of Time",
-      author: "Stephen Hawking",
-    },
-  ],
-  "paling-banyak-diunduh": [
-    {
-      id: 9,
-      year: 1980,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/2b/Cosmos_book_cover.jpg",
-      title: "Cosmos",
-      author: "Carl Sagan",
-    },
-    {
-      id: 10,
-      year: 1980,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/2b/Cosmos_book_cover.jpg",
-      title: "Cosmos",
-      author: "Carl Sagan",
-    },
-    {
-      id: 11,
-      year: 1980,
-      image:
-        "https://upload.wikimedia.org/wikipedia/en/2/2b/Cosmos_book_cover.jpg",
-      title: "Cosmos",
-      author: "Carl Sagan",
-    },
-  ],
-});
+// Fetch data saat component dimount
+onMounted(() => {
+  const currentTab = tabs.find(tab => tab.value === activeTab.value)
+  if (currentTab) {
+    fetchDocuments(currentTab.filter)
+  }
+})
+
+// Watch activeTab untuk fetch data saat tab berubah
+watch(activeTab, (newTab) => {
+  // Jangan fetch jika ada search query aktif
+  if (searchQuery.value) return
+
+  const tab = tabs.find(t => t.value === newTab)
+  if (tab) {
+    fetchDocuments(tab.filter)
+  }
+})
 
 const filteredBooks = computed(() => {
   // Jika ada hasil search dari API, gunakan itu
@@ -228,22 +164,19 @@ const filteredBooks = computed(() => {
     }));
   }
 
-  // Jika tidak ada search, tampilkan data tab
-  const tabBooks = books.value[activeTab.value as keyof typeof books.value] || [];
-
-  // Filter berdasarkan search query di data lokal (fallback)
-  if (!searchQuery.value) {
-    return tabBooks;
+  // Jika tidak ada search, tampilkan data dari API berdasarkan tab
+  if (!searchQuery.value && documents.value.length > 0) {
+    return documents.value.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      author: doc.author || 'Unknown Author',
+      year: doc.published_date ? new Date(doc.published_date).getFullYear() : '',
+      image: doc.cover_image || 'https://via.placeholder.com/192x256?text=No+Cover',
+    }));
   }
 
-  const query = searchQuery.value.toLowerCase();
-  return tabBooks.filter((book) => {
-    return (
-      book.title.toLowerCase().includes(query) ||
-      book.author.toLowerCase().includes(query) ||
-      book.year.toString().includes(query)
-    );
-  });
+  // Fallback: return empty array
+  return []
 });
 
 const scrollContainer = (direction: "left" | "right") => {

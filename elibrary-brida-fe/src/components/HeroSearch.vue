@@ -52,10 +52,12 @@
 
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSearch } from '@/composables/useSearch'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
 
+const router = useRouter()
 const { searchQuery, setSearchQuery } = useSearch()
 const { searchDocuments, isLoading } = useDocumentSearch()
 const localSearch = ref(searchQuery.value)
@@ -76,12 +78,17 @@ const handleSearch = () => {
 }
 
 const scrollToCatalog = async () => {
-  // Trigger search jika ada query
+  // Redirect ke halaman search jika ada query
   if (localSearch.value.trim()) {
     setSearchQuery(localSearch.value)
-    await searchDocuments(localSearch.value)
+    router.push({
+      name: 'search',
+      query: { q: localSearch.value }
+    })
+    return
   }
 
+  // Jika tidak ada query, scroll ke catalog
   const catalogElement = document.getElementById('catalog')
   if (catalogElement) {
     catalogElement.scrollIntoView({ behavior: 'smooth' })

@@ -23,6 +23,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/search',
+      name: 'search',
+      component: () => import('@/pages/public/SearchResultsView.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'Hasil Pencarian'
+      }
+    },
+    {
       path: '/detail/:id',
       name: 'detail',
       component: () => import('@/pages/public/DetailView.vue'),

@@ -19,7 +19,7 @@ export interface SearchResponse {
   per_page?: number
 }
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/documents/search?q=...'
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
 
 export function useDocumentSearch() {
   const searchResults = ref<Document[]>([])
@@ -27,8 +27,8 @@ export function useDocumentSearch() {
   const error = ref<string | null>(null)
   const totalResults = ref(0)
 
-  const searchDocuments = async (query: string) => {
-    if (!query.trim()) {
+  const searchDocuments = async (query: string, filter?: string) => {
+    if (!query.trim() && !filter) {
       searchResults.value = []
       totalResults.value = 0
       return
@@ -38,9 +38,17 @@ export function useDocumentSearch() {
     error.value = null
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/documents/search?q=${encodeURIComponent(query)}`
-      )
+      let url = `${API_BASE_URL}/documents/search?`
+
+      if (query.trim()) {
+        url += `q=${encodeURIComponent(query)}`
+      }
+
+      if (filter) {
+        url += query.trim() ? `&filter=${filter}` : `filter=${filter}`
+      }
+
+      const response = await fetch(url)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
