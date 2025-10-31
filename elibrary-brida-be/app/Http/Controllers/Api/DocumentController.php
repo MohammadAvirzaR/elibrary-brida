@@ -47,4 +47,26 @@ class DocumentController extends Controller
 
             return $query->paginate(10);
     }
+
+    public function featuredContent()
+    {
+        $featured = Document::where('is_featured', true)
+            ->orderBy('upload_date', 'desc')
+            ->limit(10)
+            ->get();
+
+        $latest = Document::orderBy('upload_date', 'desc')
+            ->limit(10)
+            ->get();
+
+        $mostDownloaded = Document::orderBy('download_count', 'desc')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'featured' => $featured,
+            'latest' => $latest,
+            'most_downloaded' => $mostDownloaded,
+        ]);
+    }
 }
