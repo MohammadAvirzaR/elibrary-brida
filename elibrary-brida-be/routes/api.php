@@ -13,7 +13,11 @@ Route::post('/login', [AuthController::class, 'login']);
 //route untuk mencari dokumen
 Route::get('/documents/search', [DocumentController::class, 'search']);
 
+//route untuk konten unggulan
+Route::get('/documents/featured-content', [DocumentController::class, 'featuredContent']);
+
 Route::get('/filters', [FilterController::class, 'index']);
+
 
 // Route yang butuh autentikasi Sanctum
 Route::middleware('auth:sanctum')->group(function () {

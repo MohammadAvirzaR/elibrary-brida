@@ -1,0 +1,3 @@
+- [x] Add featuredContent method to DocumentController that returns featured, latest, and most downloaded documents (10 each)
+- [x] Add route /documents/featured-content in routes/api.php
+- [x] Test the endpoint by running php artisan route:list
