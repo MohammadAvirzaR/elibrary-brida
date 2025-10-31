@@ -63,6 +63,12 @@ class Document extends Model
         return $this->belongsTo(License::class);
     }
 
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'document_subject', 'document_id', 'subject_id');
+    }
+
+
     // 🔍 Scope untuk search agar controller tetap bersih
     public function scopeSearch($query, $keyword)
     {

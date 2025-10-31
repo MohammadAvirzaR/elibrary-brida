@@ -22,20 +22,27 @@ class DocumentController extends Controller
                 });
             }
 
+            // Filter type
             if ($request->filled('type_id')) {
-                $query->where('type_id', $request->type_id);
+                $query->whereIn('type_id', (array) $request->type_id);
             }
 
+            // Filter year range
             if ($request->filled('year')) {
-                $query->where('year_published', $request->year);
+                $year = now()->year - $request->year;
+                $query->where('year_published', '>=', $year);
             }
-            
+
+            // Filter access rights
             if ($request->filled('access_right')) {
                 $query->where('access_right', $request->access_right);
             }
 
-            if ($request->filled('access_right')) {
-                $query->where('access_right', $request->access_right);
+            // ✅ Filter subject via pivot table
+            if ($request->filled('subject_id')) {
+                $query->whereHas('subjects', function ($q) use ($request) {
+                    $q->whereIn('subjects.id', (array) $request->subject_id);
+                });
             }
 
             return $query->paginate(10);
