@@ -4,21 +4,24 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Models\Document;
+use App\Models\Subject;
 
 class DocumentSubjectSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('document_subject')->insert([
-            // Dokument 1 -> Ilmu Komputer, Pendidikan
-            ['document_id' => 1, 'subject_id' => 1],
-            ['document_id' => 1, 'subject_id' => 8],
+        $subjects = Subject::pluck('id')->toArray();
 
-            // Dokument 2 -> Ekonomi
-            ['document_id' => 2, 'subject_id' => 7],
+        Document::all()->each(function ($doc) use ($subjects) {
+            $randomSubjects = collect($subjects)->random(rand(1, 3))->all();
 
-            // Dokument 3 -> Psikologi
-            ['document_id' => 3, 'subject_id' => 5],
-        ]);
+            foreach ($randomSubjects as $subjectId) {
+                DB::table('document_subject')->insert([
+                    'document_id' => $doc->id,
+                    'subject_id' => $subjectId,
+                ]);
+            }
+        });
     }
 }
