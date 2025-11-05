@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdvancedSearchModal: typeof import('./components/AdvancedSearchModal.vue')['default']
     BooksTable: typeof import('./components/BooksTable.vue')['default']
     ExamplesUi: typeof import('./components/system/ExamplesUi.vue')['default']
     FooterSection: typeof import('./components/FooterSection.vue')['default']
@@ -21,6 +22,7 @@ declare module 'vue' {
     IconSupport: typeof import('./components/icons/IconSupport.vue')['default']
     IconTooling: typeof import('./components/icons/IconTooling.vue')['default']
     ILucideBookmark: typeof import('~icons/lucide/bookmark')['default']
+    ILucideChevronLeft: typeof import('~icons/lucide/chevron-left')['default']
     ILucideDownload: typeof import('~icons/lucide/download')['default']
     ILucideEye: typeof import('~icons/lucide/eye')['default']
     ILucideGlobe: typeof import('~icons/lucide/globe')['default']

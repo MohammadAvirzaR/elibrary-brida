@@ -42,11 +42,18 @@
     </div>
 
     <button
-      @click="scrollToCatalog"
+      @click="openAdvancedSearch"
       class="bg-neutral-800 text-white font-body px-8 py-3 rounded-md hover:bg-neutral-950 transition"
     >
       Advanced Search
     </button>
+
+    <!-- Advanced Search Modal -->
+    <AdvancedSearchModal
+      :is-open="isAdvancedSearchOpen"
+      @close="closeAdvancedSearch"
+      @search="handleAdvancedSearch"
+    />
   </section>
 </template>
 
@@ -56,11 +63,22 @@ import { useRouter } from 'vue-router'
 import { useSearch } from '@/composables/useSearch'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
+import AdvancedSearchModal from './AdvancedSearchModal.vue'
+
+interface SearchFilters {
+  query: string
+  license: string
+  accessRight: string
+  subjects: string[]
+  types: string[]
+  years: string[]
+}
 
 const router = useRouter()
 const { searchQuery, setSearchQuery } = useSearch()
 const { searchDocuments, isLoading } = useDocumentSearch()
 const localSearch = ref(searchQuery.value)
+const isAdvancedSearchOpen = ref(false)
 
 // Sinkronisasi dengan global search state
 watch(searchQuery, (newValue) => {
@@ -93,5 +111,18 @@ const scrollToCatalog = async () => {
   if (catalogElement) {
     catalogElement.scrollIntoView({ behavior: 'smooth' })
   }
+}
+
+const openAdvancedSearch = () => {
+  isAdvancedSearchOpen.value = true
+}
+
+const closeAdvancedSearch = () => {
+  isAdvancedSearchOpen.value = false
+}
+
+const handleAdvancedSearch = (filters: SearchFilters) => {
+  console.log('Advanced search filters:', filters)
+  // Modal akan handle redirect ke search page
 }
 </script>
