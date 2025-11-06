@@ -1,26 +1,26 @@
 <template>
   <section
     id="catalog"
-    class="container mx-auto my-16 px-6 min-h-screen scroll-mt-20 pt-5"
+    class="container mx-auto my-20 px-6 scroll-mt-20"
   >
     <!-- Search Results Info -->
-    <div v-if="searchQuery && totalResults > 0" class="mb-4 text-center">
-      <p class="text-gray-600">
-        Ditemukan <span class="font-semibold">{{ totalResults }}</span> hasil untuk "<span class="font-semibold">{{ searchQuery }}</span>"
+    <div v-if="searchQuery && totalResults > 0" class="mb-8 text-center">
+      <p class="text-neutral-600 text-sm">
+        Ditemukan <span class="font-semibold text-neutral-900">{{ totalResults }}</span> hasil untuk "<span class="font-semibold text-neutral-900">{{ searchQuery }}</span>"
       </p>
     </div>
 
     <!-- Tabs -->
-    <div class="flex justify-center space-x-6 border-b pb-2 text-gray-600 mb-8">
+    <div class="flex justify-center space-x-8 border-b border-neutral-200 pb-3 mb-10">
       <button
         v-for="tab in tabs"
         :key="tab.value"
         @click="activeTab = tab.value"
         :class="[
-          'pb-2 transition-all',
+          'pb-3 px-1 transition-all text-sm font-medium',
           activeTab === tab.value
-            ? 'text-gray-900 font-semibold border-b-2 border-blue-600'
-            : 'hover:text-gray-900 transition ease-in-out duration-200',
+            ? 'text-neutral-900 border-b-2 border-blue-600'
+            : 'text-neutral-500 hover:text-neutral-900',
         ]"
       >
         {{ tab.label }}
@@ -32,12 +32,12 @@
       <!-- Left Arrow -->
       <button
         @click="scrollContainer('left')"
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
         aria-label="Scroll left"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="w-6 h-6 text-gray-700"
+          class="w-5 h-5 text-neutral-700"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -54,12 +54,12 @@
       <!-- Right Arrow -->
       <button
         @click="scrollContainer('right')"
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
         aria-label="Scroll right"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="w-6 h-6 text-gray-700"
+          class="w-5 h-5 text-neutral-700"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -76,18 +76,18 @@
       <!-- Book Cards Container -->
       <div
         ref="scrollContainerRef"
-        class="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        class="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth pb-6"
         style="scrollbar-width: none; -ms-overflow-style: none"
       >
         <!-- Loading State -->
-        <div v-if="isLoadingDocs" class="flex gap-6 w-full justify-center items-center py-16">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p class="text-gray-600">Memuat data...</p>
+        <div v-if="isLoadingDocs" class="flex gap-4 w-full justify-center items-center py-20">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          <p class="text-neutral-600 text-sm">Memuat data...</p>
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="filteredBooks.length === 0" class="w-full text-center py-16">
-          <p class="text-gray-500">Tidak ada buku ditemukan</p>
+        <div v-else-if="filteredBooks.length === 0" class="w-full text-center py-20">
+          <p class="text-neutral-500 text-sm">Tidak ada buku ditemukan</p>
         </div>
 
         <!-- Book Cards -->
@@ -95,19 +95,21 @@
           v-else
           v-for="book in filteredBooks"
           :key="book.id"
-          class="flex-shrink-0 w-48 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer"
+          class="flex-shrink-0 w-44 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
         >
-          <div class="p-4">
-            <img
-              :src="book.image"
-              :alt="book.title"
-              class="w-full h-64 object-cover rounded-md mb-3"
-            />
-            <p class="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
+          <div class="p-3">
+            <div class="relative overflow-hidden rounded-lg mb-3">
+              <img
+                :src="book.image"
+                :alt="book.title"
+                class="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <p class="font-semibold text-neutral-900 text-sm line-clamp-2 mb-1.5 leading-tight">
               {{ book.title }}
             </p>
-            <p class="text-xs text-gray-500 mb-1">{{ book.author }}</p>
-            <p class="text-xs text-gray-400">{{ book.year }}</p>
+            <p class="text-xs text-neutral-500 mb-0.5">{{ book.author }}</p>
+            <p class="text-xs text-neutral-400">{{ book.year }}</p>
           </div>
         </div>
       </div>

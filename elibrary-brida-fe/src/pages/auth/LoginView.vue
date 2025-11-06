@@ -1,6 +1,6 @@
 <template id="login-view">
   <AuthLayout>
-    <div class="min-h-screen bg-gray-100 flex items-center justify-center p-4 relative">
+    <div class="min-h-screen flex items-center justify-center p-4 relative">
       <!-- Back Button - Fixed to left side -->
       <button
         @click="router.push('/')"
@@ -13,7 +13,7 @@
 
       <div class="w-full max-w-md">
         <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
           <!-- Logo and Title -->
           <div class="text-center mb-8">
             <div class="flex justify-center mb-4">

@@ -1,7 +1,7 @@
 <template>
   <footer class="bg-neutral-100 mt-20 py-12 border-t border-gray-200">
     <div
-      class="container mx-auto grid md:grid-cols-4 gap-10 text-[18px] text-neutral-950 px-6"
+      class="container mx-auto grid md:grid-cols-4 gap-10 text-sm text-neutral-950 px-6"
     >
       <div class="flex flex-col items-center">
         <!-- Logo -->
@@ -40,7 +40,7 @@
       </div>
 
       <div>
-        <h4 class="font-heading font-semibold text-neutral-950 mb-3">
+        <h4 class="font-heading font-semibold text-neutral-950 mb-3 text-sm">
           Alamat & Kontak
         </h4>
         <p class="mb-1">(021) 88888</p>
@@ -49,7 +49,7 @@
       </div>
 
       <div>
-        <h4 class="font-heading font-semibold text-neutral-950 mb-3">
+        <h4 class="font-heading font-semibold text-neutral-950 mb-3 text-sm">
           Navigasi
         </h4>
         <ul class="space-y-1">
@@ -70,7 +70,7 @@
       </div>
 
       <div>
-        <h4 class="font-heading font-semibold text-neutral-950 mb-3">
+        <h4 class="font-heading font-semibold text-neutral-950 mb-3 text-sm">
           Deskripsi
         </h4>
         <p class="font-body text-justify text-neutral-800 leading-relaxed">

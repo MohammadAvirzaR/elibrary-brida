@@ -1,18 +1,22 @@
 <template>
   <section
-    class="flex flex-col items-center gap-[30px] w-full max-w-[720px] mx-auto text-center pt-64 min-h-screen"
+    class="flex flex-col items-center justify-center gap-8 w-full max-w-2xl mx-auto text-center px-6 min-h-[85vh]"
   >
-    <h2 class="text-[32px] font-heading font-bold text-neutral-950 mb-6">
-      E-Library BRIDA Sulawesi Tenggara
-    </h2>
-    <div class="relative w-full">
+    <div class="space-y-3">
+      <h2 class="text-4xl md:text-5xl font-heading font-bold text-neutral-900 tracking-tight">
+        E-Library BRIDA
+      </h2>
+      <p class="text-lg text-neutral-600 font-medium">Sulawesi Tenggara</p>
+    </div>
+
+    <div class="relative w-full max-w-xl">
       <i-lucide-search
-        class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 text-neutral-400"
+        class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400"
         v-if="!isLoading"
       />
       <svg
         v-if="isLoading"
-        class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-neutral-400"
+        class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-neutral-400"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -37,13 +41,13 @@
         @input="handleSearch"
         @keyup.enter="scrollToCatalog"
         placeholder="Cari buku digital..."
-        class="bg-neutral-200 placeholder-neutral-400 text-neutral-950 rounded-full px-6 py-3 w-full focus:outline-none hover:bg-neutral-300 transition"
+        class="bg-white placeholder-neutral-400 text-neutral-950 rounded-full pl-14 pr-6 py-4 w-full shadow-sm border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-all duration-200"
       />
     </div>
 
     <button
       @click="openAdvancedSearch"
-      class="bg-neutral-800 text-white font-body px-8 py-3 rounded-md hover:bg-neutral-950 transition"
+      class="bg-neutral-900 text-white font-medium px-6 py-2.5 rounded-full hover:bg-neutral-800 transition-all duration-200 shadow-sm hover:shadow-md"
     >
       Advanced Search
     </button>

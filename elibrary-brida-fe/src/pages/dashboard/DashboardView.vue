@@ -137,69 +137,110 @@
       </header>
 
       <!-- Dashboard Content -->
-      <main class="p-8">
+      <main class="p-8 max-w-7xl mx-auto">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ username || 'Admin' }}! 👋</h1>
+          <p class="text-gray-600 mt-1">Here's what's happening with your library today.</p>
+        </div>
+
         <!-- Summary Section -->
         <section class="mb-12">
-          <h1 class="text-4xl font-bold text-gray-900 mb-8">Summary</h1>
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Queue Review Card -->
-            <div class="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl p-8 shadow-lg text-white">
-            <h2 class="text-5xl font-bold mb-2">{{ queueCount }}</h2>
-              <p class="text-xl">Queue Review</p>
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer group">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-clock class="w-6 h-6 text-white" />
+                </div>
+                <i-lucide-trending-up class="w-5 h-5 text-white opacity-70" />
+              </div>
+              <h3 class="text-white text-opacity-90 text-sm font-medium mb-1">Queue Review</h3>
+              <p class="text-4xl font-bold text-white">{{ queueCount }}</p>
+              <p class="text-white text-opacity-70 text-xs mt-2">Pending approval</p>
             </div>
 
             <!-- Top Contributor Card -->
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 shadow-lg text-white">
-              <h2 class="text-4xl font-bold mb-2">{{ topContributor }}</h2>
-              <p class="text-xl">Top Contributor</p>
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer group">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-trophy class="w-6 h-6 text-white" />
+                </div>
+                <i-lucide-award class="w-5 h-5 text-white opacity-70" />
+              </div>
+              <h3 class="text-white text-opacity-90 text-sm font-medium mb-1">Top Contributor</h3>
+              <p class="text-2xl font-bold text-white">{{ topContributor }}</p>
+              <p class="text-white text-opacity-70 text-xs mt-2">Most uploads this month</p>
             </div>
 
             <!-- Top Viewed Card -->
-            <div class="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl p-8 shadow-lg text-white">
-              <h2 class="text-4xl font-bold mb-2">{{ topArticle }}</h2>
-              <p class="text-xl">Top Viewed Today</p>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer group">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-eye class="w-6 h-6 text-white" />
+                </div>
+                <i-lucide-flame class="w-5 h-5 text-white opacity-70" />
+              </div>
+              <h3 class="text-white text-opacity-90 text-sm font-medium mb-1">Top Viewed Today</h3>
+              <p class="text-2xl font-bold text-white">{{ topArticle }}</p>
+              <p class="text-white text-opacity-70 text-xs mt-2">Most popular document</p>
             </div>
 
             <!-- Total Papers Card -->
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 shadow-lg text-white">
-              <h2 class="text-5xl font-bold mb-2">{{ totalPapers }}</h2>
-              <p class="text-xl">Total of Papers</p>
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer group">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-book-open class="w-6 h-6 text-white" />
+                </div>
+                <i-lucide-bar-chart class="w-5 h-5 text-white opacity-70" />
+              </div>
+              <h3 class="text-white text-opacity-90 text-sm font-medium mb-1">Total Papers</h3>
+              <p class="text-4xl font-bold text-white">{{ totalPapers }}</p>
+              <p class="text-white text-opacity-70 text-xs mt-2">Documents in library</p>
             </div>
           </div>
         </section>
 
         <!-- Queue Review Section -->
         <section class="mb-12">
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex items-start md:items-center justify-between mb-6 flex-col md:flex-row gap-4">
             <div>
-              <h2 class="text-3xl font-bold text-gray-900">Queue Review</h2>
-              <p class="text-gray-600 mt-1">*Klik judul dokumen untuk melihat detail dokumennya</p>
+              <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <i-lucide-inbox class="w-6 h-6 text-blue-600" />
+                Queue Review
+              </h2>
+              <p class="text-gray-500 text-sm mt-1">Review and approve pending submissions</p>
             </div>
-            <div class="flex items-center gap-4">
-              <span class="text-gray-700">Selected</span>
-              <span class="font-bold text-gray-900">{{ selectedQueue.length }}</span>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
+                <span class="text-sm text-gray-600">Selected:</span>
+                <span class="font-bold text-blue-600">{{ selectedQueue.length }}</span>
+              </div>
               <button
                 @click="approveSelected"
                 :disabled="selectedQueue.length === 0"
-                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-sm hover:shadow"
               >
+                <i-lucide-check class="w-4 h-4" />
                 Approve
               </button>
               <button
                 @click="rejectSelected"
                 :disabled="selectedQueue.length === 0"
-                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-sm hover:shadow"
               >
+                <i-lucide-x class="w-4 h-4" />
                 Reject
               </button>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <!-- Table Header -->
-            <div class="flex items-center gap-4 p-4 border-b">
-              <button class="p-2 hover:bg-gray-100 rounded-lg">
+            <div class="flex items-center gap-4 p-5 border-b bg-gray-50">
+              <button class="p-2 hover:bg-gray-200 rounded-lg transition">
                 <i-lucide-filter class="w-5 h-5 text-gray-600" />
               </button>
               <div class="relative flex-1 max-w-md">
@@ -207,8 +248,8 @@
                 <input
                   v-model="queueSearchQuery"
                   type="text"
-                  placeholder="Search..."
-                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by name, email, or title..."
+                  class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             </div>
@@ -216,73 +257,83 @@
             <!-- Table -->
             <div class="overflow-x-auto">
               <table class="w-full">
-                <thead class="bg-gray-50 border-b">
+                <thead class="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th class="px-6 py-3 text-left">
+                    <th class="px-6 py-4 text-left">
                       <input
                         type="checkbox"
                         @change="toggleSelectAllQueue"
                         :checked="selectedQueue.length === queueReviews.length && queueReviews.length > 0"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">#</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Title</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Last Update</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Action</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">More</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Update</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">More</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                  <tr v-for="(item, index) in filteredQueueReviews" :key="item.id" class="hover:bg-gray-50">
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  <tr v-for="(item, index) in filteredQueueReviews" :key="item.id" class="hover:bg-blue-50 transition-colors">
                     <td class="px-6 py-4">
                       <input
                         type="checkbox"
                         :value="item.id"
                         v-model="selectedQueue"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">{{ index + 1 }}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ index + 1 }}</td>
                     <td class="px-6 py-4">
-                      <div class="text-sm font-semibold text-gray-900">{{ item.name }}</div>
-                      <div class="text-xs text-gray-500">{{ item.email }}</div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+                          {{ item.name.split(' ').map(n => n[0]).join('').substring(0, 2) }}
+                        </div>
+                        <div>
+                          <div class="text-sm font-semibold text-gray-900">{{ item.name }}</div>
+                          <div class="text-xs text-gray-500">{{ item.email }}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td class="px-6 py-4">
-                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2">
+                    <td class="px-6 py-4 max-w-xs">
+                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium">
                         {{ item.title }}
                       </a>
                     </td>
                     <td class="px-6 py-4">
-                      <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        <i-lucide-clock class="w-3 h-3" />
                         {{ item.status }}
                       </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">
-                      <div>{{ item.lastUpdate.date }}</div>
+                      <div class="font-medium">{{ item.lastUpdate.date }}</div>
                       <div class="text-xs text-gray-500">{{ item.lastUpdate.time }}</div>
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex gap-2">
                         <button
                           @click="approveItem(item.id)"
-                          class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition"
+                          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow flex items-center gap-1.5"
                         >
+                          <i-lucide-check class="w-3.5 h-3.5" />
                           Approve
                         </button>
                         <button
                           @click="rejectItem(item.id)"
-                          class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition"
+                          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow flex items-center gap-1.5"
                         >
+                          <i-lucide-x class="w-3.5 h-3.5" />
                           Reject
                         </button>
                       </div>
                     </td>
                     <td class="px-6 py-4">
-                      <button class="p-2 hover:bg-gray-200 rounded-lg transition">
-                        <i-lucide-mail class="w-5 h-5 text-blue-600" />
+                      <button class="p-2 hover:bg-blue-100 rounded-lg transition group">
+                        <i-lucide-mail class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition" />
                       </button>
                     </td>
                   </tr>
@@ -323,28 +374,34 @@
 
         <!-- History Section -->
         <section>
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex items-start md:items-center justify-between mb-6 flex-col md:flex-row gap-4">
             <div>
-              <h2 class="text-3xl font-bold text-gray-900">History</h2>
-              <p class="text-gray-600 mt-1">*Klik judul dokumen untuk melihat detail dokumennya</p>
+              <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <i-lucide-history class="w-6 h-6 text-gray-600" />
+                Review History
+              </h2>
+              <p class="text-gray-500 text-sm mt-1">View all approved and rejected submissions</p>
             </div>
-            <div class="flex items-center gap-4">
-              <span class="text-gray-700">Selected</span>
-              <span class="font-bold text-gray-900">{{ selectedHistory.length }}</span>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
+                <span class="text-sm text-gray-600">Selected:</span>
+                <span class="font-bold text-blue-600">{{ selectedHistory.length }}</span>
+              </div>
               <button
                 @click="deleteSelected"
                 :disabled="selectedHistory.length === 0"
-                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-sm hover:shadow"
               >
+                <i-lucide-trash-2 class="w-4 h-4" />
                 Delete
               </button>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <!-- Table Header -->
-            <div class="flex items-center gap-4 p-4 border-b">
-              <button class="p-2 hover:bg-gray-100 rounded-lg">
+            <div class="flex items-center gap-4 p-5 border-b bg-gray-50">
+              <button class="p-2 hover:bg-gray-200 rounded-lg transition">
                 <i-lucide-filter class="w-5 h-5 text-gray-600" />
               </button>
               <div class="relative flex-1 max-w-md">
@@ -352,79 +409,92 @@
                 <input
                   v-model="historySearchQuery"
                   type="text"
-                  placeholder="Search..."
-                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by name, email, or title..."
+                  class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
+                <i-lucide-x class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" @click="historySearchQuery = ''" />
               </div>
             </div>
 
             <!-- Table -->
             <div class="overflow-x-auto">
               <table class="w-full">
-                <thead class="bg-gray-50 border-b">
+                <thead class="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th class="px-6 py-3 text-left">
+                    <th class="px-6 py-4 text-left">
                       <input
                         type="checkbox"
                         @change="toggleSelectAllHistory"
                         :checked="selectedHistory.length === histories.length && histories.length > 0"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">#</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Title</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Last Update</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Action</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">More</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Update</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">More</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                  <tr v-for="(item, index) in filteredHistories" :key="item.id" class="hover:bg-gray-50">
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  <tr v-for="(item, index) in filteredHistories" :key="item.id" class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4">
                       <input
                         type="checkbox"
                         :value="item.id"
                         v-model="selectedHistory"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">{{ index + 1 }}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ index + 1 }}</td>
                     <td class="px-6 py-4">
-                      <div class="text-sm font-semibold text-gray-900">{{ item.name }}</div>
-                      <div class="text-xs text-gray-500">{{ item.email }}</div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white font-semibold text-sm">
+                          {{ item.name.split(' ').map(n => n[0]).join('').substring(0, 2) }}
+                        </div>
+                        <div>
+                          <div class="text-sm font-semibold text-gray-900">{{ item.name }}</div>
+                          <div class="text-xs text-gray-500">{{ item.email }}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td class="px-6 py-4">
-                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2">
+                    <td class="px-6 py-4 max-w-xs">
+                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium">
                         {{ item.title }}
                       </a>
                     </td>
                     <td class="px-6 py-4">
                       <span
                         :class="[
-                          'inline-flex px-3 py-1 text-xs font-semibold rounded-full',
-                          item.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border',
+                          item.status === 'Accepted'
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : 'bg-red-100 text-red-800 border-red-200'
                         ]"
                       >
+                        <i-lucide-check-circle v-if="item.status === 'Accepted'" class="w-3 h-3" />
+                        <i-lucide-x-circle v-else class="w-3 h-3" />
                         {{ item.status }}
                       </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">
-                      <div>{{ item.lastUpdate.date }}</div>
+                      <div class="font-medium">{{ item.lastUpdate.date }}</div>
                       <div class="text-xs text-gray-500">{{ item.lastUpdate.time }}</div>
                     </td>
                     <td class="px-6 py-4">
                       <button
                         @click="deleteItem(item.id)"
-                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 hover:shadow-md transition-all duration-200"
                       >
+                        <i-lucide-trash-2 class="w-4 h-4" />
                         Delete
                       </button>
                     </td>
                     <td class="px-6 py-4">
-                      <button class="p-2 hover:bg-gray-200 rounded-lg transition">
-                        <i-lucide-mail class="w-5 h-5 text-blue-600" />
+                      <button class="group p-2.5 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                        <i-lucide-mail class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                       </button>
                     </td>
                   </tr>
