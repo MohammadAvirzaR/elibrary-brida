@@ -9,29 +9,12 @@
         <div class="relative max-w-2xl">
           <i-lucide-search
             class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            v-if="!isSearching"
+            v-if="!isSearching && !isLoading"
           />
-          <svg
-            v-if="isSearching"
-            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
+          <i-lucide-loader-2
+            v-if="isSearching || isLoading"
+            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500"
+          />
           <input
             type="text"
             v-model="localSearchQuery"
@@ -43,12 +26,12 @@
         </div>
 
         <!-- Search Info -->
-        <div v-if="searchQuery" class="mt-4">
+        <div v-if="searchQuery || totalResults > 0" class="mt-4">
           <p class="text-gray-600">
             Menampilkan
             <span class="font-semibold">{{ totalResults }}</span>
-            hasil untuk
-            "<span class="font-semibold text-blue-600">{{ searchQuery }}</span>"
+            hasil<span v-if="searchQuery"> untuk
+            "<span class="font-semibold text-blue-600">{{ searchQuery }}</span>"</span>
           </p>
         </div>
       </div>
@@ -108,8 +91,8 @@
           <!-- Loading State -->
           <div v-if="isLoading" class="flex justify-center items-center py-20">
             <div class="text-center">
-              <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p class="text-gray-600">Memuat hasil pencarian...</p>
+              <i-lucide-loader-2 class="w-16 h-16 text-blue-600 mx-auto mb-4 animate-spin" />
+              <p class="text-gray-600 font-medium">Memuat hasil pencarian...</p>
             </div>
           </div>
 
@@ -130,7 +113,7 @@
               <div class="flex gap-6">
                 <!-- Document Number -->
                 <div class="flex-shrink-0 w-12">
-                  <span class="text-2xl font-bold text-gray-400">{{ index + 1 }}</span>
+                  <span class="text-2xl font-bold text-gray-400">{{ (currentPage - 1) * 10 + index + 1 }}</span>
                 </div>
 
                 <!-- Document Cover -->
@@ -246,7 +229,7 @@ import PublicLayout from '@/layout/PublicLayout.vue'
 
 const route = useRoute()
 const router = useRouter()
-const { searchDocuments, searchResults, isLoading, totalResults } = useDocumentSearch()
+const { searchDocuments, searchResults, isLoading, totalResults, lastPage } = useDocumentSearch()
 
 const localSearchQuery = ref('')
 const searchQuery = ref('')
@@ -271,7 +254,7 @@ const documentTypes = [
   { label: 'Prosiding', value: 'proceeding' },
 ]
 
-const totalPages = computed(() => Math.ceil(totalResults.value / 10))
+const totalPages = computed(() => lastPage.value || Math.ceil(totalResults.value / 10))
 
 const displayPages = computed(() => {
   const pages = []
@@ -291,6 +274,7 @@ const displayPages = computed(() => {
 })
 
 const debouncedSearch = useDebounceFn(async () => {
+  isSearching.value = false // Reset karena debounce selesai
   searchQuery.value = localSearchQuery.value
   await performSearch()
 }, 500)
@@ -301,20 +285,29 @@ const handleSearch = () => {
 }
 
 const performSearch = async () => {
-  if (localSearchQuery.value.trim()) {
+  try {
     searchQuery.value = localSearchQuery.value
-    currentPage.value = 1
-    await searchDocuments(searchQuery.value)
+    await searchDocuments(searchQuery.value, currentPage.value)
 
     // Update URL query parameter
-    router.push({
-      query: {
-        q: searchQuery.value,
-        page: currentPage.value
-      }
-    })
+    if (searchQuery.value.trim()) {
+      router.push({
+        query: {
+          q: searchQuery.value,
+          page: currentPage.value
+        }
+      })
+    } else {
+      // Jika query kosong, hapus query parameter q
+      router.push({
+        query: {
+          page: currentPage.value > 1 ? currentPage.value : undefined
+        }
+      })
+    }
+  } finally {
+    isSearching.value = false
   }
-  isSearching.value = false
 }
 
 const applyFilters = () => {
@@ -332,23 +325,26 @@ const formatDate = (date?: string) => {
   return new Date(date).getFullYear()
 }
 
-const prevPage = () => {
+const prevPage = async () => {
   if (currentPage.value > 1) {
     currentPage.value--
-    performSearch()
+    await performSearch()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
-const nextPage = () => {
+const nextPage = async () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
-    performSearch()
+    await performSearch()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
-const goToPage = (page: number) => {
+const goToPage = async (page: number) => {
   currentPage.value = page
-  performSearch()
+  await performSearch()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Initialize search from URL query
@@ -360,16 +356,24 @@ onMounted(() => {
     localSearchQuery.value = query
     searchQuery.value = query
     currentPage.value = page
-    searchDocuments(query)
+    searchDocuments(query, page)
+  } else {
+    // Jika tidak ada query, load semua dokumen
+    currentPage.value = page
+    searchDocuments('', page)
   }
 })
 
 // Watch route changes
-watch(() => route.query.q, (newQuery) => {
-  if (newQuery && newQuery !== localSearchQuery.value) {
-    localSearchQuery.value = newQuery as string
-    searchQuery.value = newQuery as string
-    performSearch()
+watch(() => route.query, (newQuery) => {
+  const query = newQuery.q as string
+  const page = parseInt(newQuery.page as string) || 1
+
+  if (query !== localSearchQuery.value) {
+    localSearchQuery.value = query || ''
+    searchQuery.value = query || ''
+    currentPage.value = page
+    searchDocuments(query || '', page)
   }
 })
 </script>

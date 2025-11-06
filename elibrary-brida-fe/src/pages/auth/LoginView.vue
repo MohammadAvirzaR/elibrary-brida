@@ -32,12 +32,12 @@
 
           <!-- Login Form -->
           <form @submit.prevent="handleLogin" class="space-y-4">
-            <!-- Username Input -->
+            <!-- Email Input -->
             <div>
               <input
                 v-model="formData.username"
-                type="text"
-                placeholder="Username"
+                type="email"
+                placeholder="Email"
                 class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
               />
@@ -130,35 +130,43 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    // TODO: Replace with your actual API call
-    // Example:
-    // const response = await fetch('/api/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(formData)
-    // })
-    // const data = await response.json()
+    // Call Laravel API
+    const response = await fetch('http://127.0.0.1:8000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        email: formData.username, // API expects email field
+        password: formData.password
+      })
+    })
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const data = await response.json()
 
-    // Mock success - Replace with actual logic
-    if (formData.username && formData.password) {
-      // Store token (example)
-      localStorage.setItem('auth_token', 'mock_token_12345')
-
-      // Optional: Store user data
-      localStorage.setItem('user', JSON.stringify({
-        username: formData.username,
-        name: 'User Name'
-      }))
-
-      // Get redirect path or default to dashboard
-      const redirectPath = (route.query.redirect as string) || '/dashboard'
-      router.push(redirectPath)
-    } else {
-      throw new Error('Invalid credentials')
+    if (!response.ok) {
+      throw new Error(data.message || 'Login gagal. Periksa email dan password Anda.')
     }
+
+    // Store token from API response
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token)
+    }
+
+    // Store user data
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify({
+        id: data.user.id,
+        username: data.user.name || data.user.email,
+        email: data.user.email,
+        role: data.user.role || 'user'
+      }))
+    }
+
+    // Get redirect path or default to dashboard
+    const redirectPath = (route.query.redirect as string) || '/dashboard'
+    router.push(redirectPath)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Login failed. Please try again.'
   } finally {

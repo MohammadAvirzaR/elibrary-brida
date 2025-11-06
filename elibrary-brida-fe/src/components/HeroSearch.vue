@@ -101,7 +101,10 @@ const scrollToCatalog = async () => {
     setSearchQuery(localSearch.value)
     router.push({
       name: 'search',
-      query: { q: localSearch.value }
+      query: {
+        q: localSearch.value,
+        page: 1
+      }
     })
     return
   }

@@ -10,17 +10,18 @@ class DocumentController extends Controller
 {
     public function search(Request $request)
     {
-           $query = Document::query();
+        $query = Document::query();
 
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%$search%")
-                    ->orWhere('author', 'like', "%$search%")
-                    ->orWhere('keywords', 'like', "%$search%")
-                    ->orWhere('abstract', 'like', "%$search%");
-                });
-            }
+        // Terima parameter 'q' atau 'search' untuk pencarian teks
+        if ($request->filled('q') || $request->filled('search')) {
+            $search = $request->input('q') ?: $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%$search%")
+                ->orWhere('author', 'like', "%$search%")
+                ->orWhere('keywords', 'like', "%$search%")
+                ->orWhere('abstract', 'like', "%$search%");
+            });
+        }
 
             // Filter type
             if ($request->filled('type_id')) {

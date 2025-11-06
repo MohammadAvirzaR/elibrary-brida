@@ -15,8 +15,11 @@ export interface Document {
 export interface SearchResponse {
   data: Document[]
   total: number
-  page?: number
+  current_page?: number
+  last_page?: number
   per_page?: number
+  from?: number
+  to?: number
 }
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api'
@@ -26,27 +29,31 @@ export function useDocumentSearch() {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const totalResults = ref(0)
+  const currentPage = ref(1)
+  const lastPage = ref(1)
+  const perPage = ref(10)
 
-  const searchDocuments = async (query: string, filter?: string) => {
-    if (!query.trim() && !filter) {
-      searchResults.value = []
-      totalResults.value = 0
-      return
-    }
-
+  const searchDocuments = async (query: string, page: number = 1, filter?: string) => {
     isLoading.value = true
     error.value = null
 
     try {
-      let url = `${API_BASE_URL}/documents/search?`
+      // Bangun URL dengan query parameter yang benar
+      const params = new URLSearchParams()
 
       if (query.trim()) {
-        url += `q=${encodeURIComponent(query)}`
+        params.append('q', query.trim())
+      }
+
+      if (page > 1) {
+        params.append('page', page.toString())
       }
 
       if (filter) {
-        url += query.trim() ? `&filter=${filter}` : `filter=${filter}`
+        params.append('filter', filter)
       }
+
+      const url = `${API_BASE_URL}/documents/search?${params.toString()}`
 
       const response = await fetch(url)
 
@@ -58,6 +65,9 @@ export function useDocumentSearch() {
 
       searchResults.value = data.data || []
       totalResults.value = data.total || 0
+      currentPage.value = data.current_page || 1
+      lastPage.value = data.last_page || 1
+      perPage.value = data.per_page || 10
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch search results'
       searchResults.value = []
@@ -79,6 +89,9 @@ export function useDocumentSearch() {
     isLoading,
     error,
     totalResults,
+    currentPage,
+    lastPage,
+    perPage,
     searchDocuments,
     clearResults,
   }
