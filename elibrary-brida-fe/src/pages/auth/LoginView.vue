@@ -111,11 +111,11 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
+import api from '@/services/api'
 
 const router = useRouter()
-const route = useRoute()
 
 const formData = reactive({
   username: '',
@@ -130,24 +130,12 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    // Call Laravel API
-    const response = await fetch('http://127.0.0.1:8000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        email: formData.username, // API expects email field
-        password: formData.password
-      })
+    // Call API using api client
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await api.auth.login({
+      email: formData.username, // API expects email field
+      password: formData.password
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Login gagal. Periksa email dan password Anda.')
-    }
 
     // Store token from API response
     if (data.token) {
@@ -158,17 +146,35 @@ const handleLogin = async () => {
     if (data.user) {
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
+        name: data.user.name || data.user.email,
         username: data.user.name || data.user.email,
         email: data.user.email,
-        role: data.user.role || 'user'
+        role: data.user.role || 'guest'
       }))
     }
 
-    // Get redirect path or default to dashboard
-    const redirectPath = (route.query.redirect as string) || '/dashboard'
-    router.push(redirectPath)
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Login failed. Please try again.'
+    // Redirect based on user role
+    const userRole = data.user?.role?.toLowerCase()
+
+    // Dispatch event to notify other components
+    window.dispatchEvent(new Event('auth-changed'))
+
+    if (userRole === 'super_admin') {
+      // Redirect super_admin directly to dashboard
+      router.push('/dashboard')
+    } else if (userRole === 'admin') {
+      // Redirect admin to welcome page first
+      router.push('/welcome')
+    } else {
+      // Redirect guest/kontributor/reviewer to landing page
+      router.push('/')
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Login failed. Please try again.'
+    }
   } finally {
     isLoading.value = false
   }

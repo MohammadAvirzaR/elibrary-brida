@@ -1,7 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RoleType } from '@/middleware/roleGuard'
+import { ROLES } from '@/middleware/roleGuard'
+
+// Extend route meta to include roles
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    roles?: RoleType[]
+    layout?: string
+    title?: string
+  }
+}
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  history: createWebHistory((import.meta as any).env?.BASE_URL),
   routes: [
     // ========== PUBLIC ROUTES ==========
     {
@@ -99,6 +112,15 @@ const router = createRouter({
         title: 'Forgot Password'
       }
     },
+    {
+      path: '/welcome',
+      name: 'welcome',
+      component: () => import('@/pages/WelcomeView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Welcome'
+      }
+    },
 
     // ========== DASHBOARD ROUTES (Protected) ==========
     {
@@ -107,6 +129,7 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/DashboardView.vue'),
       meta: {
         requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // Only super_admin and admin can access
         title: 'Dashboard'
       }
     },
@@ -142,9 +165,10 @@ const router = createRouter({
     {
       path: '/roles',
       name: 'roles',
-      component: () => import('@/pages/dashboard/RoleView.vue'),
+      component: () => import('@/pages/dashboard/RolesView.vue'),
       meta: {
         requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage roles
         title: 'Role Management'
       }
     },
@@ -153,14 +177,24 @@ const router = createRouter({
     {
       path: '/users',
       name: 'users',
-      component: () => import('@/pages/dashboard/UserView.vue'),
+      component: () => import('@/pages/dashboard/UsersView.vue'),
       meta: {
         requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // super_admin and admin can manage users
         title: 'User Management'
       }
     },
 
     // ========== 404 NOT FOUND ==========
+    {
+      path: '/unauthorized',
+      name: 'unauthorized',
+      component: () => import('@/pages/UnauthorizedView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Access Denied'
+      }
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -187,7 +221,7 @@ const router = createRouter({
 })
 
 // ========== NAVIGATION GUARD ==========
-// Proteksi route yang perlu authentication
+// Proteksi route yang perlu authentication dan role-based access control
 router.beforeEach((to, from, next) => {
   // Update document title
   document.title = `${to.meta.title || 'E-Library'} | BRIDA Sulawesi Tenggara`
@@ -198,6 +232,9 @@ router.beforeEach((to, from, next) => {
   // Check if user is logged in
   const isAuthenticated = checkAuth()
 
+  // Get current user
+  const user = getCurrentUser()
+
   if (requiresAuth && !isAuthenticated) {
     // Redirect to login if not authenticated
     // Save attempted route for redirect after login
@@ -206,13 +243,49 @@ router.beforeEach((to, from, next) => {
       query: { redirect: to.fullPath }
     })
   } else if (to.name === 'login' && isAuthenticated) {
-    // Redirect to dashboard if already logged in
-    next({ name: 'dashboard' })
-  } else {
+    // Redirect to welcome if already logged in
+    next({ name: 'welcome' })
+  } else if (requiresAuth && isAuthenticated) {
+    // Check role-based access if route has role requirements
+    const requiredRoles = to.meta.roles
+
+    if (requiredRoles && requiredRoles.length > 0) {
+      // Check if user has required role
+      const userRole = user?.role as RoleType
+
+      if (!requiredRoles.includes(userRole)) {
+        // User doesn't have required role
+        console.warn(`Access denied. Required roles: ${requiredRoles.join(', ')}, User role: ${userRole}`)
+
+        // Redirect to unauthorized page
+        next({ name: 'unauthorized' })
+        return
+      }
+    }
+
     // Allow navigation
+    next()
+  } else {
+    // Allow navigation for public routes
     next()
   }
 })
+
+// ========== HELPER FUNCTIONS ==========
+
+/**
+ * Get current user from localStorage
+ */
+function getCurrentUser() {
+  const userStr = localStorage.getItem('user')
+  if (!userStr) return null
+
+  try {
+    return JSON.parse(userStr)
+  } catch {
+    return null
+  }
+}
 
 // ========== AUTH CHECK FUNCTION ==========
 /**
@@ -230,7 +303,7 @@ function checkAuth(): boolean {
       // const payload = JSON.parse(atob(token.split('.')[1]))
       // return payload.exp * 1000 > Date.now()
       return true
-    } catch (error) {
+    } catch {
       // Invalid token
       localStorage.removeItem('auth_token')
       return false

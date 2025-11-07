@@ -32,7 +32,7 @@
             Dashboard
           </span>
         </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
+        <router-link to="/users" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
           <i-lucide-user class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -42,8 +42,8 @@
           >
             User
           </span>
-        </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
+        </router-link>
+        <router-link to="/roles" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
           <i-lucide-shield-check class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -53,7 +53,7 @@
           >
             Role
           </span>
-        </a>
+        </router-link>
         <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
           <i-lucide-user-circle class="w-5 h-5 flex-shrink-0" />
           <span

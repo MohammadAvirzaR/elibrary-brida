@@ -1,6 +1,6 @@
 <template>
   <section
-    class="flex flex-col items-center justify-center gap-8 w-full max-w-2xl mx-auto text-center px-6 min-h-[85vh]"
+    class="flex flex-col items-center justify-center gap-8 w-full max-w-2xl mx-auto text-center px-6 min-h-[90vh]"
   >
     <div class="space-y-3">
       <h2 class="text-4xl md:text-5xl font-heading font-bold text-neutral-900 tracking-tight">
