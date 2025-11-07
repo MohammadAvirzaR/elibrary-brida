@@ -22,6 +22,10 @@ class RoleSeeder extends Seeder
                 'description' => 'Bertanggung jawab mengelola data dokumen dan pengguna dalam lingkup sistem tertentu.',
             ],
             [
+                'name' => 'contributor',
+                'description' => 'Menyumbang dokumen baru atau mengajukan perubahan pada dokumen yang ada.',
+            ],
+            [
                 'name' => 'reviewer',
                 'description' => 'Memeriksa dan meninjau dokumen sebelum disetujui atau ditolak.',
             ],

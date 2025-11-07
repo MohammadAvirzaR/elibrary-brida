@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('contact')->nullable();
             $table->text('bio')->nullable();
             $table->string('membership_proof')->nullable();
-            $table->enum('profession', [
+            $table->enum('profession',  [
                 'pelajar_mahasiswa', 
                 'dosen_tenaga_pendidik', 
                 'pns_tni_polri_dsb', 

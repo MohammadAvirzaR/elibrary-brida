@@ -27,6 +27,7 @@ class DocumentFactory extends Factory
             'upload_date' => now(),
             'license_id' => License::inRandomOrder()->value('id') ?? 1,
             'access_right' => $this->faker->randomElement(['public', 'private']),
+            'is_featured' => $this->faker->boolean(20), // 20% chance to be featured
         ];
     }
 }

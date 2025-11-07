@@ -1,3 +1,5 @@
-- [x] Add featuredContent method to DocumentController that returns featured, latest, and most downloaded documents (10 each)
-- [x] Add route /documents/featured-content in routes/api.php
-- [x] Test the endpoint by running php artisan route:list
+# TODO: Fix Login Double Hashing Issue
+
+## Steps to Complete
+- [ ] Edit AuthController.php to remove manual bcrypt in register method, letting the User model mutator handle password hashing.
+- [ ] Test login functionality to ensure it works after the fix.
