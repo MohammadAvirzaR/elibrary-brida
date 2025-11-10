@@ -54,6 +54,7 @@ class RoleController extends Controller
             $role = Role::create([
                 'name' => $request->name,
                 'description' => $request->description,
+                'permissions' => $request->permissions ?? [],
             ]);
 
             return response()->json([
@@ -96,6 +97,7 @@ class RoleController extends Controller
             $role->update([
                 'name' => $request->name,
                 'description' => $request->description,
+                'permissions' => $request->permissions ?? [],
             ]);
 
             return response()->json([

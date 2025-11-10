@@ -149,10 +149,10 @@ export const api = {
 
     getById: (id: number) => apiCall(`/users/${id}`, { method: 'GET' }, true),
 
-    create: (data: { name: string; email: string; institution: string; password: string; role_id: number }) =>
+    create: (data: { name: string; email: string; institution?: string; phone?: string; address?: string; password: string; role_id: number }) =>
       apiCall('/users', { method: 'POST', body: JSON.stringify(data) }, true),
 
-    update: (id: number, data: { name?: string; email?: string; institution?: string; role_id?: number }) =>
+    update: (id: number, data: { name?: string; email?: string; institution?: string; phone?: string; address?: string; password?: string; role_id?: number }) =>
       apiCall(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
 
     delete: (id: number) =>

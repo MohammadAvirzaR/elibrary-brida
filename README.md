@@ -1,97 +1,350 @@
-# elibrary-brida-fe
+# 📚 E-Library BRIDA
 
-This template should help get you started developing with Vue 3 in Vite.
+> Sistem Manajemen E-Library untuk BRIDA Sulawesi Tenggara
 
-## Recommended IDE Setup
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](CHANGELOG.md)
+[![Laravel](https://img.shields.io/badge/Laravel-10-red.svg)](https://laravel.com)
+[![Vue](https://img.shields.io/badge/Vue-3-green.svg)](https://vuejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org)
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+---
 
-## Recommended Browser Setup
+## 📋 Daftar Isi
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- [Tentang Proyek](#tentang-proyek)
+- [Tech Stack](#tech-stack)
+- [Struktur Project](#struktur-project)
+- [Quick Start](#quick-start)
+- [Fitur Utama](#fitur-utama)
+- [Role & Permissions](#role--permissions)
+- [Dokumentasi](#dokumentasi)
+- [Development](#development)
 
-## Type Support for `.vue` Imports in TS
+---
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## 🎯 Tentang Proyek
 
-## Customize configuration
+E-Library BRIDA adalah sistem manajemen perpustakaan digital yang dibangun untuk BRIDA Sulawesi Tenggara. Sistem ini memiliki fitur lengkap untuk manajemen dokumen, user, dan role-based access control.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+### Fitur Unggulan
+✨ **Smart Role Change Notification** - Notifikasi otomatis saat role user berubah  
+🎨 **Discord-Style Role Management** - Drag & drop hierarchy dengan color coding  
+📤 **Document Upload & Management** - Upload, search, dan manage dokumen  
+🔐 **Granular Permissions** - Kontrol akses detail per role  
+📊 **Admin Dashboard** - Analytics dan user management  
 
-## Project Setup
+---
 
-```sh
-npm install
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework**: Vue 3 (Composition API)
+- **Language**: TypeScript
+- **Build Tool**: Vite 7.1.7
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn-vue, Select2
+- **State Management**: Pinia
+- **Routing**: Vue Router
+
+### Backend
+- **Framework**: Laravel 10
+- **Database**: MySQL
+- **Authentication**: Laravel Sanctum (Token-based)
+- **API**: RESTful API
+
+---
+
+## 📁 Struktur Project
+
 ```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-
-\# 📚 E-Library BRIDA — Monorepo
-
-
-
-> Sistem E-Library BRIDA Sulawesi Tenggara (Frontend + Backend)
-
-
-
-\## Struktur Folder
-
 elibrary-brida/
+├── elibrary-brida-fe/          # Frontend (Vue 3)
+│   ├── src/
+│   │   ├── components/         # Reusable components
+│   │   ├── composables/        # Vue composables
+│   │   ├── pages/             # Page components
+│   │   │   ├── auth/          # Login, Register
+│   │   │   ├── dashboard/     # Admin dashboard
+│   │   │   └── public/        # Public pages
+│   │   ├── router/            # Vue Router config
+│   │   ├── services/          # API services
+│   │   ├── stores/            # Pinia stores
+│   │   └── middleware/        # Route guards
+│   └── package.json
+│
+├── elibrary-brida-be/          # Backend (Laravel)
+│   ├── app/
+│   │   ├── Http/Controllers/
+│   │   ├── Models/
+│   │   └── Middleware/
+│   ├── database/
+│   │   ├── migrations/
+│   │   └── seeders/
+│   └── routes/
+│       └── api.php
+│
+├── CHANGELOG.md               # Update history (PENTING!)
+├── CREDENTIALS.md             # System credentials
+└── README.md                  # This file
+```
 
-├─ elibrary-brida-fe/ → Vue 3 + Tailwind + Shadcn
+---
 
-├─ elibrary-brida-be/ → (akan ditambahkan nanti)
+## 🚀 Quick Start
 
+### Prerequisites
+- Node.js >= 18.x
+- PHP >= 8.1
+- Composer
+- MySQL >= 8.0
 
+### 1️⃣ Clone Repository
+```bash
+git clone https://github.com/MohammadAvirzaR/elibrary-brida.git
+cd elibrary-brida
+```
 
-\## Status Saat Ini
-
-\- ✅ Frontend development in progress
-
-\- ⏳ Backend development (Laravel API) in progress
-
-
-
-\## Setup
-
+### 2️⃣ Setup Frontend
+```bash
 cd elibrary-brida-fe
-
 npm install
+cp .env.example .env         # Configure API endpoint
+npm run dev                  # Dev server: http://localhost:5173
+```
 
-npm run dev
+### 3️⃣ Setup Backend
+```bash
+cd ../elibrary-brida-be
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed   # Create tables & seed data
+php artisan serve            # Dev server: http://localhost:8000
+```
 
+### 4️⃣ Access Aplikasi
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000/api
+- **Credentials**: Lihat `CREDENTIALS.md`
 
+---
 
-\## Branch Strategy
+## ✨ Fitur Utama
 
-\- main → final release
+### 🔐 Authentication & Authorization
+- Login & Register dengan validation
+- Role-based access control (RBAC)
+- Token-based authentication (Sanctum)
+- Auto-redirect berdasarkan role
+- **Smart role change notification** ⭐ NEW!
 
-\- develop → active dev
+### 👥 User Management (Admin)
+- CRUD users dengan flexible validation
+- Assign roles ke users
+- Protect super_admin dari edit/delete
+- Real-time role change detection
 
-\- feature/\* → per fitur
+### 📑 Role Management
+- **Discord-style interface** dengan drag & drop
+- Color-coded roles
+- Granular permission system
+- Member count per role
+- Display options (mentionable, separated)
 
-\- fix/\* → bug fix
+### 📤 Document Management
+- Upload dokumen (PDF, DOC, etc.)
+- Advanced search & filters
+- Document categorization
+- Download tracking
 
+### 📊 Dashboard
+- **Admin Dashboard**: User stats, document stats, activity logs
+- **User Dashboard**: Upload, my documents, profile
 
+---
 
+## 🎭 Role & Permissions
+
+| Role | Level | Access |
+|------|-------|--------|
+| **Super Admin** | 5 | Full system access, tidak bisa diedit |
+| **Admin** | 4 | User management, document approval |
+| **Contributor** | 3 | Upload & manage own documents |
+| **Reviewer** | 2 | Review & comment documents |
+| **Guest** | 1 | View & download public documents |
+
+**Note**: Default role untuk user baru adalah `Guest`.
+
+---
+
+## 📚 Dokumentasi
+
+### File Dokumentasi Utama
+- **`CHANGELOG.md`** ⭐ - **WAJIB BACA** untuk update terbaru
+- **`CREDENTIALS.md`** - Akses credentials sistem
+- **`README.md`** - Dokumentasi utama (file ini)
+
+### Role Change Notification
+Sistem notifikasi cerdas yang mendeteksi perubahan role:
+- ✅ **Login pertama**: Save role, no popup
+- ✅ **Login berikutnya (role sama)**: No popup
+- ✅ **Login berikutnya (role berubah)**: Show popup dengan old → new role
+- ✅ **Auto-hide**: 15 detik dengan progress bar
+- ✅ **In-session detection**: Polling setiap 10 detik
+
+Lihat `CHANGELOG.md` v1.5.0 untuk detail lengkap.
+
+### API Documentation
+Base URL: `http://localhost:8000/api`
+
+**Authentication**
+```bash
+POST /api/login
+POST /api/register
+POST /api/logout
+```
+
+**Users** (Admin only)
+```bash
+GET    /api/users
+POST   /api/users
+PUT    /api/users/{id}
+DELETE /api/users/{id}
+```
+
+**Roles**
+```bash
+GET    /api/roles
+POST   /api/roles
+PUT    /api/roles/{id}
+DELETE /api/roles/{id}
+```
+
+**Documents**
+```bash
+GET    /api/documents
+POST   /api/documents
+GET    /api/documents/{id}
+PUT    /api/documents/{id}
+DELETE /api/documents/{id}
+```
+
+---
+
+## 👨‍💻 Development
+
+### Branch Strategy
+```
+main          → Production-ready code
+development   → Active development (default branch)
+feature/*     → New features
+fix/*         → Bug fixes
+```
+
+### Workflow
+1. Checkout `development` branch
+2. Create feature branch: `git checkout -b feature/your-feature`
+3. Make changes & commit
+4. Push & create Pull Request ke `development`
+5. After review → merge ke `development`
+6. Testing di `development`
+7. Merge ke `main` untuk production
+
+### Commit Message Convention
+```
+feat: Add role change notification system
+fix: Fix empty role dropdown
+docs: Update CHANGELOG.md
+refactor: Remove unused files
+style: Update modal styling
+```
+
+### Update CHANGELOG
+**PENTING**: Setiap kali ada update, tambahkan entry di `CHANGELOG.md`:
+```markdown
+## [1.X.0] - YYYY-MM-DD
+
+### ✨ Added
+- Feature baru yang ditambahkan
+
+### 🔧 Modified
+- File yang dimodifikasi
+
+### 🐛 Fixed
+- Bug yang diperbaiki
+
+### 🗑️ Removed
+- File/feature yang dihapus
+```
+
+---
+
+## 🧪 Testing
+
+### Frontend Testing
+```bash
+npm run test              # Run unit tests
+npm run test:e2e         # Run E2E tests (coming soon)
+npm run lint             # Check linting
+```
+
+### Backend Testing
+```bash
+php artisan test         # Run PHPUnit tests
+```
+
+### Manual Testing Checklist
+- [ ] Login dengan semua role
+- [ ] Test role change notification
+- [ ] Test user CRUD
+- [ ] Test document upload
+- [ ] Test responsive design
+- [ ] Check browser console errors
+
+---
+
+## 🚀 Deployment
+
+### Build Frontend
+```bash
+cd elibrary-brida-fe
+npm run build            # Output: dist/
+```
+
+### Production Checklist
+- [ ] Update `.env` dengan production credentials
+- [ ] Run migrations di production database
+- [ ] Build frontend assets
+- [ ] Set proper file permissions
+- [ ] Configure web server (Nginx/Apache)
+- [ ] Enable HTTPS
+- [ ] Setup backup schedule
+
+---
+
+## 📝 License
+
+This project is proprietary and confidential.  
+© 2024 BRIDA Sulawesi Tenggara. All rights reserved.
+
+---
+
+## 👤 Contact
+
+**Developer**: MohammadAvirzaR  
+**Project**: E-Library BRIDA  
+**Version**: 1.5.0  
+**Last Updated**: 2024-11-10
+
+---
+
+## 📌 Important Links
+
+- 📖 [CHANGELOG.md](CHANGELOG.md) - **Update history & release notes**
+- 🔑 [CREDENTIALS.md](CREDENTIALS.md) - System credentials
+- 🐛 [Issues](https://github.com/MohammadAvirzaR/elibrary-brida/issues) - Bug reports
+- 🎯 [Project Board](https://github.com/MohammadAvirzaR/elibrary-brida/projects) - Development tracking
+
+---
+
+**⭐ Untuk informasi update terbaru, selalu cek [CHANGELOG.md](CHANGELOG.md)!**

@@ -41,13 +41,13 @@
         <!-- Sidebar - Filters -->
         <aside class="lg:col-span-1">
           <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-            <button
+            <!-- <button
               @click="openAdvancedSearch"
               class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition mb-6 flex items-center justify-center gap-2"
             >
               <i-lucide-sliders-horizontal class="w-4 h-4" />
               Advanced Search
-            </button>
+            </button> -->
 
             <AdvancedSearchModal
               :is-open="isAdvancedSearchOpen"
@@ -247,9 +247,9 @@ const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
 const isAdvancedSearchOpen = ref(false);
 
-const openAdvancedSearch = () => {
-  isAdvancedSearchOpen.value = true
-}
+// const openAdvancedSearch = () => {
+//   isAdvancedSearchOpen.value = true
+// }
 
 const closeAdvancedSearch = () => {
   isAdvancedSearchOpen.value = false

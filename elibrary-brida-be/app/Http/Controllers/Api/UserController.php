@@ -20,9 +20,11 @@ class UserController extends Controller
             $users = User::with('role')->get()->map(function ($user) {
                 return [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -54,9 +56,11 @@ class UserController extends Controller
                 'success' => true,
                 'data' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -85,6 +89,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'institution' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id'
         ]);
@@ -100,8 +106,11 @@ class UserController extends Controller
         try {
             $user = User::create([
                 'name' => $request->name,
+                'full_name' => $request->name, // Sync with name
                 'email' => $request->email,
                 'institution' => $request->institution,
+                'phone' => $request->phone,
+                'address' => $request->address,
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
             ]);
@@ -111,9 +120,11 @@ class UserController extends Controller
                 'message' => 'User created successfully',
                 'data' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                 ]
@@ -136,6 +147,8 @@ class UserController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
             'institution' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
             'password' => 'nullable|string|min:8',
             'role_id' => 'sometimes|required|exists:roles,id'
         ]);
@@ -152,9 +165,14 @@ class UserController extends Controller
             $user = User::findOrFail($id);
 
             $updateData = [];
-            if ($request->has('name')) $updateData['name'] = $request->name;
+            if ($request->has('name')) {
+                $updateData['name'] = $request->name;
+                $updateData['full_name'] = $request->name; // Sync with name
+            }
             if ($request->has('email')) $updateData['email'] = $request->email;
             if ($request->has('institution')) $updateData['institution'] = $request->institution;
+            if ($request->has('phone')) $updateData['phone'] = $request->phone;
+            if ($request->has('address')) $updateData['address'] = $request->address;
             if ($request->has('role_id')) $updateData['role_id'] = $request->role_id;
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($request->password);
@@ -167,9 +185,11 @@ class UserController extends Controller
                 'message' => 'User updated successfully',
                 'data' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                 ]

@@ -18,12 +18,16 @@ class User extends Authenticatable
     protected $fillable = [
         'role_id',
         'full_name',
+        'name', // For frontend compatibility
         'username',
         'email',
         'password',
         'sso_id',
         'unit_name',
+        'institution', // For frontend compatibility
         'contact',
+        'phone', // For frontend compatibility
+        'address', // For frontend compatibility
         'bio',
         'membership_proof',
         'profession',

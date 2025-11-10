@@ -32,18 +32,30 @@
             Dashboard
           </span>
         </router-link>
-        <router-link to="/users" class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group">
-          <i-lucide-user class="w-5 h-5 flex-shrink-0" />
+
+        <!-- User Management - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/users"
+          class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group"
+        >
+          <i-lucide-users class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
               'font-semibold transition-opacity duration-300',
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            User
+            User Management
           </span>
         </router-link>
-        <router-link to="/roles" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
+
+        <!-- Role Management - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/roles"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
           <i-lucide-shield-check class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -51,42 +63,27 @@
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            Role
+            Role Management
           </span>
         </router-link>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-user-circle class="w-5 h-5 flex-shrink-0" />
+
+        <!-- Profile Management - Admin & Super Admin -->
+        <router-link
+          v-if="userRole === 'admin' || userRole === 'super_admin'"
+          to="/profile-management"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-user-cog class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
               'font-semibold transition-opacity duration-300',
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            Profile
+            Profile Management
           </span>
-        </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-settings class="w-5 h-5 flex-shrink-0" />
-          <span
-            :class="[
-              'font-semibold transition-opacity duration-300',
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
-            ]"
-          >
-            Setting
-          </span>
-        </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-bell class="w-5 h-5 flex-shrink-0" />
-          <span
-            :class="[
-              'font-semibold transition-opacity duration-300',
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
-            ]"
-          >
-            Notification
-          </span>
-        </a>
+        </router-link>
+
         <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
@@ -125,14 +122,12 @@
           <!-- User Info -->
           <div class="flex items-center gap-4">
             <div class="text-right">
-              <p class="font-bold text-gray-800">{{ username || 'Moni Roy' }}</p>
-              <p class="text-sm text-gray-700">Admin</p>
+              <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>
+              <p class="text-sm text-gray-700 capitalize">{{ userRole || 'admin' }}</p>
             </div>
-            <img
-              src="https://i.pravatar.cc/150?img=5"
-              alt="Profile"
-              class="w-12 h-12 rounded-full border-2 border-white shadow-md"
-            />
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+              {{ username ? username.charAt(0).toUpperCase() : 'A' }}
+            </div>
           </div>
         </div>
       </header>
@@ -378,7 +373,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 class="text-xl font-bold text-gray-900">
@@ -632,6 +627,7 @@ interface User {
 // Sidebar & User State
 const isSidebarOpen = ref(true)
 const username = ref('')
+const userRole = ref('')
 const topSearchQuery = ref('')
 
 // Auto-refresh interval
@@ -644,8 +640,10 @@ onMounted(() => {
     try {
       const user = JSON.parse(userStr)
       username.value = user.name || 'Admin'
+      userRole.value = user.role || ''
     } catch {
       username.value = 'Admin'
+      userRole.value = ''
     }
   }
 
@@ -951,6 +949,25 @@ const handleSubmit = async () => {
 
       if (response.success) {
         await loadUsers()
+
+        // Check if the updated user is the current logged-in user
+        // If yes, update localStorage to trigger role change detection
+        const currentUser = localStorage.getItem('user')
+        if (currentUser) {
+          const user = JSON.parse(currentUser)
+          if (user.id === formData.value.id) {
+            // Update user data in localStorage
+            user.role = formData.value.role
+            if (formData.value.name && formData.value.name.trim()) {
+              user.name = formData.value.name
+            }
+            if (formData.value.email && formData.value.email.trim()) {
+              user.email = formData.value.email
+            }
+            localStorage.setItem('user', JSON.stringify(user))
+          }
+        }
+
         alert('User berhasil diupdate!')
       }
     } else {

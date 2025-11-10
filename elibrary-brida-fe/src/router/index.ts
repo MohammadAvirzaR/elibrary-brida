@@ -112,15 +112,6 @@ const router = createRouter({
         title: 'Forgot Password'
       }
     },
-    {
-      path: '/welcome',
-      name: 'welcome',
-      component: () => import('@/pages/WelcomeView.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'Welcome'
-      }
-    },
 
     // ========== DASHBOARD ROUTES (Protected) ==========
     {
@@ -172,6 +163,16 @@ const router = createRouter({
         title: 'Role Management'
       }
     },
+    {
+      path: '/role-management',
+      name: 'role-management',
+      component: () => import('@/pages/dashboard/RoleManagementView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage roles (Discord-style)
+        title: 'Role Management (Discord Style)'
+      }
+    },
 
     // ========== USER ROUTES (Protected) ==========
     {
@@ -180,8 +181,20 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/UsersView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // super_admin and admin can manage users
+        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage users
         title: 'User Management'
+      }
+    },
+
+    // ========== PROFILE MANAGEMENT (Admin & Super Admin) ==========
+    {
+      path: '/profile-management',
+      name: 'profile-management',
+      component: () => import('@/pages/dashboard/ProfileManagementView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // Admin and Super Admin can manage profiles
+        title: 'Profile Management'
       }
     },
 
@@ -255,8 +268,14 @@ router.beforeEach((to, from, next) => {
       query: { redirect: to.fullPath }
     })
   } else if (to.name === 'login' && isAuthenticated) {
-    // Redirect to welcome if already logged in
-    next({ name: 'welcome' })
+    // Redirect to appropriate dashboard if already logged in
+    const userRole = user?.role as RoleType
+
+    if (userRole === ROLES.SUPER_ADMIN || userRole === ROLES.ADMIN) {
+      next({ name: 'dashboard' })
+    } else {
+      next({ name: 'my-dashboard' })
+    }
   } else if (requiresAuth && isAuthenticated) {
     // Check role-based access if route has role requirements
     const requiredRoles = to.meta.roles

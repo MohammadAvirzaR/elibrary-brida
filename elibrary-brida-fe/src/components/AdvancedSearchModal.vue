@@ -8,7 +8,7 @@
         @click.self="closeModal"
       >
         <!-- Modal Content -->
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[100vh] max-h-[100vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
           <!-- Header -->
           <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
             <button

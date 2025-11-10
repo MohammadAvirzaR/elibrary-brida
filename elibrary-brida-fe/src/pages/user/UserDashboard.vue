@@ -76,11 +76,8 @@
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-3xl font-bold text-neutral-900">
-              Selamat Datang, {{ userName }}! 👋
+              Selamat Datang, {{ userName }}
             </h1>
-            <p class="text-neutral-600 mt-2">
-              Kelola dokumen Anda dengan mudah dan cepat
-            </p>
           </div>
           <div class="text-right">
             <p class="text-sm text-neutral-500">Status Akun</p>
@@ -383,7 +380,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
+// import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
 
 const router = useRouter()
 

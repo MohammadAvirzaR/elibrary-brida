@@ -159,15 +159,15 @@ const handleLogin = async () => {
     // Dispatch event to notify other components
     window.dispatchEvent(new Event('auth-changed'))
 
-    if (userRole === 'super_admin') {
-      // Redirect super_admin directly to dashboard
+    // Set last known role for role change detection
+    localStorage.setItem('last_known_role', userRole)
+
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      // Redirect super_admin and admin to dashboard
       router.push('/dashboard')
-    } else if (userRole === 'admin') {
-      // Redirect admin to welcome page first
-      router.push('/welcome')
     } else {
-      // Redirect guest/kontributor/reviewer to landing page
-      router.push('/')
+      // Redirect regular users to their dashboard
+      router.push('/my-dashboard')
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

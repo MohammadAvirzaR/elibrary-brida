@@ -12,6 +12,11 @@ class Role extends Model
     protected $fillable = [
         'name',        // nama peran: Admin, Petugas, Mahasiswa, dst
         'description', // deskripsi singkat peran
+        'permissions', // JSON array of permissions
+    ];
+
+    protected $casts = [
+        'permissions' => 'array',
     ];
 
     /**

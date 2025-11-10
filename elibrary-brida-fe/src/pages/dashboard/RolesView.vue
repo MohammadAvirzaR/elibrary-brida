@@ -32,18 +32,30 @@
             Dashboard
           </span>
         </router-link>
-        <a href="/users" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-user class="w-5 h-5 flex-shrink-0" />
+
+        <!-- User Management - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/users"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-users class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
               'font-semibold transition-opacity duration-300',
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            User
+            User Management
           </span>
-        </a>
-        <router-link to="/roles" class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group">
+        </router-link>
+
+        <!-- Role Management - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/roles"
+          class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group"
+        >
           <i-lucide-shield-check class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -51,42 +63,27 @@
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            Role
+            Role Management
           </span>
         </router-link>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-user-circle class="w-5 h-5 flex-shrink-0" />
+
+        <!-- Profile Management - Admin & Super Admin -->
+        <router-link
+          v-if="userRole === 'admin' || userRole === 'super_admin'"
+          to="/profile-management"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-user-cog class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
               'font-semibold transition-opacity duration-300',
               isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
             ]"
           >
-            Profile
+            Profile Management
           </span>
-        </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-settings class="w-5 h-5 flex-shrink-0" />
-          <span
-            :class="[
-              'font-semibold transition-opacity duration-300',
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
-            ]"
-          >
-            Setting
-          </span>
-        </a>
-        <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
-          <i-lucide-bell class="w-5 h-5 flex-shrink-0" />
-          <span
-            :class="[
-              'font-semibold transition-opacity duration-300',
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
-            ]"
-          >
-            Notification
-          </span>
-        </a>
+        </router-link>
+
         <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
@@ -125,14 +122,12 @@
           <!-- User Info -->
           <div class="flex items-center gap-4">
             <div class="text-right">
-              <p class="font-bold text-gray-800">{{ username || 'Moni Roy' }}</p>
-              <p class="text-sm text-gray-700">Admin</p>
+              <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>
+              <p class="text-sm text-gray-700 capitalize">{{ userRole || 'admin' }}</p>
             </div>
-            <img
-              src="https://i.pravatar.cc/150?img=5"
-              alt="Profile"
-              class="w-12 h-12 rounded-full border-2 border-white shadow-md"
-            />
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+              {{ username ? username.charAt(0).toUpperCase() : 'A' }}
+            </div>
           </div>
         </div>
       </header>
@@ -331,7 +326,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 class="text-xl font-bold text-gray-900">
@@ -377,30 +372,42 @@
             <label class="block text-sm font-medium text-gray-700 mb-3">
               Permissions
             </label>
-            <div class="space-y-3 bg-gray-50 p-4 rounded-lg">
+            <div class="space-y-3 bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
               <div
                 v-for="permission in availablePermissions"
                 :key="permission.key"
-                class="flex items-start"
+                class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
               >
-                <input
-                  :id="`permission-${permission.key}`"
-                  v-model="formData.permissions"
-                  :value="permission.key"
-                  type="checkbox"
-                  class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label
-                  :for="`permission-${permission.key}`"
-                  class="ml-3 cursor-pointer"
-                >
+                <div class="flex-1 pr-4">
                   <div class="text-sm font-medium text-gray-900">
                     {{ permission.label }}
                   </div>
-                  <div class="text-xs text-gray-500">
+                  <div class="text-xs text-gray-500 mt-0.5">
                     {{ permission.description }}
                   </div>
-                </label>
+                </div>
+                <!-- Toggle Switch -->
+                <button
+                  type="button"
+                  @click="togglePermission(permission.key)"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    formData.permissions.includes(permission.key)
+                      ? 'bg-blue-600'
+                      : 'bg-gray-200'
+                  ]"
+                  role="switch"
+                  :aria-checked="formData.permissions.includes(permission.key)"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      formData.permissions.includes(permission.key)
+                        ? 'translate-x-5'
+                        : 'translate-x-0'
+                    ]"
+                  />
+                </button>
               </div>
             </div>
           </div>
@@ -484,6 +491,7 @@ interface Permission {
 // Sidebar & User State
 const isSidebarOpen = ref(true)
 const username = ref('')
+const userRole = ref('')
 const topSearchQuery = ref('')
 
 // Get user from localStorage
@@ -493,8 +501,10 @@ onMounted(() => {
     try {
       const user = JSON.parse(userStr)
       username.value = user.name || 'Admin'
+      userRole.value = user.role || ''
     } catch {
       username.value = 'Admin'
+      userRole.value = ''
     }
   }
 })
@@ -786,6 +796,15 @@ const nextPage = () => {
 
 const goToPage = (page: number) => {
   currentPage.value = page
+}
+
+const togglePermission = (permissionKey: string) => {
+  const index = formData.value.permissions.indexOf(permissionKey)
+  if (index > -1) {
+    formData.value.permissions.splice(index, 1)
+  } else {
+    formData.value.permissions.push(permissionKey)
+  }
 }
 
 // Auto-refresh interval
