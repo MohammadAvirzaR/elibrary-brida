@@ -27,13 +27,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Super Admin only routes
-    Route::middleware(['role:Super Admin'])->group(function () {
-        // Roles management
-        Route::get('/roles', [RoleController::class, 'index']);
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin')->group(function () {
+        // Roles management (CRUD except index)
         Route::post('/roles', [RoleController::class, 'store']);
         Route::put('/roles/{id}', [RoleController::class, 'update']);
         Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
         Route::get('/permissions', [RoleController::class, 'permissions']);
+    });
+
+    // Super Admin dan Admin bisa lihat list roles (untuk dropdown di user management)
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index']);
 
         // Users management
         Route::get('/users', [UserController::class, 'index']);
@@ -44,19 +48,19 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Hanya Super Admin dan Admin yang boleh mengelola semua dokumen
-    Route::middleware(['role:Super Admin,Admin'])->group(function () {
-    Route::post('/documents', [DocumentController::class, 'store']);
-    Route::put('/documents/{id}', [DocumentController::class, 'update']);
-    Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin')->group(function () {
+        Route::post('/documents', [DocumentController::class, 'store']);
+        Route::put('/documents/{id}', [DocumentController::class, 'update']);
+        Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
     });
 
     // Reviewer hanya bisa meninjau dokumen
-    Route::middleware(['role:Reviewer'])->group(function () {
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer')->group(function () {
         Route::get('/documents/review', [DocumentController::class, 'review']);
     });
 
     // Contributor hanya bisa upload dokumen
-    Route::middleware(['role:Contributor'])->group(function () {
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor')->group(function () {
         Route::post('/documents/upload', [DocumentController::class, 'upload']);
     });
 

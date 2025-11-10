@@ -187,11 +187,13 @@ const handleRegister = async () => {
       }))
     }
 
-    // Redirect to home page (landing page) after 1.5 seconds
+    // Redirect to user dashboard after 1.5 seconds
     setTimeout(() => {
       // Dispatch event to notify other components
       window.dispatchEvent(new Event('auth-changed'))
-      router.push('/')
+
+      // New users with guest role go directly to user dashboard
+      router.push('/my-dashboard')
     }, 1500)
 
   } catch (error: unknown) {

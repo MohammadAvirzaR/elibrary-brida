@@ -15,7 +15,7 @@ class RoleController extends Controller
     public function index()
     {
         try {
-            $roles = Role::with('permissions')->get();
+            $roles = Role::all();
 
             return response()->json([
                 'success' => true,
@@ -56,16 +56,10 @@ class RoleController extends Controller
                 'description' => $request->description,
             ]);
 
-            // Sync permissions if provided
-            if ($request->has('permissions')) {
-                // Assuming you have a permissions table and relationship
-                // $role->permissions()->sync($request->permissions);
-            }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Role created successfully',
-                'data' => $role->load('permissions')
+                'data' => $role
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -104,15 +98,10 @@ class RoleController extends Controller
                 'description' => $request->description,
             ]);
 
-            // Sync permissions if provided
-            if ($request->has('permissions')) {
-                // $role->permissions()->sync($request->permissions);
-            }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Role updated successfully',
-                'data' => $role->load('permissions')
+                'data' => $role
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([

@@ -31,7 +31,7 @@
           <li><router-link to="/" class="hover:text-neutral-900 transition-colors">Home</router-link></li>
           <li><router-link to="/catalog" class="hover:text-neutral-900 transition-colors">Katalog</router-link></li>
           <li><router-link to="/faq" class="hover:text-neutral-900 transition-colors">FAQ</router-link></li>
-          <li><router-link to="/unggah-mandiri" class="hover:text-neutral-900 transition-colors">Unggah Mandiri</router-link></li>
+          <li><router-link to="/upload" class="hover:text-neutral-900 transition-colors">Unggah Mandiri</router-link></li>
         </ul>
 
         <!-- Show Login/Register if NOT logged in -->
@@ -63,7 +63,7 @@
             <p class="text-sm font-semibold text-neutral-900">{{ userName }}</p>
             <p class="text-xs text-neutral-500">{{ userRole }}</p>
           </div>
-          <div class="relative group">
+          <div class="relative profile-dropdown">
             <button
               @click="toggleProfileMenu"
               class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
@@ -72,36 +72,44 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div
-              v-if="showProfileMenu"
-              class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2 z-50"
+            <transition
+              enter-active-class="transition ease-out duration-100"
+              enter-from-class="transform opacity-0 scale-95"
+              enter-to-class="transform opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="transform opacity-100 scale-100"
+              leave-to-class="transform opacity-0 scale-95"
             >
-              <router-link
-                to="/dashboard"
-                v-if="canAccessDashboard"
-                class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
-                @click="showProfileMenu = false"
+              <div
+                v-if="showProfileMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2 z-50"
               >
-                <i-lucide-layout-dashboard class="w-4 h-4 inline mr-2" />
-                Dashboard
-              </router-link>
-              <router-link
-                to="/profile"
-                class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
-                @click="showProfileMenu = false"
-              >
-                <i-lucide-user class="w-4 h-4 inline mr-2" />
-                Profile
-              </router-link>
-              <hr class="my-2 border-neutral-200" />
-              <button
-                @click="handleLogout"
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <i-lucide-log-out class="w-4 h-4 inline mr-2" />
-                Logout
-              </button>
-            </div>
+                <router-link
+                  :to="dashboardLink"
+                  class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
+                  @click="showProfileMenu = false"
+                >
+                  <i-lucide-layout-dashboard class="w-4 h-4 inline mr-2" />
+                  Dashboard
+                </router-link>
+                <router-link
+                  to="/profile"
+                  class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
+                  @click="showProfileMenu = false"
+                >
+                  <i-lucide-user class="w-4 h-4 inline mr-2" />
+                  Profile
+                </router-link>
+                <hr class="my-2 border-neutral-200" />
+                <button
+                  @click="handleLogout"
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <i-lucide-log-out class="w-4 h-4 inline mr-2" />
+                  Logout
+                </button>
+              </div>
+            </transition>
           </div>
 
           <!-- Logout Button (Always Visible) -->
@@ -144,6 +152,9 @@ watch(() => route.path, () => {
 // Check authentication on mount
 onMounted(() => {
   checkAuth()
+
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside)
 
   // Listen for storage changes (for cross-tab synchronization)
   window.addEventListener('storage', handleStorageChange)
@@ -227,22 +238,40 @@ const formatRole = (role: string) => {
 }
 
 // Check if user can access dashboard
-const canAccessDashboard = computed(() => {
+const dashboardLink = computed(() => {
   const userStr = localStorage.getItem('user')
-  if (!userStr) return false
+  if (!userStr) return '/my-dashboard'
 
   try {
     const user = JSON.parse(userStr)
     const role = user.role?.toLowerCase()
-    return role === 'super_admin' || role === 'admin'
+
+    // Admin users go to admin dashboard
+    if (role === 'super_admin' || role === 'admin') {
+      return '/dashboard'
+    }
+
+    // Regular users go to user dashboard
+    return '/my-dashboard'
   } catch {
-    return false
+    return '/my-dashboard'
   }
 })
 
 // Toggle profile menu
-const toggleProfileMenu = () => {
+const toggleProfileMenu = (event: Event) => {
+  event.stopPropagation()
   showProfileMenu.value = !showProfileMenu.value
+}
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const profileDropdown = target.closest('.profile-dropdown')
+
+  if (showProfileMenu.value && !profileDropdown) {
+    showProfileMenu.value = false
+  }
 }
 
 // Handle logout
@@ -310,16 +339,4 @@ const searchSubmit = () => {
     })
   }
 }
-
-// Close dropdown when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (showProfileMenu.value && !target.closest('.relative.group')) {
-    showProfileMenu.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
 </script>

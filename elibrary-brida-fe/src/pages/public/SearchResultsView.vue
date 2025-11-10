@@ -42,11 +42,18 @@
         <aside class="lg:col-span-1">
           <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
             <button
-              @click="toggleAdvancedSearch"
-              class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition mb-6"
+              @click="openAdvancedSearch"
+              class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition mb-6 flex items-center justify-center gap-2"
             >
+              <i-lucide-sliders-horizontal class="w-4 h-4" />
               Advanced Search
             </button>
+
+            <AdvancedSearchModal
+              :is-open="isAdvancedSearchOpen"
+              @close="closeAdvancedSearch"
+              @search="handleAdvancedSearch"
+            />
 
             <h3 class="font-bold text-gray-900 mb-4">Subjek</h3>
             <div class="space-y-2 mb-6">
@@ -226,6 +233,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
 import PublicLayout from '@/layout/PublicLayout.vue'
+import AdvancedSearchModal from '@/components/AdvancedSearchModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -237,6 +245,22 @@ const isSearching = ref(false)
 const currentPage = ref(1)
 const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
+const isAdvancedSearchOpen = ref(false);
+
+const openAdvancedSearch = () => {
+  isAdvancedSearchOpen.value = true
+}
+
+const closeAdvancedSearch = () => {
+  isAdvancedSearchOpen.value = false
+}
+
+const handleAdvancedSearch = (filters: { subjects: string[], types: string[] }) => {
+  selectedSubjects.value = filters.subjects
+  selectedTypes.value = filters.types
+  closeAdvancedSearch()
+  applyFilters()
+}
 
 const subjects = [
   { label: 'Ilmu Komputer', value: 'computer-science' },
@@ -313,11 +337,6 @@ const performSearch = async () => {
 const applyFilters = () => {
   // TODO: Implement filter logic with API
   console.log('Filters:', { selectedSubjects: selectedSubjects.value, selectedTypes: selectedTypes.value })
-}
-
-const toggleAdvancedSearch = () => {
-  // TODO: Implement advanced search modal/panel
-  console.log('Toggle advanced search')
 }
 
 const formatDate = (date?: string) => {

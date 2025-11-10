@@ -185,6 +185,18 @@ const router = createRouter({
       }
     },
 
+    // ========== USER DASHBOARD (For regular users) ==========
+    {
+      path: '/my-dashboard',
+      name: 'my-dashboard',
+      component: () => import('@/pages/user/UserDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.GUEST, ROLES.CONTRIBUTOR, ROLES.REVIEWER], // Regular users
+        title: 'My Dashboard'
+      }
+    },
+
     // ========== 404 NOT FOUND ==========
     {
       path: '/unauthorized',

@@ -11,9 +11,9 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        // Ambil role_id untuk admin
+        // Ambil role_id untuk admin dan guest
         $adminRoleId = Role::where('name', 'super_admin')->value('id');
-        $userRoleId = Role::where('name', 'user')->value('id');
+        $guestRoleId = Role::where('name', 'guest')->value('id');
 
         DB::table('users')->insert([
             [
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'role_id' => $userRoleId,
+                'role_id' => $guestRoleId,
                 'full_name' => 'User Demo',
                 'email' => 'user@brida.com',
                 'password' => Hash::make('user123'),

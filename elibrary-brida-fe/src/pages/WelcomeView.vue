@@ -121,7 +121,17 @@ const goToDashboard = () => {
     clearInterval(countdownInterval)
     countdownInterval = null
   }
-  router.push('/dashboard')
+
+  // Redirect based on user role
+  const userRole = user.value?.role?.toLowerCase()
+
+  if (userRole === 'super_admin' || userRole === 'admin') {
+    // Admin users go to admin dashboard
+    router.push('/dashboard')
+  } else {
+    // Regular users (guest, contributor, reviewer) go to user dashboard
+    router.push('/my-dashboard')
+  }
 }
 
 const goToHome = () => {

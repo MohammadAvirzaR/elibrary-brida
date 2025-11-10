@@ -394,43 +394,52 @@
           <!-- Name -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Nama Lengkap <span class="text-red-500">*</span>
+              Nama Lengkap <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
             <input
               v-model="formData.name"
               type="text"
-              required
+              :required="!isEditMode"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="John Doe"
             />
+            <p v-if="isEditMode && !formData.name" class="mt-1 text-xs text-gray-500">
+              Kosongkan jika tidak ingin mengubah
+            </p>
           </div>
 
           <!-- Email -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Email <span class="text-red-500">*</span>
+              Email <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
             <input
               v-model="formData.email"
               type="email"
-              required
+              :required="!isEditMode"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="john@example.com"
             />
+            <p v-if="isEditMode && !formData.email" class="mt-1 text-xs text-gray-500">
+              Kosongkan jika tidak ingin mengubah
+            </p>
           </div>
 
           <!-- Institution -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Unit/Instansi <span class="text-red-500">*</span>
+              Unit/Instansi <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
             <input
               v-model="formData.institution"
               type="text"
-              required
+              :required="!isEditMode"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="BRIDA Sulawesi Tenggara"
             />
+            <p v-if="isEditMode && !formData.institution" class="mt-1 text-xs text-gray-500">
+              Kosongkan jika tidak ingin mengubah
+            </p>
           </div>
 
           <!-- Role Selection -->
@@ -441,38 +450,59 @@
             <select
               v-model="formData.role"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              :disabled="isEditingSuperAdmin && currentUserRole !== 'super_admin'"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">Pilih Role</option>
               <option v-for="role in roles" :key="role.id" :value="role.name">
-                {{ role.name }}
+                {{ getRoleLabel(role.name) }}
               </option>
             </select>
+            <p v-if="isEditingSuperAdmin && currentUserRole !== 'super_admin'" class="mt-2 text-xs text-amber-600">
+              ⚠️ Hanya Super Admin yang dapat mengubah role Super Admin
+            </p>
+            <p v-else-if="isEditMode" class="mt-2 text-xs text-gray-500">
+              💡 Role menentukan hak akses user di sistem
+            </p>
           </div>
 
-          <!-- Password (only for new user) -->
-          <div v-if="!isEditMode" class="mb-6">
+          <!-- Change Password Toggle (only for edit mode) -->
+          <div v-if="isEditMode" class="mb-6">
+            <label class="flex items-center cursor-pointer">
+              <input
+                v-model="changePassword"
+                type="checkbox"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm font-medium text-gray-700">
+                Ubah Password
+              </span>
+            </label>
+          </div>
+
+          <!-- Password (for new user or when changing password) -->
+          <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Password <span class="text-red-500">*</span>
             </label>
             <input
               v-model="formData.password"
               type="password"
-              :required="!isEditMode"
+              :required="!isEditMode || changePassword"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Minimal 8 karakter"
             />
           </div>
 
-          <!-- Password Confirmation (only for new user) -->
-          <div v-if="!isEditMode" class="mb-6">
+          <!-- Password Confirmation (for new user or when changing password) -->
+          <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Konfirmasi Password <span class="text-red-500">*</span>
             </label>
             <input
               v-model="formData.password_confirmation"
               type="password"
-              :required="!isEditMode"
+              :required="!isEditMode || changePassword"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Ulangi password"
             />
@@ -619,6 +649,9 @@ onMounted(() => {
     }
   }
 
+  // Get current user role for permission checking
+  getCurrentUserRole()
+
   // Load users and roles from API
   loadUsers()
   loadRoles()
@@ -676,6 +709,40 @@ const formData = ref({
   password: '',
   password_confirmation: ''
 })
+
+// Additional state for flexible role editing
+const changePassword = ref(false)
+const currentUserRole = ref<string>('')
+
+// Get current user role from localStorage
+const getCurrentUserRole = () => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      currentUserRole.value = user.role || ''
+    } catch {
+      currentUserRole.value = ''
+    }
+  }
+}
+
+// Check if editing a super_admin user
+const isEditingSuperAdmin = computed(() => {
+  return isEditMode.value && formData.value.role === 'super_admin'
+})
+
+// Get user-friendly role labels
+const getRoleLabel = (roleName: string): string => {
+  const roleLabels: Record<string, string> = {
+    'super_admin': 'Super Admin',
+    'admin': 'Admin',
+    'contributor': 'Contributor',
+    'reviewer': 'Reviewer',
+    'guest': 'Guest'
+  }
+  return roleLabels[roleName] || roleName
+}
 
 // Computed
 const filteredUsers = computed(() => {
@@ -767,6 +834,7 @@ const loadRoles = async () => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await api.roles.getAll()
+
     if (response.success && response.data) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       roles.value = response.data.map((role: any) => ({
@@ -795,6 +863,7 @@ const openAddModal = () => {
 
 const openEditModal = (user: User) => {
   isEditMode.value = true
+  changePassword.value = false // Reset password change flag
   formData.value = {
     id: user.id,
     name: user.name,
@@ -809,6 +878,7 @@ const openEditModal = (user: User) => {
 
 const closeModal = () => {
   showModal.value = false
+  changePassword.value = false
   formData.value = {
     id: 0,
     name: '',
@@ -831,10 +901,14 @@ const closeViewModal = () => {
 }
 
 const handleSubmit = async () => {
-  if (!isEditMode.value) {
-    // Validate password match
+  // Validate password match for new user or when changing password
+  if (!isEditMode.value || changePassword.value) {
     if (formData.value.password !== formData.value.password_confirmation) {
       alert('Password tidak cocok!')
+      return
+    }
+    if (formData.value.password.length < 8) {
+      alert('Password minimal 8 karakter!')
       return
     }
   }
@@ -848,19 +922,44 @@ const handleSubmit = async () => {
         return
       }
 
+      // Prepare update payload - hanya kirim field yang diisi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updatePayload: any = {}
+
+      // Hanya tambahkan field yang diisi/diubah
+      if (formData.value.name && formData.value.name.trim()) {
+        updatePayload.name = formData.value.name
+      }
+      if (formData.value.email && formData.value.email.trim()) {
+        updatePayload.email = formData.value.email
+      }
+      if (formData.value.institution && formData.value.institution.trim()) {
+        updatePayload.institution = formData.value.institution
+      }
+
+      // Role selalu dikirim karena wajib
+      updatePayload.role_id = role.id
+
+      // Include password only if changing
+      if (changePassword.value && formData.value.password) {
+        updatePayload.password = formData.value.password
+      }
+
       // Update existing user via API
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response: any = await api.users.update(formData.value.id, {
-        name: formData.value.name,
-        email: formData.value.email,
-        institution: formData.value.institution,
-        role_id: role.id
-      })
+      const response: any = await api.users.update(formData.value.id, updatePayload)
 
       if (response.success) {
         await loadUsers()
+        alert('User berhasil diupdate!')
       }
     } else {
+      // Validasi untuk add user baru - semua field wajib
+      if (!formData.value.name || !formData.value.email || !formData.value.institution) {
+        alert('Semua field wajib diisi untuk user baru!')
+        return
+      }
+
       // Find role_id from role name
       const role = roles.value.find(r => r.name === formData.value.role)
       if (!role) {
@@ -880,6 +979,7 @@ const handleSubmit = async () => {
 
       if (response.success) {
         await loadUsers()
+        alert('User berhasil ditambahkan!')
       }
     }
 
