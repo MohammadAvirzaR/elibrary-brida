@@ -10,8 +10,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ContributorRequestController;
 
 // Route untuk register dan login
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('register', [AuthController::class, 'register']); // Step 1: Kirim OTP
+Route::post('verify-otp', [AuthController::class, 'verifyOtp']); // Step 2: Verifikasi OTP
+Route::post('resend-otp', [AuthController::class, 'resendOtp']); // Kirim ulang OTP
+Route::post('login', [AuthController::class, 'login']);
 
 //route untuk mencari dokumen
 Route::get('/documents/search', [DocumentController::class, 'search']);
