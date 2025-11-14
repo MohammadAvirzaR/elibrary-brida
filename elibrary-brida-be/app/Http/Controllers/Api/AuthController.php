@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    // REGISTER
+    // REGISTER - Step 1: Kirim OTP
     public function register(Request $request)
     {
         $request->validate([
@@ -20,14 +23,83 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $user = User::create([
-            'full_name' => $request->name,
+        // Generate OTP 6 digit
+        $otp = rand(100000, 999999);
+        
+        // Simpan data registrasi dan OTP di cache (expired 10 menit)
+        $registrationData = [
+            'name' => $request->name,
             'email' => $request->email,
-            'unit_name' => $request->institution,
-            'password' => $request->password, // Model will auto-hash via setPasswordAttribute
-            'role_id' => 5, // default guest role
+            'institution' => $request->institution,
+            'password' => $request->password,
+            'otp' => $otp,
+        ];
+        
+        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(10));
+
+        // Kirim OTP via email
+        try {
+            Mail::raw("Kode OTP Anda adalah: {$otp}\n\nKode ini berlaku selama 10 menit.", function ($message) use ($request) {
+                $message->to($request->email)
+                        ->subject('Kode Verifikasi OTP - Registrasi');
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kode OTP telah dikirim ke email Anda',
+                'email' => $request->email,
+                'expires_in' => 600, // 10 menit dalam detik
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengirim OTP. Silakan coba lagi.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // VERIFY OTP - Step 2: Verifikasi OTP dan buat user
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
         ]);
 
+        // Ambil data registrasi dari cache
+        $registrationData = Cache::get('registration_' . $request->email);
+
+        if (!$registrationData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kode OTP sudah kadaluarsa atau tidak valid',
+            ], 400);
+        }
+
+        // Verifikasi OTP
+        if ($registrationData['otp'] != $request->otp) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kode OTP tidak valid',
+            ], 400);
+        }
+
+        // Buat user baru dengan role contributor (role_id = 4)
+        $user = User::create([
+            'full_name' => $registrationData['name'],
+            'email' => $registrationData['email'],
+            'unit_name' => $registrationData['institution'],
+            'password' => $registrationData['password'],
+            'role_id' => 3, // contributor role
+            'email_verified_at' => now(), // Set email as verified
+        ]);
+
+        // Hapus data registrasi dari cache
+        Cache::forget('registration_' . $request->email);
+
+        // Generate token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // Load role relationship
@@ -35,16 +107,62 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'User registered successfully',
+            'message' => 'Registrasi berhasil! Anda sekarang adalah kontributor.',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->full_name,
                 'email' => $user->email,
                 'institution' => $user->unit_name,
-                'role' => $user->role->name ?? 'guest',
+                'role' => $user->role->name ?? 'contributor',
             ],
             'token' => $token,
+        ], 201);
+    }
+
+    // RESEND OTP - Kirim ulang OTP
+    public function resendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
         ]);
+
+        // Cek apakah ada data registrasi di cache
+        $registrationData = Cache::get('registration_' . $request->email);
+
+        if (!$registrationData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sesi registrasi tidak ditemukan. Silakan daftar ulang.',
+            ], 400);
+        }
+
+        // Generate OTP baru
+        $otp = rand(100000, 999999);
+        $registrationData['otp'] = $otp;
+
+        // Update cache dengan OTP baru
+        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(10));
+
+        // Kirim OTP via email
+        try {
+            Mail::raw("Kode OTP baru Anda adalah: {$otp}\n\nKode ini berlaku selama 10 menit.", function ($message) use ($request) {
+                $message->to($request->email)
+                        ->subject('Kode Verifikasi OTP Baru - Registrasi');
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kode OTP baru telah dikirim ke email Anda',
+                'email' => $request->email,
+                'expires_in' => 600,
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengirim OTP. Silakan coba lagi.',
+            ], 500);
+        }
     }
 
     // LOGIN
