@@ -38,9 +38,15 @@
                 v-model="formData.username"
                 type="email"
                 placeholder="Email"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="[
+                  'w-full px-4 py-3 rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
+                  !isEmailValid && formData.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                ]"
                 required
               />
+              <p v-if="emailErrorMessage" class="mt-1 text-sm text-red-600">
+                {{ emailErrorMessage }}
+              </p>
             </div>
 
             <!-- Password Input -->
@@ -57,7 +63,7 @@
             <!-- Login Button -->
             <button
               type="submit"
-              :disabled="isLoading"
+              :disabled="isLoading || !isEmailValid"
               class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {{ isLoading ? 'Loading...' : 'Log in' }}
@@ -110,10 +116,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
 import api from '@/services/api'
+import { emailAddress } from '@form-validation/validator-email-address'
 
 const router = useRouter()
 
@@ -125,7 +132,28 @@ const formData = reactive({
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+// Email validation
+const isEmailValid = computed(() => {
+  if (!formData.username) return true // Don't show error on empty
+  const result = emailAddress().validate({
+    value: formData.username,
+    options: {}
+  })
+  return result.valid
+})
+
+const emailErrorMessage = computed(() => {
+  if (!formData.username || isEmailValid.value) return ''
+  return 'Please enter a valid email address'
+})
+
 const handleLogin = async () => {
+  // Validate email before submitting
+  if (!isEmailValid.value) {
+    errorMessage.value = 'Please enter a valid email address'
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
 
@@ -181,11 +209,7 @@ const handleLogin = async () => {
 }
 
 const handleSSO = () => {
-  // TODO: Implement SSO login logic
   console.log('SSO Login clicked')
-
-  // Example: Redirect to SSO provider
-  // window.location.href = 'https://your-sso-provider.com/auth?client_id=your_client_id&redirect_uri=' + encodeURIComponent(window.location.origin + '/auth/callback')
 }
 
 const handleImageError = (event: Event) => {

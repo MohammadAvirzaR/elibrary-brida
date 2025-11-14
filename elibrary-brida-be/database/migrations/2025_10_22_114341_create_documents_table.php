@@ -31,11 +31,13 @@ return new class extends Migration
             $table->foreignId('license_id')->nullable()->constrained('licenses')->onDelete('set null');
             $table->string('funding_program')->nullable();
             $table->string('supervisor')->nullable();
-            $table->enum('status', ['approved', 'rejected'])->default('approved');
+            $table->string('publisher')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->string('research_location')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->enum('access_right', ['public', 'private'])->default('public');
+            $table->timestamps();
         });
     }
 

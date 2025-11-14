@@ -335,7 +335,6 @@ const performSearch = async () => {
 }
 
 const applyFilters = () => {
-  // TODO: Implement filter logic with API
   console.log('Filters:', { selectedSubjects: selectedSubjects.value, selectedTypes: selectedTypes.value })
 }
 

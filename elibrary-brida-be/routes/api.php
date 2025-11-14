@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FilterController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ContributorRequestController;
 
 // Route untuk register dan login
 Route::post('/register', [AuthController::class, 'register']);
@@ -26,6 +27,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Contributor request routes
+    Route::post('/contributor-requests', [ContributorRequestController::class, 'store']); // User submit request
+    Route::get('/contributor-requests/check-pending', [ContributorRequestController::class, 'checkPending']); // Check if user has pending request
+
     // Super Admin only routes
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin')->group(function () {
         // Roles management (CRUD except index)
@@ -33,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/roles/{id}', [RoleController::class, 'update']);
         Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
         Route::get('/permissions', [RoleController::class, 'permissions']);
+
+        // Contributor requests management (approve/reject)
+        Route::get('/contributor-requests', [ContributorRequestController::class, 'index']);
+        Route::post('/contributor-requests/{id}/approve', [ContributorRequestController::class, 'approve']);
+        Route::post('/contributor-requests/{id}/reject', [ContributorRequestController::class, 'reject']);
     });
 
     // Super Admin dan Admin bisa lihat list roles (untuk dropdown di user management)

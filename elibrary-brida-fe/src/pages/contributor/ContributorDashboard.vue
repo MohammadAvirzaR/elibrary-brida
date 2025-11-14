@@ -11,7 +11,7 @@
             </div>
             <div>
               <h1 class="text-lg font-bold text-neutral-900">E-Library BRIDA</h1>
-              <p class="text-xs text-neutral-500">Dashboard Pengguna</p>
+              <p class="text-xs text-neutral-500">Dashboard Kontributor</p>
             </div>
           </div>
 
@@ -26,29 +26,14 @@
               Beranda
             </button>
 
-            <!-- Contributor Request Button / Dashboard Link -->
+            <!-- Upload Button -->
             <button
-              v-if="userRole === 'contributor'"
-              @click="goToContributorDashboard"
+              @click="openUploadModal"
               class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
             >
               <i-lucide-upload class="w-4 h-4 mr-2" />
-              Dashboard Kontributor
+              Unggah Dokumen
             </button>
-
-            <button
-              v-else-if="userRole === 'guest' && !hasPendingRequest"
-              @click="goToContributorRequest"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
-            >
-              <i-lucide-file-text class="w-4 h-4 mr-2" />
-              Jadi Kontributor
-            </button>
-
-            <div v-else-if="userRole === 'guest' && hasPendingRequest" class="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-50 border border-yellow-200 rounded-lg">
-              <i-lucide-clock class="w-4 h-4 text-yellow-600" />
-              <span class="text-yellow-800 font-medium">Menunggu Persetujuan</span>
-            </div>
 
             <!-- User Profile Dropdown -->
             <div class="relative">
@@ -93,13 +78,13 @@
             <h1 class="text-3xl font-bold text-neutral-900">
               Selamat Datang, {{ userName }}
             </h1>
-            <p class="text-sm text-neutral-600 mt-1">Kelola dokumen yang Anda unduh</p>
+            <p class="text-sm text-neutral-600 mt-1">Kelola dokumen yang Anda upload</p>
           </div>
           <div class="text-right">
             <p class="text-sm text-neutral-500">Status Akun</p>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-              <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              Aktif
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+              <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              Kontributor
             </span>
           </div>
         </div>
@@ -112,11 +97,11 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Total Unduhan</p>
-              <p class="text-3xl font-bold text-neutral-900 mt-2">{{ stats.totalDownloads }}</p>
+              <p class="text-sm font-medium text-neutral-600">Total Dokumen</p>
+              <p class="text-3xl font-bold text-neutral-900 mt-2">{{ stats.totalDocuments }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i-lucide-download class="w-6 h-6 text-blue-600" />
+              <i-lucide-file-text class="w-6 h-6 text-blue-600" />
             </div>
           </div>
           <p class="text-xs text-neutral-500 mt-4">
@@ -127,74 +112,74 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Favorit</p>
-              <p class="text-3xl font-bold text-amber-600 mt-2">{{ stats.favorites }}</p>
+              <p class="text-sm font-medium text-neutral-600">Menunggu Review</p>
+              <p class="text-3xl font-bold text-amber-600 mt-2">{{ stats.pending }}</p>
             </div>
             <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-              <i-lucide-star class="w-6 h-6 text-amber-600" />
+              <i-lucide-clock class="w-6 h-6 text-amber-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">Dokumen tersimpan</p>
+          <p class="text-xs text-neutral-500 mt-4">Dalam proses verifikasi</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Kategori</p>
-              <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.categories }}</p>
+              <p class="text-sm font-medium text-neutral-600">Disetujui</p>
+              <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.approved }}</p>
             </div>
             <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <i-lucide-folder class="w-6 h-6 text-green-600" />
+              <i-lucide-check-circle class="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">Jenis dokumen berbeda</p>
+          <p class="text-xs text-neutral-500 mt-4">Sudah dipublikasikan</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Terakhir Diunduh</p>
-              <p class="text-3xl font-bold text-purple-600 mt-2">{{ stats.recent }}</p>
+              <p class="text-sm font-medium text-neutral-600">Ditolak</p>
+              <p class="text-3xl font-bold text-red-600 mt-2">{{ stats.rejected }}</p>
             </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <i-lucide-clock class="w-6 h-6 text-purple-600" />
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <i-lucide-x-circle class="w-6 h-6 text-red-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">7 hari terakhir</p>
+          <p class="text-xs text-neutral-500 mt-4">Perlu perbaikan</p>
         </div>
       </div>
 
       <!-- Main Content Area -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Download Section -->
+        <!-- Upload Section -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Quick Browse Card -->
+          <!-- Quick Upload Card -->
           <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
             <div class="flex items-start justify-between">
               <div class="flex-1">
-                <h2 class="text-2xl font-bold mb-2">Telusuri Koleksi Dokumen</h2>
+                <h2 class="text-2xl font-bold mb-2">Upload Dokumen Baru</h2>
                 <p class="text-blue-100 mb-6">
-                  Temukan dan unduh dokumen yang Anda butuhkan
+                  Bagikan pengetahuan Anda dengan mengunggah dokumen
                 </p>
                 <button
-                  @click="goToCatalog"
+                  @click="showUploadModal = true"
                   class="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition-colors shadow-md"
                 >
-                  <i-lucide-search class="w-5 h-5" />
-                  Telusuri Dokumen
+                  <i-lucide-upload class="w-5 h-5" />
+                  Mulai Upload
                 </button>
               </div>
               <div class="hidden md:block">
-                <i-lucide-book-open class="w-24 h-24 text-blue-400 opacity-50" />
+                <i-lucide-cloud-upload class="w-24 h-24 text-blue-400 opacity-50" />
               </div>
             </div>
           </div>
 
-          <!-- Downloaded Documents Table -->
+          <!-- My Documents Table -->
           <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
             <div class="p-6 border-b border-neutral-200">
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-neutral-900">Dokumen yang Diunduh</h3>
+                <h3 class="text-lg font-bold text-neutral-900">Dokumen Saya</h3>
                 <div class="flex items-center gap-3">
                   <input
                     v-model="searchQuery"
@@ -203,13 +188,13 @@
                     class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <select
-                    v-model="filterCategory"
+                    v-model="filterStatus"
                     class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Semua Kategori</option>
-                    <option value="penelitian">Penelitian</option>
-                    <option value="laporan">Laporan</option>
-                    <option value="artikel">Artikel</option>
+                    <option value="">Semua Status</option>
+                    <option value="pending">Menunggu Review</option>
+                    <option value="approved">Disetujui</option>
+                    <option value="rejected">Ditolak</option>
                   </select>
                 </div>
               </div>
@@ -226,7 +211,10 @@
                       Kategori
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Tanggal Unduh
+                      Status
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      Tanggal Upload
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Aksi
@@ -255,8 +243,17 @@
                         {{ doc.category }}
                       </span>
                     </td>
+                    <td class="px-6 py-4">
+                      <span
+                        :class="getStatusClass(doc.status)"
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      >
+                        <span :class="getStatusDotClass(doc.status)" class="w-1.5 h-1.5 rounded-full mr-1.5"></span>
+                        {{ getStatusText(doc.status) }}
+                      </span>
+                    </td>
                     <td class="px-6 py-4 text-sm text-neutral-600">
-                      {{ formatDate(doc.downloadDate) }}
+                      {{ formatDate(doc.uploadDate) }}
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
@@ -268,29 +265,28 @@
                           <i-lucide-eye class="w-4 h-4" />
                         </button>
                         <button
-                          @click="downloadAgain(doc)"
-                          class="text-green-600 hover:text-green-800 p-1"
-                          title="Unduh Lagi"
+                          @click="editDocument(doc)"
+                          class="text-amber-600 hover:text-amber-800 p-1"
+                          title="Edit"
                         >
-                          <i-lucide-download class="w-4 h-4" />
+                          <i-lucide-edit class="w-4 h-4" />
                         </button>
                         <button
-                          @click="toggleFavorite(doc)"
-                          :class="doc.isFavorite ? 'text-amber-600' : 'text-neutral-400'"
-                          class="hover:text-amber-800 p-1"
-                          title="Favorit"
+                          @click="deleteDocument(doc)"
+                          class="text-red-600 hover:text-red-800 p-1"
+                          title="Hapus"
                         >
-                          <i-lucide-star class="w-4 h-4" :class="{ 'fill-current': doc.isFavorite }" />
+                          <i-lucide-trash-2 class="w-4 h-4" />
                         </button>
                       </div>
                     </td>
                   </tr>
                   <tr v-if="filteredDocuments.length === 0">
-                    <td colspan="4" class="px-6 py-12 text-center">
+                    <td colspan="5" class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-neutral-400">
                         <i-lucide-inbox class="w-16 h-16 mb-4" />
-                        <p class="text-lg font-medium">Belum ada dokumen yang diunduh</p>
-                        <p class="text-sm mt-1">Mulai telusuri dan unduh dokumen dari katalog</p>
+                        <p class="text-lg font-medium">Belum ada dokumen</p>
+                        <p class="text-sm mt-1">Mulai dengan mengunggah dokumen pertama Anda</p>
                       </div>
                     </td>
                   </tr>
@@ -306,24 +302,24 @@
           <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 class="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
               <i-lucide-lightbulb class="w-5 h-5 text-amber-500" />
-              Tips Unduh Dokumen
+              Tips Upload
             </h3>
             <ul class="space-y-3 text-sm text-neutral-700">
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Gunakan fitur pencarian untuk menemukan dokumen</span>
+                <span>Pastikan file dalam format PDF atau DOCX</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Tandai dokumen favorit untuk akses cepat</span>
+                <span>Ukuran maksimal file adalah 10MB</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Filter berdasarkan kategori untuk hasil lebih spesifik</span>
+                <span>Gunakan judul yang deskriptif dan jelas</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Unduh ulang dokumen kapan saja dari riwayat</span>
+                <span>Isi metadata dengan lengkap untuk memudahkan pencarian</span>
               </li>
             </ul>
           </div>
@@ -372,6 +368,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Upload Modal -->
+    <UploadDocumentModal
+      v-if="showUploadModal"
+      @close="showUploadModal = false"
+      @uploaded="handleDocumentUploaded"
+    />
   </div>
 </template>
 
@@ -379,17 +382,17 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
 
 const router = useRouter()
 
 // User info
 const userName = ref('')
 const userEmail = ref('')
-const userRole = ref('')
 
 // UI State for navbar
 const showProfileMenu = ref(false)
-const hasPendingRequest = ref(false)
+const showUploadModal = ref(false)
 
 // Computed user initials
 const userInitials = computed(() => {
@@ -402,16 +405,16 @@ const userInitials = computed(() => {
     .toUpperCase()
 })
 
-interface DocumentItem {
+interface UploadedDocument {
   id: number
   title: string
   author: string
   category: string
-  downloadDate: string
-  isFavorite: boolean
+  status: 'pending' | 'approved' | 'rejected'
+  uploadDate: string
 }
 
-interface ActivityItem {
+interface ActivityLog {
   id: number
   type: string
   title: string
@@ -423,23 +426,23 @@ interface ApiDocumentResponse {
   title: string
   author: string
   category_name?: string
+  status?: string
   created_at: string
-  is_favorite?: boolean
   [key: string]: unknown
 }
 
 const stats = ref({
-  totalDownloads: 0,
+  totalDocuments: 0,
   thisMonth: 0,
-  favorites: 0,
-  categories: 0,
-  recent: 0
+  pending: 0,
+  approved: 0,
+  rejected: 0
 })
 
-const documents = ref<DocumentItem[]>([])
+const documents = ref<UploadedDocument[]>([])
 const searchQuery = ref('')
-const filterCategory = ref('')
-const recentActivities = ref<ActivityItem[]>([])
+const filterStatus = ref('')
+const recentActivities = ref<ActivityLog[]>([])
 
 // Filtered documents
 const filteredDocuments = computed(() => {
@@ -452,8 +455,8 @@ const filteredDocuments = computed(() => {
     )
   }
 
-  if (filterCategory.value) {
-    filtered = filtered.filter(doc => doc.category === filterCategory.value)
+  if (filterStatus.value) {
+    filtered = filtered.filter(doc => doc.status === filterStatus.value)
   }
 
   return filtered
@@ -480,10 +483,10 @@ const loadDocuments = async () => {
       documents.value = response.data.map((doc) => ({
         id: doc.id,
         title: doc.title,
-        author: doc.author,
+        author: doc.author || userName.value,
         category: doc.category_name || 'Umum',
-        downloadDate: doc.created_at,
-        isFavorite: doc.is_favorite || false
+        status: (doc.status || 'pending') as 'pending' | 'approved' | 'rejected',
+        uploadDate: doc.created_at
       }))
     }
   } catch (error) {
@@ -493,28 +496,29 @@ const loadDocuments = async () => {
 }
 
 const loadStats = async () => {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
   const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
   stats.value = {
-    totalDownloads: documents.value.length,
-    thisMonth: documents.value.filter(d => new Date(d.downloadDate) >= thisMonthStart).length,
-    favorites: documents.value.filter(d => d.isFavorite).length,
-    categories: new Set(documents.value.map(d => d.category)).size,
-    recent: documents.value.filter(d => new Date(d.downloadDate) >= sevenDaysAgo).length
+    totalDocuments: documents.value.length,
+    thisMonth: documents.value.filter(d => new Date(d.uploadDate) >= thisMonthStart).length,
+    pending: documents.value.filter(d => d.status === 'pending').length,
+    approved: documents.value.filter(d => d.status === 'approved').length,
+    rejected: documents.value.filter(d => d.status === 'rejected').length
   }
 }
 
 const loadRecentActivities = async () => {
   const latestDocs = documents.value
-    .sort((a, b) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime())
+    .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
     .slice(0, 5)
 
   recentActivities.value = latestDocs.map((doc, index) => ({
     id: index + 1,
-    type: 'download',
-    title: `Mengunduh: ${doc.title}`,
-    time: formatTimeAgo(doc.downloadDate)
+    type: doc.status === 'approved' ? 'approved' : doc.status === 'rejected' ? 'rejected' : 'upload',
+    title: doc.status === 'approved' ? `Dokumen "${doc.title}" disetujui` :
+           doc.status === 'rejected' ? `Dokumen "${doc.title}" ditolak` :
+           `Mengunggah: ${doc.title}`,
+    time: formatTimeAgo(doc.uploadDate)
   }))
 }
 
@@ -532,21 +536,51 @@ const formatTimeAgo = (date: string): string => {
   return formatDate(date)
 }
 
+// Status helpers
+const getStatusClass = (status: string) => {
+  const classes: Record<string, string> = {
+    pending: 'bg-amber-100 text-amber-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800'
+  }
+  return classes[status] || 'bg-neutral-100 text-neutral-800'
+}
+
+const getStatusDotClass = (status: string) => {
+  const classes: Record<string, string> = {
+    pending: 'bg-amber-500',
+    approved: 'bg-green-500',
+    rejected: 'bg-red-500'
+  }
+  return classes[status] || 'bg-neutral-500'
+}
+
+const getStatusText = (status: string) => {
+  const texts: Record<string, string> = {
+    pending: 'Menunggu Review',
+    approved: 'Disetujui',
+    rejected: 'Ditolak'
+  }
+  return texts[status] || status
+}
+
 // Activity helpers
 const getActivityIconClass = (type: string) => {
   const classes: Record<string, string> = {
-    download: 'bg-blue-100 text-blue-600',
-    favorite: 'bg-amber-100 text-amber-600',
-    view: 'bg-green-100 text-green-600'
+    upload: 'bg-blue-100 text-blue-600',
+    approved: 'bg-green-100 text-green-600',
+    rejected: 'bg-red-100 text-red-600',
+    comment: 'bg-purple-100 text-purple-600'
   }
   return classes[type] || 'bg-neutral-100 text-neutral-600'
 }
 
 const getActivityIcon = (type: string) => {
   const icons: Record<string, string> = {
-    download: 'i-lucide-download',
-    favorite: 'i-lucide-star',
-    view: 'i-lucide-eye'
+    upload: 'i-lucide-upload',
+    approved: 'i-lucide-check-circle',
+    rejected: 'i-lucide-x-circle',
+    comment: 'i-lucide-message-circle'
   }
   return icons[type] || 'i-lucide-bell'
 }
@@ -570,29 +604,8 @@ const goToLandingPage = () => {
   router.push('/')
 }
 
-const goToContributorRequest = () => {
-  router.push('/become-contributor')
-}
-
-const goToContributorDashboard = () => {
-  router.push('/contributor-dashboard')
-}
-
-const goToCatalog = () => {
-  router.push('/catalog')
-}
-
-const checkPendingRequest = async () => {
-  if (userRole.value === 'guest') {
-    try {
-      const response = await api.contributorRequests.checkPending() as { success: boolean; has_pending: boolean }
-      if (response.success && response.has_pending) {
-        hasPendingRequest.value = true
-      }
-    } catch (error) {
-      console.error('Gagal memeriksa status permintaan:', error)
-    }
-  }
+const openUploadModal = () => {
+  showUploadModal.value = true
 }
 
 const logout = () => {
@@ -618,16 +631,11 @@ onMounted(async () => {
       const user = JSON.parse(userStr)
       userName.value = user.name || 'User'
       userEmail.value = user.email || ''
-      userRole.value = user.role || 'guest'
     } catch {
       userName.value = 'User'
       userEmail.value = ''
-      userRole.value = 'guest'
     }
   }
-
-  // Check if user has pending contributor request
-  await checkPendingRequest()
 
   // Load dashboard data
   loadStats()
@@ -640,41 +648,31 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const viewDocument = (doc: DocumentItem) => {
+const viewDocument = (doc: UploadedDocument) => {
   router.push(`/detail/${doc.id}`)
 }
 
-const downloadAgain = async (doc: DocumentItem) => {
+const editDocument = (doc: UploadedDocument) => {
+  console.log('Edit dokumen:', doc)
+}
+
+const deleteDocument = async (doc: UploadedDocument) => {
+  if (!confirm(`Hapus dokumen "${doc.title}"?`)) return
+
   try {
-    window.open(`${API_BASE_URL}/documents/${doc.id}/download`, '_blank')
+    await api.documents.delete(doc.id)
+    documents.value = documents.value.filter(d => d.id !== doc.id)
+    await loadStats()
   } catch (error) {
-    console.error('Gagal mengunduh dokumen:', error)
-    alert('Gagal mengunduh dokumen. Silakan coba lagi.')
+    console.error('Gagal menghapus dokumen:', error)
+    alert('Gagal menghapus dokumen. Silakan coba lagi.')
   }
 }
 
-const toggleFavorite = async (doc: DocumentItem) => {
-  const previousState = doc.isFavorite
-  doc.isFavorite = !doc.isFavorite
-
-  try {
-    await api.documents.update(doc.id, {
-      is_favorite: doc.isFavorite
-    })
-    loadStats()
-  } catch (error) {
-    doc.isFavorite = previousState
-    console.error('Gagal mengubah status favorit:', error)
-  }
+const handleDocumentUploaded = async () => {
+  showUploadModal.value = false
+  await loadDocuments()
+  await loadStats()
+  loadRecentActivities()
 }
-
-interface ImportMetaEnv {
-  VITE_API_BASE_URL?: string
-}
-
-interface ImportMeta {
-  env: ImportMetaEnv
-}
-
-const API_BASE_URL = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 </script>

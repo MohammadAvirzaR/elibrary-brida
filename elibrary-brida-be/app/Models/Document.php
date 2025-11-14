@@ -17,6 +17,7 @@ class Document extends Model
         'user_id',
         'title',
         'author',
+        'publisher',
         'year_published',
         'type_id',
         'unit_id',
@@ -39,8 +40,7 @@ class Document extends Model
         'access_right',
     ];
 
-    // Kalau tabel tidak punya created_at & updated_at
-    public $timestamps = false;
+    public $timestamps = true;
 
     // 🔗 Relasi ke tabel lain
     public function user()

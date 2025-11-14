@@ -84,6 +84,23 @@
           </span>
         </router-link>
 
+        <!-- Contributor Requests - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/contributor-requests"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
+          <span
+            :class="[
+              'font-semibold transition-opacity duration-300',
+              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
+            ]"
+          >
+            Contributor Requests
+          </span>
+        </router-link>
+
         <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
@@ -535,19 +552,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
 const router = useRouter()
 const username = ref('')
 const userRole = ref('')
 const isSidebarOpen = ref(true)
 
-// Summary Stats
-const queueCount = ref(5)
-const topContributor = ref('User x')
-const topArticle = ref('Artikel x')
-const totalPapers = ref(100)
+const queueCount = ref(0)
+const topContributor = ref('Memuat...')
+const topArticle = ref('Memuat...')
+const totalPapers = ref(0)
 
-// Queue Review Data
 const selectedQueue = ref<number[]>([])
 const queueSearchQuery = ref('')
 const queueRowsPerPage = ref(5)
@@ -564,48 +580,30 @@ interface QueueItem {
   }
 }
 
-const queueReviews = ref<QueueItem[]>([
-  {
-    id: 1,
-    name: 'Alexandra Harry',
-    email: 'alexandraharry37@gmail.com',
-    title: 'Role of AI in Education',
-    status: 'Waiting',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 2,
-    name: 'Ahmad Rosser',
-    email: 'ahm@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Waiting',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 3,
-    name: 'Zain Calzoni',
-    email: 'zain@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Waiting',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 4,
-    name: 'Leo Stanton',
-    email: 'leon@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Waiting',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 5,
-    name: 'Kaiya Vetrovs',
-    email: 'kaiya@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Waiting',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
+const queueReviews = ref<QueueItem[]>([])
+
+const loadPendingDocuments = async () => {
+  try {
+    const response = await api.documents.review() as { success: boolean; data: DocumentResponse[] }
+    if (response.success && response.data) {
+      queueReviews.value = response.data.map((doc) => ({
+        id: doc.id,
+        name: doc.user?.name || 'Unknown',
+        email: doc.user?.email || '',
+        title: doc.title,
+        status: 'Waiting',
+        lastUpdate: {
+          date: new Date(doc.created_at).toLocaleDateString('id-ID'),
+          time: new Date(doc.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+        }
+      }))
+      queueCount.value = queueReviews.value.length
+    }
+  } catch (error) {
+    console.error('Gagal memuat dokumen pending:', error)
+    queueReviews.value = []
   }
-])
+}
 
 const filteredQueueReviews = computed(() => {
   if (!queueSearchQuery.value) return queueReviews.value
@@ -617,7 +615,6 @@ const filteredQueueReviews = computed(() => {
   )
 })
 
-// History Data
 const selectedHistory = ref<number[]>([])
 const historySearchQuery = ref('')
 const historyRowsPerPage = ref(5)
@@ -634,48 +631,69 @@ interface HistoryItem {
   }
 }
 
-const histories = ref<HistoryItem[]>([
-  {
-    id: 1,
-    name: 'Alexandra Harry',
-    email: 'alexandraharry37@gmail.com',
-    title: 'Role of AI in Education',
-    status: 'Accepted',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 2,
-    name: 'Ahmad Rosser',
-    email: 'ahm@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Rejected',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 3,
-    name: 'Zain Calzoni',
-    email: 'zain@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Accepted',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 4,
-    name: 'Leo Stanton',
-    email: 'leon@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Rejected',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
-  },
-  {
-    id: 5,
-    name: 'Kaiya Vetrovs',
-    email: 'kaiya@mail.com',
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla...',
-    status: 'Accepted',
-    lastUpdate: { date: '9/18/2025', time: '10:45 WIB' }
+interface DocumentResponse {
+  id: number
+  title: string
+  status?: string
+  created_at: string
+  updated_at?: string
+  user?: {
+    name: string
+    email: string
   }
-])
+  [key: string]: unknown
+}
+
+const histories = ref<HistoryItem[]>([])
+
+const loadHistory = async () => {
+  try {
+    const response = await api.documents.getAll() as { success: boolean; data: DocumentResponse[] }
+    if (response.success && response.data) {
+      histories.value = response.data
+        .filter(doc => doc.status === 'approved' || doc.status === 'rejected')
+        .map((doc) => ({
+          id: doc.id,
+          name: doc.user?.name || 'Unknown',
+          email: doc.user?.email || '',
+          title: doc.title,
+          status: doc.status === 'approved' ? 'Accepted' as const : 'Rejected' as const,
+          lastUpdate: {
+            date: new Date(doc.updated_at || doc.created_at).toLocaleDateString('id-ID'),
+            time: new Date(doc.updated_at || doc.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+          }
+        }))
+    }
+  } catch (error) {
+    console.error('Gagal memuat riwayat:', error)
+    histories.value = []
+  }
+}
+
+const loadStats = async () => {
+  try {
+    const response = await api.documents.getAll() as { success: boolean; data: DocumentResponse[] }
+    if (response.success && response.data) {
+      const allDocs = response.data
+      queueCount.value = allDocs.filter(doc => doc.status === 'pending').length
+      totalPapers.value = allDocs.filter(doc => doc.status === 'approved').length
+
+      const userCounts: Record<string, number> = {}
+      allDocs.forEach(doc => {
+        if (doc.user?.name) {
+          userCounts[doc.user.name] = (userCounts[doc.user.name] || 0) + 1
+        }
+      })
+      const topUser = Object.entries(userCounts).sort((a, b) => b[1] - a[1])[0]
+      topContributor.value = topUser ? topUser[0] : 'Belum ada'
+
+      const approvedDocs = allDocs.filter(doc => doc.status === 'approved')
+      topArticle.value = approvedDocs[0]?.title || 'Belum ada'
+    }
+  } catch (error) {
+    console.error('Gagal memuat statistik:', error)
+  }
+}
 
 const filteredHistories = computed(() => {
   if (!historySearchQuery.value) return histories.value
@@ -702,6 +720,9 @@ onMounted(() => {
   } else {
     router.push('/login')
   }
+  loadPendingDocuments()
+  loadHistory()
+  loadStats()
 })
 
 const logout = () => {
@@ -720,37 +741,51 @@ const toggleSelectAllQueue = (e: Event) => {
   selectedQueue.value = checked ? queueReviews.value.map(item => item.id) : []
 }
 
-const approveItem = (id: number) => {
-  const item = queueReviews.value.find(q => q.id === id)
-  if (item) {
-    histories.value.unshift({
-      ...item,
-      status: 'Accepted'
-    })
-    queueReviews.value = queueReviews.value.filter(q => q.id !== id)
-    queueCount.value--
+const approveItem = async (id: number) => {
+  try {
+    await api.documents.update(id, { status: 'approved' })
+    const item = queueReviews.value.find(q => q.id === id)
+    if (item) {
+      histories.value.unshift({
+        ...item,
+        status: 'Accepted'
+      })
+      queueReviews.value = queueReviews.value.filter(q => q.id !== id)
+      queueCount.value--
+    }
+  } catch (error) {
+    console.error('Gagal menyetujui dokumen:', error)
   }
 }
 
-const rejectItem = (id: number) => {
-  const item = queueReviews.value.find(q => q.id === id)
-  if (item) {
-    histories.value.unshift({
-      ...item,
-      status: 'Rejected'
-    })
-    queueReviews.value = queueReviews.value.filter(q => q.id !== id)
-    queueCount.value--
+const rejectItem = async (id: number) => {
+  try {
+    await api.documents.update(id, { status: 'rejected' })
+    const item = queueReviews.value.find(q => q.id === id)
+    if (item) {
+      histories.value.unshift({
+        ...item,
+        status: 'Rejected'
+      })
+      queueReviews.value = queueReviews.value.filter(q => q.id !== id)
+      queueCount.value--
+    }
+  } catch (error) {
+    console.error('Gagal menolak dokumen:', error)
   }
 }
 
-const approveSelected = () => {
-  selectedQueue.value.forEach(id => approveItem(id))
+const approveSelected = async () => {
+  for (const id of selectedQueue.value) {
+    await approveItem(id)
+  }
   selectedQueue.value = []
 }
 
-const rejectSelected = () => {
-  selectedQueue.value.forEach(id => rejectItem(id))
+const rejectSelected = async () => {
+  for (const id of selectedQueue.value) {
+    await rejectItem(id)
+  }
   selectedQueue.value = []
 }
 

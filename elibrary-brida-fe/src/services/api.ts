@@ -1,13 +1,15 @@
-// API Base Configuration
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+interface ImportMeta {
+  env?: {
+    VITE_API_BASE_URL?: string
+  }
+}
 
-// Helper function to get auth token
+const API_BASE_URL = (import.meta as ImportMeta).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+
 const getAuthToken = (): string | null => {
   return localStorage.getItem('auth_token')
 }
 
-// Helper function to create headers
 const createHeaders = (includeAuth = false): HeadersInit => {
   const headers: HeadersInit = {
     'Accept': 'application/json',
@@ -24,7 +26,6 @@ const createHeaders = (includeAuth = false): HeadersInit => {
   return headers
 }
 
-// Generic API call function
 async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -46,7 +47,7 @@ async function apiCall<T>(
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed')
+      throw new Error(data.message || 'Request gagal')
     }
 
     return data
@@ -56,9 +57,7 @@ async function apiCall<T>(
   }
 }
 
-// Export API client
 export const api = {
-  // Auth endpoints
   auth: {
     register: (data: {
       name: string
@@ -76,7 +75,6 @@ export const api = {
     me: () => apiCall('/me', { method: 'GET' }, true),
   },
 
-  // Documents endpoints
   documents: {
     search: (query: string, page = 1, limit = 10) =>
       apiCall(`/documents/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`),
@@ -96,15 +94,22 @@ export const api = {
         },
       } as RequestInit, true),
 
-    update: (id: number, data: FormData) =>
-      apiCall(`/documents/${id}`, {
-        method: 'POST', // Laravel uses POST with _method=PUT for FormData
-        body: data,
-        headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
-          'Accept': 'application/json',
-        },
-      } as RequestInit, true),
+    update: (id: number, data: FormData | Record<string, unknown>) => {
+      if (data instanceof FormData) {
+        return apiCall(`/documents/${id}`, {
+          method: 'POST',
+          body: data,
+          headers: {
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Accept': 'application/json',
+          },
+        } as RequestInit, true)
+      }
+      return apiCall(`/documents/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }, true)
+    },
 
     delete: (id: number) =>
       apiCall(`/documents/${id}`, { method: 'DELETE' }, true),
@@ -122,12 +127,10 @@ export const api = {
       } as RequestInit, true),
   },
 
-  // Filters endpoints
   filters: {
     getAll: () => apiCall('/filters'),
   },
 
-  // Roles endpoints
   roles: {
     getAll: () => apiCall('/roles', { method: 'GET' }, true),
 
@@ -143,7 +146,6 @@ export const api = {
     getPermissions: () => apiCall('/permissions', { method: 'GET' }, true),
   },
 
-  // Users endpoints
   users: {
     getAll: () => apiCall('/users', { method: 'GET' }, true),
 
@@ -157,6 +159,21 @@ export const api = {
 
     delete: (id: number) =>
       apiCall(`/users/${id}`, { method: 'DELETE' }, true),
+  },
+
+  contributorRequests: {
+    getAll: () => apiCall('/contributor-requests', { method: 'GET' }, true),
+
+    submit: (message: string) =>
+      apiCall('/contributor-requests', { method: 'POST', body: JSON.stringify({ message }) }, true),
+
+    checkPending: () => apiCall('/contributor-requests/check-pending', { method: 'GET' }, true),
+
+    approve: (id: number, admin_notes?: string) =>
+      apiCall(`/contributor-requests/${id}/approve`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
+
+    reject: (id: number, admin_notes: string) =>
+      apiCall(`/contributor-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
   },
 }
 

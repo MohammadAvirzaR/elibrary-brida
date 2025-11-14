@@ -84,7 +84,22 @@
           </span>
         </router-link>
 
-        <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
+        <!-- Contributor Requests - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/contributor-requests"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
+          <span
+            :class="[
+              'font-semibold transition-opacity duration-300',
+              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
+            ]"
+          >
+            Contributor Requests
+          </span>
+        </router-link>        <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -130,7 +145,7 @@
             </div>
           </div>
         </div>
-      </header>
+        </header>
 
       <!-- Roles Content -->
       <main class="p-8">

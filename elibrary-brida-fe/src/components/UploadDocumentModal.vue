@@ -49,7 +49,7 @@
                 </p>
                 <button
                   type="button"
-                  @click="$refs.fileInput.click()"
+                  @click="fileInput?.click()"
                   class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Pilih File
@@ -213,6 +213,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import api from '@/services/api'
 
 const emit = defineEmits(['close', 'uploaded'])
 
@@ -338,35 +339,47 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // TODO: Implement actual upload to API
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    const formData = new FormData()
 
-    // Emit success event with document data
-    const newDocument = {
-      id: Date.now(),
-      title: form.title,
-      author: form.author,
-      category: form.category,
-      status: 'pending',
-      uploadDate: new Date().toISOString(),
-      description: form.description,
-      year: form.year,
-      publisher: form.publisher,
-      keywords: form.keywords
+    if (form.file) {
+      formData.append('file', form.file)
     }
+    formData.append('title', form.title)
+    formData.append('description', form.description)
+    formData.append('category', form.category)
+    formData.append('year', form.year.toString())
+    formData.append('author', form.author)
+    formData.append('publisher', form.publisher)
+    formData.append('keywords', form.keywords)
+    formData.append('status', 'pending')
 
-    emit('uploaded', newDocument)
+    const response = await api.documents.upload(formData) as { success: boolean; data: { id: number; title: string; status: string; created_at: string; [key: string]: unknown } }
 
-    // Reset form
-    Object.keys(form).forEach(key => {
-      if (key === 'file') {
-        form[key as keyof typeof form] = null
-      } else if (key === 'year') {
-        form[key as keyof typeof form] = new Date().getFullYear()
-      } else {
-        form[key as keyof typeof form] = ''
+    if (response.success && response.data) {
+      const newDocument = {
+        id: response.data.id,
+        title: response.data.title,
+        author: form.author,
+        category: form.category,
+        status: response.data.status,
+        uploadDate: response.data.created_at,
+        description: form.description,
+        year: form.year,
+        publisher: form.publisher,
+        keywords: form.keywords
       }
-    })
+
+      emit('uploaded', newDocument)
+
+      form.file = null
+      form.title = ''
+      form.author = ''
+      form.year = new Date().getFullYear()
+      form.publisher = ''
+      form.description = ''
+      form.category = ''
+      form.keywords = ''
+    }
   } catch (error) {
     console.error('Upload failed:', error)
     alert('Gagal mengunggah dokumen. Silakan coba lagi.')
