@@ -116,15 +116,25 @@ export const api = {
 
     review: () => apiCall('/documents/review', { method: 'GET' }, true),
 
-    upload: (data: FormData) =>
-      apiCall('/documents/upload', {
+    upload: async (data: FormData) => {
+      const token = getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/documents/upload`, {
         method: 'POST',
         body: data,
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
-      } as RequestInit, true),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.message || `HTTP ${response.status}: Upload failed`)
+      }
+
+      return result
+    },
   },
 
   filters: {

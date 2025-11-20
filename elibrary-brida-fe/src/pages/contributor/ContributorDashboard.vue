@@ -463,7 +463,7 @@ const filteredDocuments = computed(() => {
 })
 
 // Load user data
-onMounted(() => {
+onMounted(async () => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
     const user = JSON.parse(userStr)
@@ -471,7 +471,7 @@ onMounted(() => {
     userEmail.value = user.email || ''
   }
 
-  loadDocuments()
+  await loadDocuments()
   loadStats()
   loadRecentActivities()
 })
@@ -488,6 +488,10 @@ const loadDocuments = async () => {
         status: (doc.status || 'pending') as 'pending' | 'approved' | 'rejected',
         uploadDate: doc.created_at
       }))
+
+      // Update stats setelah dokumen dimuat
+      loadStats()
+      loadRecentActivities()
     }
   } catch (error) {
     console.error('Gagal memuat dokumen:', error)
@@ -495,7 +499,7 @@ const loadDocuments = async () => {
   }
 }
 
-const loadStats = async () => {
+const loadStats = () => {
   const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
   stats.value = {

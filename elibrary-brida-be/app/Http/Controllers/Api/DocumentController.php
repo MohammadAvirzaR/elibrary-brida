@@ -12,7 +12,6 @@ class DocumentController extends Controller
     {
         $query = Document::query();
 
-        // Terima parameter 'q' atau 'search' untuk pencarian teks
         if ($request->filled('q') || $request->filled('search')) {
             $search = $request->input('q') ?: $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -23,30 +22,26 @@ class DocumentController extends Controller
             });
         }
 
-            // Filter type
-            if ($request->filled('type_id')) {
-                $query->whereIn('type_id', (array) $request->type_id);
-            }
+        if ($request->filled('type_id')) {
+            $query->whereIn('type_id', (array) $request->type_id);
+        }
 
-            // Filter year range
-            if ($request->filled('year')) {
-                $year = now()->year - $request->year;
-                $query->where('year_published', '>=', $year);
-            }
+        if ($request->filled('year')) {
+            $year = now()->year - $request->year;
+            $query->where('year_published', '>=', $year);
+        }
 
-            // Filter access rights
-            if ($request->filled('access_right')) {
-                $query->where('access_right', $request->access_right);
-            }
+        if ($request->filled('access_right')) {
+            $query->where('access_right', $request->access_right);
+        }
 
-            // ✅ Filter subject via pivot table
-            if ($request->filled('subject_id')) {
-                $query->whereHas('subjects', function ($q) use ($request) {
-                    $q->whereIn('subjects.id', (array) $request->subject_id);
-                });
-            }
+        if ($request->filled('subject_id')) {
+            $query->whereHas('subjects', function ($q) use ($request) {
+                $q->whereIn('subjects.id', (array) $request->subject_id);
+            });
+        }
 
-            return $query->paginate(10);
+        return $query->paginate(10);
     }
 
     public function featuredContent()
@@ -103,42 +98,66 @@ class DocumentController extends Controller
 
     public function upload(Request $request)
     {
-        $validated = $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx|max:10240',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category' => 'nullable|string',
-            'year' => 'required|integer',
-            'author' => 'required|string|max:255',
-            'publisher' => 'nullable|string|max:255',
-            'keywords' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'category' => 'nullable|string',
+                'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+                'author' => 'required|string|max:255',
+                'publisher' => 'nullable|string|max:255',
+                'keywords' => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $filePath = null;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('documents', $filename, 'public');
+            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $file->getClientOriginalName());
+
+            try {
+                $filePath = $file->storeAs('documents', $filename, 'public');
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menyimpan file: ' . $e->getMessage()
+                ], 500);
+            }
         }
 
-        $document = Document::create([
-            'user_id' => $request->user()->id,
-            'title' => $validated['title'],
-            'abstract' => $validated['description'],
-            'author' => $validated['author'],
-            'publisher' => $validated['publisher'] ?? null,
-            'year_published' => $validated['year'],
-            'keywords' => $validated['keywords'] ?? null,
-            'file_path' => $filePath,
-            'status' => 'pending',
-            'type_id' => null,
-        ]);
+        try {
+            $document = Document::create([
+                'user_id' => $request->user()->id,
+                'title' => $validated['title'],
+                'abstract' => $validated['description'],
+                'author' => $validated['author'],
+                'publisher' => $validated['publisher'] ?? null,
+                'year_published' => $validated['year'],
+                'keywords' => $validated['keywords'] ?? null,
+                'file_path' => $filePath,
+                'status' => 'pending',
+                'type_id' => null,
+                'upload_date' => now(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Dokumen berhasil diunggah',
-            'data' => $document->load('user')
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil diunggah dan menunggu persetujuan',
+                'data' => $document->load('user')
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan dokumen: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)

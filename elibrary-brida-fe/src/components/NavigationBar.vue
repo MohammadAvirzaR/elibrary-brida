@@ -144,58 +144,43 @@ const userRole = ref('')
 const userInitials = ref('')
 const showProfileMenu = ref(false)
 
-// Watch route changes to update auth state
 watch(() => route.path, () => {
   checkAuth()
 })
 
-// Check authentication on mount
 onMounted(() => {
   checkAuth()
 
-  // Add click outside listener
   document.addEventListener('click', handleClickOutside)
-
-  // Listen for storage changes (for cross-tab synchronization)
   window.addEventListener('storage', handleStorageChange)
-
-  // Listen for custom auth event
   window.addEventListener('auth-changed', checkAuth as EventListener)
 
-  // Refresh user data periodically (every 30 seconds)
   const refreshInterval = setInterval(async () => {
     if (isAuthenticated.value) {
       await refreshUserData()
     }
-  }, 30000) // 30 seconds
+  }, 30000)
 
-  // Store interval ID for cleanup
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(window as any).__authRefreshInterval = refreshInterval
+  ;(window as Window & { __authRefreshInterval?: ReturnType<typeof setInterval> }).__authRefreshInterval = refreshInterval
 })
 
-// Clean up listeners
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('storage', handleStorageChange)
   window.removeEventListener('auth-changed', checkAuth as EventListener)
 
-  // Clear refresh interval
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const interval = (window as any).__authRefreshInterval
+  const interval = (window as Window & { __authRefreshInterval?: ReturnType<typeof setInterval> }).__authRefreshInterval
   if (interval) {
     clearInterval(interval)
   }
 })
 
-// Handle storage changes
 const handleStorageChange = (event: StorageEvent) => {
   if (event.key === 'auth_token' || event.key === 'user') {
     checkAuth()
   }
 }
 
-// Check if user is authenticated
 const checkAuth = () => {
   const token = localStorage.getItem('auth_token')
   const userStr = localStorage.getItem('user')
@@ -207,7 +192,6 @@ const checkAuth = () => {
       userName.value = user.name || user.username || 'User'
       userRole.value = formatRole(user.role || 'Guest')
 
-      // Generate initials from name
       const names = userName.value.split(' ')
       if (names.length >= 2 && names[0]?.[0] && names[1]?.[0]) {
         userInitials.value = (names[0][0] + names[1][0]).toUpperCase()
@@ -225,7 +209,6 @@ const checkAuth = () => {
   }
 }
 
-// Format role name
 const formatRole = (role: string) => {
   const roleMap: Record<string, string> = {
     'super_admin': 'Super Admin',
@@ -237,7 +220,6 @@ const formatRole = (role: string) => {
   return roleMap[role.toLowerCase()] || role
 }
 
-// Check if user can access dashboard
 const dashboardLink = computed(() => {
   const userStr = localStorage.getItem('user')
   if (!userStr) return '/my-dashboard'
@@ -246,12 +228,10 @@ const dashboardLink = computed(() => {
     const user = JSON.parse(userStr)
     const role = user.role?.toLowerCase()
 
-    // Admin users go to admin dashboard
     if (role === 'super_admin' || role === 'admin') {
       return '/dashboard'
     }
 
-    // Regular users go to user dashboard
     return '/my-dashboard'
   } catch {
     return '/my-dashboard'
@@ -274,7 +254,6 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-// Handle logout
 const handleLogout = () => {
   localStorage.removeItem('auth_token')
   localStorage.removeItem('user')
@@ -283,19 +262,29 @@ const handleLogout = () => {
   router.push('/')
 }
 
-// Refresh user data from server
+interface UserApiResponse {
+  user: {
+    id: number
+    name?: string
+    full_name?: string
+    username?: string
+    email: string
+    institution?: string
+    unit_name?: string
+    role?: { name?: string } | string
+  }
+}
+
 const refreshUserData = async () => {
   const token = localStorage.getItem('auth_token')
   if (!token) return
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await api.auth.me()
+    const data = await api.auth.me() as UserApiResponse
 
-    // Update user data in localStorage
     if (data.user) {
       const oldRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).role : null
-      const newRole = data.user.role?.name || data.user.role || 'guest'
+      const newRole = typeof data.user.role === 'object' ? data.user.role?.name || 'guest' : data.user.role || 'guest'
 
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
@@ -306,7 +295,6 @@ const refreshUserData = async () => {
         role: newRole
       }))
 
-      // If role changed, update UI
       if (oldRole && oldRole !== newRole) {
         checkAuth()
         // Optional: Show notification or redirect

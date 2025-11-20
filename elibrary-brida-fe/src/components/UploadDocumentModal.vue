@@ -214,8 +214,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const emit = defineEmits(['close', 'uploaded'])
+const { toast } = useToast()
 
 const fileInput = ref<HTMLInputElement>()
 const isDragging = ref(false)
@@ -369,7 +371,10 @@ const handleSubmit = async () => {
         keywords: form.keywords
       }
 
+      toast.success('Upload Tersimpan', 'Dokumen berhasil diunggah dan menunggu persetujuan admin')
+
       emit('uploaded', newDocument)
+      emit('close')
 
       form.file = null
       form.title = ''
@@ -382,7 +387,26 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Upload failed:', error)
-    alert('Gagal mengunggah dokumen. Silakan coba lagi.')
+
+    let errorMessage = ''
+
+    if (error instanceof Error) {
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        errorMessage = 'Anda tidak memiliki izin untuk upload dokumen. Silakan ajukan permohonan sebagai kontributor terlebih dahulu.'
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.'
+      } else if (error.message.includes('422') || error.message.includes('validation')) {
+        errorMessage = 'Data yang Anda masukkan tidak valid. Periksa kembali semua field.'
+      } else if (error.message.includes('413') || error.message.includes('too large')) {
+        errorMessage = 'Ukuran file terlalu besar. Maksimal 10MB.'
+      } else {
+        errorMessage = error.message
+      }
+    } else {
+      errorMessage = 'Silakan coba lagi atau hubungi administrator.'
+    }
+
+    toast.error('Gagal Mengunggah', errorMessage)
   } finally {
     isSubmitting.value = false
   }

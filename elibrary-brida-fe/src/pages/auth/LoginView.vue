@@ -121,8 +121,10 @@ import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
 import api from '@/services/api'
 import { emailAddress } from '@form-validation/validator-email-address'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 const formData = reactive({
   username: '',
@@ -132,9 +134,8 @@ const formData = reactive({
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-// Email validation
 const isEmailValid = computed(() => {
-  if (!formData.username) return true // Don't show error on empty
+  if (!formData.username) return true
   const result = emailAddress().validate({
     value: formData.username,
     options: {}
@@ -147,8 +148,17 @@ const emailErrorMessage = computed(() => {
   return 'Please enter a valid email address'
 })
 
+interface LoginResponse {
+  token: string
+  user: {
+    id: number
+    name: string
+    email: string
+    role: string
+  }
+}
+
 const handleLogin = async () => {
-  // Validate email before submitting
   if (!isEmailValid.value) {
     errorMessage.value = 'Please enter a valid email address'
     return
@@ -158,19 +168,15 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    // Call API using api client
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await api.auth.login({
-      email: formData.username, // API expects email field
+    const data = await api.auth.login({
+      email: formData.username,
       password: formData.password
-    })
+    }) as LoginResponse
 
-    // Store token from API response
     if (data.token) {
       localStorage.setItem('auth_token', data.token)
     }
 
-    // Store user data
     if (data.user) {
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
@@ -181,27 +187,25 @@ const handleLogin = async () => {
       }))
     }
 
-    // Redirect based on user role
     const userRole = data.user?.role?.toLowerCase()
 
-    // Dispatch event to notify other components
     window.dispatchEvent(new Event('auth-changed'))
-
-    // Set last known role for role change detection
     localStorage.setItem('last_known_role', userRole)
 
+    toast.success('Login Berhasil', `Selamat datang, ${data.user?.name || 'User'}!`)
+
     if (userRole === 'super_admin' || userRole === 'admin') {
-      // Redirect super_admin and admin to dashboard
       router.push('/dashboard')
     } else {
-      // Redirect regular users to their dashboard
       router.push('/my-dashboard')
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
       errorMessage.value = error.message
+      toast.error('Login Gagal', error.message)
     } else {
       errorMessage.value = 'Login failed. Please try again.'
+      toast.error('Login Gagal', 'Silakan coba lagi')
     }
   } finally {
     isLoading.value = false
@@ -213,7 +217,6 @@ const handleSSO = () => {
 }
 
 const handleImageError = (event: Event) => {
-  // Fallback if logo image fails to load
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
 }

@@ -475,15 +475,17 @@ onMounted(() => {
 
 const loadDocuments = async () => {
   try {
-    const response = await api.documents.getAll() as { success: boolean; data: ApiDocumentResponse[] }
-    if (response.success && response.data) {
-      documents.value = response.data.map((doc) => ({
+    const response = await api.documents.search('', 1, 100) as { data: ApiDocumentResponse[] }
+    if (response.data) {
+      // Filter hanya dokumen yang sudah approved untuk user
+      const approvedDocs = response.data.filter((doc: ApiDocumentResponse) => doc.status === 'approved')
+      documents.value = approvedDocs.map((doc) => ({
         id: doc.id,
         title: doc.title,
         author: doc.author,
         category: doc.category_name || 'Umum',
         downloadDate: doc.created_at,
-        isFavorite: doc.is_favorite || false
+        isFavorite: false
       }))
     }
   } catch (error) {

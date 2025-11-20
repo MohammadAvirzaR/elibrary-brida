@@ -550,11 +550,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 const username = ref('')
 const userRole = ref('')
 const isSidebarOpen = ref(true)
@@ -584,8 +586,11 @@ const queueReviews = ref<QueueItem[]>([])
 
 const loadPendingDocuments = async () => {
   try {
+    console.log('Loading pending documents...')
     const response = await api.documents.review() as { success: boolean; data: DocumentResponse[] }
+    console.log('Response from /documents/review:', response)
     if (response.success && response.data) {
+      console.log('Found', response.data.length, 'pending documents')
       queueReviews.value = response.data.map((doc) => ({
         id: doc.id,
         name: doc.user?.name || 'Unknown',
@@ -598,6 +603,9 @@ const loadPendingDocuments = async () => {
         }
       }))
       queueCount.value = queueReviews.value.length
+      console.log('Queue reviews updated:', queueReviews.value)
+    } else {
+      console.warn('No pending documents or invalid response structure')
     }
   } catch (error) {
     console.error('Gagal memuat dokumen pending:', error)
@@ -705,6 +713,9 @@ const filteredHistories = computed(() => {
   )
 })
 
+// Auto refresh data
+let refreshInterval: ReturnType<typeof setInterval> | null = null
+
 // Functions
 onMounted(() => {
   const storedUser = localStorage.getItem('user')
@@ -723,6 +734,18 @@ onMounted(() => {
   loadPendingDocuments()
   loadHistory()
   loadStats()
+
+  refreshInterval = setInterval(() => {
+    loadPendingDocuments()
+    loadHistory()
+    loadStats()
+  }, 30000)
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
 })
 
 const logout = () => {
@@ -752,9 +775,11 @@ const approveItem = async (id: number) => {
       })
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
+      toast.success('Dokumen Disetujui', `"${item.title}" telah disetujui`)
     }
   } catch (error) {
     console.error('Gagal menyetujui dokumen:', error)
+    toast.error('Gagal Menyetujui', 'Terjadi kesalahan saat menyetujui dokumen')
   }
 }
 
@@ -769,24 +794,34 @@ const rejectItem = async (id: number) => {
       })
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
+      toast.warning('Dokumen Ditolak', `"${item.title}" telah ditolak`)
     }
   } catch (error) {
     console.error('Gagal menolak dokumen:', error)
+    toast.error('Gagal Menolak', 'Terjadi kesalahan saat menolak dokumen')
   }
 }
 
 const approveSelected = async () => {
+  const count = selectedQueue.value.length
   for (const id of selectedQueue.value) {
     await approveItem(id)
   }
   selectedQueue.value = []
+  if (count > 0) {
+    toast.success('Dokumen Disetujui', `${count} dokumen berhasil disetujui`)
+  }
 }
 
 const rejectSelected = async () => {
+  const count = selectedQueue.value.length
   for (const id of selectedQueue.value) {
     await rejectItem(id)
   }
   selectedQueue.value = []
+  if (count > 0) {
+    toast.warning('Dokumen Ditolak', `${count} dokumen telah ditolak`)
+  }
 }
 
 // History Actions
@@ -796,12 +831,20 @@ const toggleSelectAllHistory = (e: Event) => {
 }
 
 const deleteItem = (id: number) => {
+  const item = histories.value.find(h => h.id === id)
   histories.value = histories.value.filter(h => h.id !== id)
+  if (item) {
+    toast.info('Data Berhasil Dihapus', `"${item.title}" telah dihapus dari history`)
+  }
 }
 
 const deleteSelected = () => {
+  const count = selectedHistory.value.length
   selectedHistory.value.forEach(id => deleteItem(id))
   selectedHistory.value = []
+  if (count > 0) {
+    toast.info('Data Berhasil Dihapus', `${count} dokumen telah dihapus dari history`)
+  }
 }
 </script>
 

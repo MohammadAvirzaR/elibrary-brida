@@ -66,17 +66,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
     });
 
-    // Reviewer hanya bisa meninjau dokumen
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer')->group(function () {
+    // Admin, Super Admin, dan Reviewer bisa meninjau dokumen pending
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,admin,super_admin')->group(function () {
         Route::get('/documents/review', [DocumentController::class, 'review']);
     });
 
-    // Contributor hanya bisa upload dokumen
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor')->group(function () {
+    // Contributor, Admin, dan Super Admin bisa upload dokumen
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin')->group(function () {
         Route::post('/documents/upload', [DocumentController::class, 'upload']);
     });
 
-    // Guest hanya bisa lihat
+    // Semua authenticated user bisa lihat dokumen mereka
     Route::get('/documents', [DocumentController::class, 'index']);
 
 });
