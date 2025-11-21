@@ -27,8 +27,10 @@
               File Dokumen <span class="text-red-500">*</span>
             </label>
             <div
-              @dragover.prevent
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
               @drop.prevent="handleDrop"
+              @click="!form.file && fileInput?.click()"
               class="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
               :class="{ 'border-blue-500 bg-blue-50': isDragging }"
             >
@@ -49,7 +51,7 @@
                 </p>
                 <button
                   type="button"
-                  @click="fileInput?.click()"
+                  @click.stop="fileInput?.click()"
                   class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Pilih File
@@ -259,10 +261,25 @@ const handleDrop = (event: DragEvent) => {
 const validateFile = (file: File) => {
   errors.file = ''
 
-  // Check file type
-  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-  if (!allowedTypes.includes(file.type)) {
+  console.log('File validation:', {
+    name: file.name,
+    type: file.type,
+    size: file.size
+  })
+
+  // Check file extension (more reliable than MIME type)
+  const fileName = file.name.toLowerCase()
+  const allowedExtensions = ['.pdf', '.doc', '.docx']
+  const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
+
+  // Check file type (MIME type)
+  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '']
+  const hasValidType = allowedTypes.includes(file.type) || file.type === ''
+
+  // Accept if either extension OR type is valid (some browsers don't set MIME type correctly)
+  if (!hasValidExtension && !hasValidType) {
     errors.file = 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan'
+    console.error('Invalid file type:', file.type, 'and extension:', fileName)
     return
   }
 
@@ -274,6 +291,7 @@ const validateFile = (file: File) => {
   }
 
   form.file = file
+  console.log('File accepted:', file.name)
 
   // Auto-fill title from filename if empty
   if (!form.title) {
@@ -387,6 +405,19 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Upload failed:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      formData: {
+        hasFile: !!form.file,
+        fileName: form.file?.name,
+        fileSize: form.file?.size,
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        year: form.year,
+        author: form.author
+      }
+    })
 
     let errorMessage = ''
 
@@ -399,6 +430,8 @@ const handleSubmit = async () => {
         errorMessage = 'Data yang Anda masukkan tidak valid. Periksa kembali semua field.'
       } else if (error.message.includes('413') || error.message.includes('too large')) {
         errorMessage = 'Ukuran file terlalu besar. Maksimal 10MB.'
+      } else if (error.message.includes('file')) {
+        errorMessage = 'File tidak valid atau belum dipilih. Pastikan Anda memilih file PDF, DOC, atau DOCX.'
       } else {
         errorMessage = error.message
       }

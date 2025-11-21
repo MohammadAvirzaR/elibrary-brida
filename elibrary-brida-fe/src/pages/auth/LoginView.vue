@@ -96,18 +96,26 @@
 
           <!-- Bottom Links -->
           <div class="mt-6 space-y-2 text-center text-sm">
-            <router-link
-              to="/forgot-password"
-              class="block text-gray-900 hover:text-gray-700 font-semibold transition"
-            >
-              Forgot password?
-            </router-link>
-            <router-link
-              to="/register"
-              class="block text-gray-900 hover:text-gray-700 font-semibold transition"
-            >
-              Don't have any accounts?
-            </router-link>
+            <p class="text-gray-700">
+  Lupa Password ?
+  <router-link
+    to="/forgot-password"
+    class="text-blue-600 hover:text-blue-500 font-semibold transition"
+  >
+    Klik disini
+  </router-link>
+</p>
+
+            <p class="text-gray-700">
+  Tidak punya akun ?
+  <router-link
+    to="/register"
+    class="text-blue-600 hover:text-blue-500 font-semibold transition"
+  >
+    Buat akun
+  </router-link>
+</p>
+
           </div>
         </div>
       </div>

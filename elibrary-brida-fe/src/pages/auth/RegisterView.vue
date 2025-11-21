@@ -40,6 +40,7 @@
                 placeholder="Nama Lengkap"
                 class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
+                :disabled="isLoading"
               />
             </div>
 
@@ -54,6 +55,7 @@
                   !isEmailValid && formData.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                 ]"
                 required
+                :disabled="isLoading"
               />
               <p v-if="emailErrorMessage" class="mt-1 text-sm text-red-600">
                 {{ emailErrorMessage }}
@@ -65,43 +67,74 @@
               <input
                 v-model="formData.institution"
                 type="text"
-                placeholder="Unit/Instansi"
+                placeholder="Unit/Instansi (Opsional)"
                 class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required
+                :disabled="isLoading"
               />
             </div>
 
             <!-- Password Input -->
-            <div>
+            <div class="relative">
               <input
                 v-model="formData.password"
-                type="password"
-                placeholder="Password"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Password (minimal 6 karakter)"
+                class="w-full px-4 py-3 pr-12 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
                 minlength="6"
+                :disabled="isLoading"
               />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                :disabled="isLoading"
+              >
+                <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
             </div>
 
             <!-- Confirm Password Input -->
-            <div>
+            <div class="relative">
               <input
                 v-model="formData.password_confirmation"
-                type="password"
+                :type="showConfirmPassword ? 'text' : 'password'"
                 placeholder="Konfirmasi Password"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                class="w-full px-4 py-3 pr-12 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
                 minlength="6"
+                :disabled="isLoading"
               />
+              <button
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                :disabled="isLoading"
+              >
+                <svg v-if="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
             </div>
 
             <!-- Register Button -->
             <button
               type="submit"
               :disabled="isLoading || !isEmailValid"
-              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center justify-center gap-2"
             >
-              {{ isLoading ? 'Loading...' : 'Daftar' }}
+              <i-lucide-loader-2 v-if="isLoading" class="w-4 h-4 animate-spin" />
+              <span>{{ isLoading ? 'Mengirim OTP...' : 'Daftar' }}</span>
             </button>
 
             <!-- Error Message -->
@@ -109,20 +142,34 @@
               {{ errorMessage }}
             </div>
 
-            <!-- Success Message -->
-            <div v-if="successMessage" class="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
-              {{ successMessage }}
-            </div>
+            <!-- Info Message -->
+
           </form>
+
+          <!-- OTP Modal -->
+          <OtpVerificationModal
+            v-if="showOtpModal"
+            :email="formData.email"
+            :expires-in="otpExpiresIn"
+            :is-resending="isResending"
+            @close="handleCloseOtp"
+            @verify="handleVerifyOtp"
+            @resend="handleResendOtp"
+            ref="otpModal"
+          />
 
           <!-- Bottom Links -->
           <div class="mt-6 text-center text-sm">
-            <router-link
-              to="/login"
-              class="block text-gray-900 hover:text-gray-700 font-semibold transition"
-            >
-              Sudah punya akun? Login di sini
-            </router-link>
+            <p class="text-gray-700">
+  Sudah punya akun ?
+  <router-link
+    to="/login"
+    class="text-blue-600 hover:text-blue-500 font-semibold transition"
+  >
+    Login di sini
+  </router-link>
+</p>
+
           </div>
         </div>
       </div>
@@ -134,7 +181,7 @@
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
-import api from '@/services/api'
+import OtpVerificationModal from '@/components/OtpVerificationModal.vue'
 import { emailAddress } from '@form-validation/validator-email-address'
 import { useToast } from '@/composables/useToast'
 
@@ -151,10 +198,23 @@ const formData = reactive({
 
 const isLoading = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
+const showOtpModal = ref(false)
+const otpExpiresIn = ref(600) // 10 minutes
+const isResending = ref(false)
+const otpModal = ref<InstanceType<typeof OtpVerificationModal>>()
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
-interface RegisterResponse {
-  token: string
+interface OtpResponse {
+  status: string
+  message: string
+  email: string
+  expires_in: number
+}
+
+interface VerifyOtpResponse {
+  status: string
+  message: string
   user: {
     id: number
     name: string
@@ -162,6 +222,7 @@ interface RegisterResponse {
     institution?: string
     role: string
   }
+  token: string
 }
 
 const isEmailValid = computed(() => {
@@ -184,28 +245,77 @@ const handleRegister = async () => {
     return
   }
 
-  isLoading.value = true
-  errorMessage.value = ''
-  successMessage.value = ''
-
   if (formData.password !== formData.password_confirmation) {
     errorMessage.value = 'Password dan konfirmasi password tidak sama.'
-    isLoading.value = false
     return
   }
 
+  isLoading.value = true
+  errorMessage.value = ''
+
   try {
-    const data = await api.auth.register({
-      name: formData.name,
-      email: formData.email,
-      institution: formData.institution,
-      password: formData.password,
-      password_confirmation: formData.password_confirmation
-    }) as RegisterResponse
+    const response = await fetch('http://127.0.0.1:8000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        institution: formData.institution,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation
+      })
+    })
 
-    successMessage.value = 'Registrasi berhasil! Mengalihkan ke halaman utama...'
-    toast.success('Registrasi Berhasil', 'Akun Anda telah dibuat. Mengalihkan ke dashboard...')
+    const data: OtpResponse = await response.json()
 
+    if (!response.ok) {
+      throw new Error(data.message || 'Gagal mengirim OTP')
+    }
+
+    toast.success('OTP Terkirim', 'Kode verifikasi telah dikirim ke email Anda')
+    otpExpiresIn.value = data.expires_in || 600
+    showOtpModal.value = true
+
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+      toast.error('Gagal Mengirim OTP', error.message)
+    } else {
+      errorMessage.value = 'Gagal mengirim OTP. Silakan coba lagi.'
+      toast.error('Gagal Mengirim OTP', 'Silakan coba lagi')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleVerifyOtp = async (otp: string) => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        otp: otp
+      })
+    })
+
+    const data: VerifyOtpResponse = await response.json()
+
+    if (!response.ok) {
+      otpModal.value?.setError(data.message || 'Kode OTP tidak valid')
+      return
+    }
+
+    toast.success('Verifikasi Berhasil', data.message || 'Registrasi berhasil!')
+
+    // Save token and user data
     if (data.token) {
       localStorage.setItem('auth_token', data.token)
     }
@@ -217,26 +327,65 @@ const handleRegister = async () => {
         username: data.user.name || data.user.email,
         email: data.user.email,
         institution: data.user.institution,
-        role: data.user.role || 'guest'
+        role: data.user.role || 'reviewer'
       }))
     }
+
+    showOtpModal.value = false
 
     setTimeout(() => {
       window.dispatchEvent(new Event('auth-changed'))
       router.push('/my-dashboard')
-    }, 1500)
+    }, 1000)
 
   } catch (error: unknown) {
     if (error instanceof Error) {
-      errorMessage.value = error.message
-      toast.error('Registrasi Gagal', error.message)
+      otpModal.value?.setError(error.message)
     } else {
-      errorMessage.value = 'Registrasi gagal. Silakan coba lagi.'
-      toast.error('Registrasi Gagal', 'Silakan coba lagi')
+      otpModal.value?.setError('Verifikasi gagal. Silakan coba lagi.')
+    }
+  }
+}
+
+const handleResendOtp = async () => {
+  isResending.value = true
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/resend-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        email: formData.email
+      })
+    })
+
+    const data: OtpResponse = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Gagal mengirim ulang OTP')
+    }
+
+    toast.success('OTP Terkirim', 'Kode verifikasi baru telah dikirim ke email Anda')
+    otpExpiresIn.value = data.expires_in || 600
+    otpModal.value?.reset()
+
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      toast.error('Gagal Mengirim OTP', error.message)
+    } else {
+      toast.error('Gagal Mengirim OTP', 'Silakan coba lagi')
     }
   } finally {
-    isLoading.value = false
+    isResending.value = false
   }
+}
+
+const handleCloseOtp = () => {
+  showOtpModal.value = false
+  otpModal.value?.reset()
 }
 
 const handleImageError = (event: Event) => {

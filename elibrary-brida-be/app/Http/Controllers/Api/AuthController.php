@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -25,7 +26,7 @@ class AuthController extends Controller
 
         // Generate OTP 6 digit
         $otp = rand(100000, 999999);
-        
+
         // Simpan data registrasi dan OTP di cache (expired 10 menit)
         $registrationData = [
             'name' => $request->name,
@@ -34,12 +35,12 @@ class AuthController extends Controller
             'password' => $request->password,
             'otp' => $otp,
         ];
-        
-        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(10));
+
+        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(1));
 
         // Kirim OTP via email
         try {
-            Mail::raw("Kode OTP Anda adalah: {$otp}\n\nKode ini berlaku selama 10 menit.", function ($message) use ($request) {
+            Mail::raw("Kode OTP Anda adalah: {$otp}\n\nKode ini berlaku selama 1 menit.", function ($message) use ($request) {
                 $message->to($request->email)
                         ->subject('Kode Verifikasi OTP - Registrasi');
             });
@@ -48,9 +49,9 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'Kode OTP telah dikirim ke email Anda',
                 'email' => $request->email,
-                'expires_in' => 600, // 10 menit dalam detik
+                'expires_in' => 60,
             ], 200);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -86,13 +87,17 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Buat user baru dengan role contributor (role_id = 4)
+        // Buat user baru dengan role contributor
+        // Cari role_id yang tersedia atau gunakan default
+        $contributorRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
+        $roleId = $contributorRole ? $contributorRole->id : DB::table('roles')->min('id') ?? 5;
+
         $user = User::create([
             'full_name' => $registrationData['name'],
             'email' => $registrationData['email'],
             'unit_name' => $registrationData['institution'],
             'password' => $registrationData['password'],
-            'role_id' => 4, // reviewer role
+            'role_id' => $roleId,
             'email_verified_at' => now(), // Set email as verified
         ]);
 
@@ -107,13 +112,13 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Registrasi berhasil! Anda sekarang adalah kontributor.',
+            'message' => 'Registrasi berhasil! Anda sekarang adalah guest.',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->full_name,
                 'email' => $user->email,
                 'institution' => $user->unit_name,
-                'role' => $user->role->name ?? 'contributor',
+                'role' => $user->role->name ?? 'guest',
             ],
             'token' => $token,
         ], 201);
@@ -154,9 +159,9 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'Kode OTP baru telah dikirim ke email Anda',
                 'email' => $request->email,
-                'expires_in' => 600,
+                'expires_in' => 60,
             ], 200);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
