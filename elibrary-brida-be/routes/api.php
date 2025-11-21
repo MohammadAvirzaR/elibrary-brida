@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FilterController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\AdminDocumentController;
 
 // Route untuk register dan login
 Route::post('register', [AuthController::class, 'register']); // Step 1: Kirim OTP
@@ -66,7 +67,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/documents/upload', [DocumentController::class, 'upload']);
     });
 
+    Route::post('/documents/preview', [DocumentController::class, 'preview']);
+
+    Route::get('/documents/my', [DocumentController::class, 'myDocuments']);
+
     // Guest hanya bisa lihat
     Route::get('/documents', [DocumentController::class, 'index']);
+
+    // Public (preview validation)
+    Route::post('/documents/preview', [DocumentController::class, 'preview']);
+
+    // Protected: submit final (hanya contributor)
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':contributor'])->group(function () {
+        Route::post('/documents', [DocumentController::class, 'store']); // final submit
+    });
+
+    // Admin routes: approve/reject (hanya admin & super_admin)
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin'])->group(function () {
+        Route::post('/admin/documents/{id}/approve', [AdminDocumentController::class, 'approve']);
+        Route::post('/admin/documents/{id}/reject', [AdminDocumentController::class, 'reject']);
+    });
 
 });

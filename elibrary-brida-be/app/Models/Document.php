@@ -9,79 +9,56 @@ class Document extends Model
 {
     use HasFactory;
 
-    // Nama tabel
-    protected $table = 'documents'; // ganti sesuai nama tabel di migrasi kamu
+    protected $table = 'documents';
 
-    // Kolom yang bisa diisi
     protected $fillable = [
         'user_id',
         'title',
-        'author',
         'year_published',
         'type_id',
         'unit_id',
         'language',
         'email',
         'keywords',
-        'abstract',
         'file_path',
-        'upload_date',
-        'view_count',
-        'download_count',
-        'is_featured',
         'license_id',
-        'funding_program',
-        'supervisor',
         'status',
+        'access_right',
+        'abstract_id',
+        'abstract_en',
+        'funding_program',
         'research_location',
         'latitude',
         'longitude',
-        'access_right',
+        'embargo_until',
+        'statement_agreed',
+        'upload_date',
     ];
 
-    // Kalau tabel tidak punya created_at & updated_at
-    public $timestamps = false;
+    protected $casts = [
+        'embargo_until' => 'date',
+        'statement_agreed' => 'boolean',
+    ];
 
-    // 🔗 Relasi ke tabel lain
-    public function user()
+    // ===================== RELASI ======================
+
+    public function authors()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(DocumentAuthor::class);
     }
 
-    public function type()
+    public function supervisors()
     {
-        return $this->belongsTo(Type::class);
+        return $this->hasMany(DocumentSupervisor::class);
     }
 
-    public function unit()
+    public function attachments()
     {
-        return $this->belongsTo(Unit::class);
-    }
-
-    public function license()
-    {
-        return $this->belongsTo(License::class);
+        return $this->hasMany(DocumentAttachment::class);
     }
 
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class, 'document_subject', 'document_id', 'subject_id');
-    }
-
-
-    // 🔍 Scope untuk search agar controller tetap bersih
-    public function scopeSearch($query, $keyword)
-    {
-        if ($keyword) {
-            return $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                    ->orWhere('author', 'like', "%{$keyword}%")
-                    ->orWhere('keywords', 'like', "%{$keyword}%")
-                    ->orWhere('abstract', 'like', "%{$keyword}%")
-                    ->orWhere('year_published', 'like', "%{$keyword}%");
-            });
-        }
-
-        return $query;
+        return $this->belongsToMany(Subject::class, 'document_subject');
     }
 }

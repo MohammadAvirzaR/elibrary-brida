@@ -92,7 +92,7 @@ class AuthController extends Controller
             'email' => $registrationData['email'],
             'unit_name' => $registrationData['institution'],
             'password' => $registrationData['password'],
-            'role_id' => 3, // contributor role
+            'role_id' => 4, // reviewer role
             'email_verified_at' => now(), // Set email as verified
         ]);
 
