@@ -49,9 +49,15 @@
                 v-model="formData.email"
                 type="email"
                 placeholder="Email"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="[
+                  'w-full px-4 py-3 rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
+                  !isEmailValid && formData.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                ]"
                 required
               />
+              <p v-if="emailErrorMessage" class="mt-1 text-sm text-red-600">
+                {{ emailErrorMessage }}
+              </p>
             </div>
 
             <!-- Unit/Instansi Input -->
@@ -92,7 +98,7 @@
             <!-- Register Button -->
             <button
               type="submit"
-              :disabled="isLoading"
+              :disabled="isLoading || !isEmailValid"
               class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {{ isLoading ? 'Loading...' : 'Daftar' }}
@@ -125,12 +131,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
 import api from '@/services/api'
+import { emailAddress } from '@form-validation/validator-email-address'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 const formData = reactive({
   name: '',
@@ -144,12 +153,41 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
+interface RegisterResponse {
+  token: string
+  user: {
+    id: number
+    name: string
+    email: string
+    institution?: string
+    role: string
+  }
+}
+
+const isEmailValid = computed(() => {
+  if (!formData.email) return true
+  const result = emailAddress().validate({
+    value: formData.email,
+    options: {}
+  })
+  return result.valid
+})
+
+const emailErrorMessage = computed(() => {
+  if (!formData.email || isEmailValid.value) return ''
+  return 'Please enter a valid email address'
+})
+
 const handleRegister = async () => {
+  if (!isEmailValid.value) {
+    errorMessage.value = 'Please enter a valid email address'
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
   successMessage.value = ''
 
-  // Validasi password match
   if (formData.password !== formData.password_confirmation) {
     errorMessage.value = 'Password dan konfirmasi password tidak sama.'
     isLoading.value = false
@@ -157,25 +195,21 @@ const handleRegister = async () => {
   }
 
   try {
-    // Call API using api client
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await api.auth.register({
+    const data = await api.auth.register({
       name: formData.name,
       email: formData.email,
       institution: formData.institution,
       password: formData.password,
       password_confirmation: formData.password_confirmation
-    })
+    }) as RegisterResponse
 
-    // Success
     successMessage.value = 'Registrasi berhasil! Mengalihkan ke halaman utama...'
+    toast.success('Registrasi Berhasil', 'Akun Anda telah dibuat. Mengalihkan ke dashboard...')
 
-    // Store token if provided
     if (data.token) {
       localStorage.setItem('auth_token', data.token)
     }
 
-    // Store user data if provided (with default role: guest)
     if (data.user) {
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
@@ -187,20 +221,18 @@ const handleRegister = async () => {
       }))
     }
 
-    // Redirect to user dashboard after 1.5 seconds
     setTimeout(() => {
-      // Dispatch event to notify other components
       window.dispatchEvent(new Event('auth-changed'))
-
-      // New users with guest role go directly to user dashboard
       router.push('/my-dashboard')
     }, 1500)
 
   } catch (error: unknown) {
     if (error instanceof Error) {
       errorMessage.value = error.message
+      toast.error('Registrasi Gagal', error.message)
     } else {
       errorMessage.value = 'Registrasi gagal. Silakan coba lagi.'
+      toast.error('Registrasi Gagal', 'Silakan coba lagi')
     }
   } finally {
     isLoading.value = false
@@ -208,7 +240,6 @@ const handleRegister = async () => {
 }
 
 const handleImageError = (event: Event) => {
-  // Fallback if logo image fails to load
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
 }

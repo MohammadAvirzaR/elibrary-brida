@@ -14,6 +14,8 @@ class Document extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'author',        // dari remote
+        'publisher',     // dari remote
         'year_published',
         'type_id',
         'unit_id',
@@ -39,6 +41,8 @@ class Document extends Model
         'embargo_until' => 'date',
         'statement_agreed' => 'boolean',
     ];
+
+    public $timestamps = true;
 
     // ===================== RELASI ======================
 

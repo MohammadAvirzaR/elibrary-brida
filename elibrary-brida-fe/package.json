@@ -16,12 +16,15 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@form-validation/validator-email-address": "^2.4.0",
+    "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "lucide-vue-next": "^0.545.0",
     "pinia": "^3.0.3",
+    "reka-ui": "^2.6.0",
     "shadcn-vue": "^2.3.2",
     "simple-icons": "^15.17.0",
     "tailwind-merge": "^3.3.1",

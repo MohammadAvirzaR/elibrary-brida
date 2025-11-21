@@ -83,6 +83,23 @@
           </span>
         </router-link>
 
+        <!-- Contributor Requests - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/contributor-requests"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
+          <span
+            :class="[
+              'font-semibold transition-opacity duration-300',
+              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
+            ]"
+          >
+            Contributor Requests
+          </span>
+        </router-link>
+
         <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
@@ -273,7 +290,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="closeEditModal"
     >
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
           <h2 class="text-xl font-bold text-gray-900">Edit User Profile</h2>

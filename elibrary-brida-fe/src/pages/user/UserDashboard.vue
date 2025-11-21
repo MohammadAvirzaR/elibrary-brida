@@ -11,7 +11,7 @@
             </div>
             <div>
               <h1 class="text-lg font-bold text-neutral-900">E-Library BRIDA</h1>
-              <p class="text-xs text-neutral-500">Dashboard User</p>
+              <p class="text-xs text-neutral-500">Dashboard Pengguna</p>
             </div>
           </div>
 
@@ -26,14 +26,29 @@
               Beranda
             </button>
 
-            <!-- Upload Button -->
+            <!-- Contributor Request Button / Dashboard Link -->
             <button
-              @click="openUploadModal"
+              v-if="userRole === 'contributor'"
+              @click="goToContributorDashboard"
               class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
             >
               <i-lucide-upload class="w-4 h-4 mr-2" />
-              Unggah Dokumen
+              Dashboard Kontributor
             </button>
+
+            <button
+              v-else-if="userRole === 'guest' && !hasPendingRequest"
+              @click="goToContributorRequest"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
+            >
+              <i-lucide-file-text class="w-4 h-4 mr-2" />
+              Jadi Kontributor
+            </button>
+
+            <div v-else-if="userRole === 'guest' && hasPendingRequest" class="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-50 border border-yellow-200 rounded-lg">
+              <i-lucide-clock class="w-4 h-4 text-yellow-600" />
+              <span class="text-yellow-800 font-medium">Menunggu Persetujuan</span>
+            </div>
 
             <!-- User Profile Dropdown -->
             <div class="relative">
@@ -78,6 +93,7 @@
             <h1 class="text-3xl font-bold text-neutral-900">
               Selamat Datang, {{ userName }}
             </h1>
+            <p class="text-sm text-neutral-600 mt-1">Kelola dokumen yang Anda unduh</p>
           </div>
           <div class="text-right">
             <p class="text-sm text-neutral-500">Status Akun</p>
@@ -96,11 +112,11 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Total Dokumen</p>
-              <p class="text-3xl font-bold text-neutral-900 mt-2">{{ stats.totalDocuments }}</p>
+              <p class="text-sm font-medium text-neutral-600">Total Unduhan</p>
+              <p class="text-3xl font-bold text-neutral-900 mt-2">{{ stats.totalDownloads }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i-lucide-file-text class="w-6 h-6 text-blue-600" />
+              <i-lucide-download class="w-6 h-6 text-blue-600" />
             </div>
           </div>
           <p class="text-xs text-neutral-500 mt-4">
@@ -111,74 +127,74 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Menunggu Review</p>
-              <p class="text-3xl font-bold text-amber-600 mt-2">{{ stats.pending }}</p>
+              <p class="text-sm font-medium text-neutral-600">Favorit</p>
+              <p class="text-3xl font-bold text-amber-600 mt-2">{{ stats.favorites }}</p>
             </div>
             <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-              <i-lucide-clock class="w-6 h-6 text-amber-600" />
+              <i-lucide-star class="w-6 h-6 text-amber-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">Dalam proses verifikasi</p>
+          <p class="text-xs text-neutral-500 mt-4">Dokumen tersimpan</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Disetujui</p>
-              <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.approved }}</p>
+              <p class="text-sm font-medium text-neutral-600">Kategori</p>
+              <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.categories }}</p>
             </div>
             <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <i-lucide-check-circle class="w-6 h-6 text-green-600" />
+              <i-lucide-folder class="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">Sudah dipublikasikan</p>
+          <p class="text-xs text-neutral-500 mt-4">Jenis dokumen berbeda</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-neutral-600">Ditolak</p>
-              <p class="text-3xl font-bold text-red-600 mt-2">{{ stats.rejected }}</p>
+              <p class="text-sm font-medium text-neutral-600">Terakhir Diunduh</p>
+              <p class="text-3xl font-bold text-purple-600 mt-2">{{ stats.recent }}</p>
             </div>
-            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <i-lucide-x-circle class="w-6 h-6 text-red-600" />
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <i-lucide-clock class="w-6 h-6 text-purple-600" />
             </div>
           </div>
-          <p class="text-xs text-neutral-500 mt-4">Perlu perbaikan</p>
+          <p class="text-xs text-neutral-500 mt-4">7 hari terakhir</p>
         </div>
       </div>
 
       <!-- Main Content Area -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Upload Section -->
+        <!-- Download Section -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Quick Upload Card -->
+          <!-- Quick Browse Card -->
           <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
             <div class="flex items-start justify-between">
               <div class="flex-1">
-                <h2 class="text-2xl font-bold mb-2">Upload Dokumen Baru</h2>
+                <h2 class="text-2xl font-bold mb-2">Telusuri Koleksi Dokumen</h2>
                 <p class="text-blue-100 mb-6">
-                  Bagikan pengetahuan Anda dengan mengunggah dokumen
+                  Temukan dan unduh dokumen yang Anda butuhkan
                 </p>
                 <button
-                  @click="showUploadModal = true"
+                  @click="goToCatalog"
                   class="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition-colors shadow-md"
                 >
-                  <i-lucide-upload class="w-5 h-5" />
-                  Mulai Upload
+                  <i-lucide-search class="w-5 h-5" />
+                  Telusuri Dokumen
                 </button>
               </div>
               <div class="hidden md:block">
-                <i-lucide-cloud-upload class="w-24 h-24 text-blue-400 opacity-50" />
+                <i-lucide-book-open class="w-24 h-24 text-blue-400 opacity-50" />
               </div>
             </div>
           </div>
 
-          <!-- My Documents Table -->
+          <!-- Downloaded Documents Table -->
           <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
             <div class="p-6 border-b border-neutral-200">
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-neutral-900">Dokumen Saya</h3>
+                <h3 class="text-lg font-bold text-neutral-900">Dokumen yang Diunduh</h3>
                 <div class="flex items-center gap-3">
                   <input
                     v-model="searchQuery"
@@ -187,13 +203,13 @@
                     class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <select
-                    v-model="filterStatus"
+                    v-model="filterCategory"
                     class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Semua Status</option>
-                    <option value="pending">Menunggu Review</option>
-                    <option value="approved">Disetujui</option>
-                    <option value="rejected">Ditolak</option>
+                    <option value="">Semua Kategori</option>
+                    <option value="penelitian">Penelitian</option>
+                    <option value="laporan">Laporan</option>
+                    <option value="artikel">Artikel</option>
                   </select>
                 </div>
               </div>
@@ -210,10 +226,7 @@
                       Kategori
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Tanggal Upload
+                      Tanggal Unduh
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Aksi
@@ -242,17 +255,8 @@
                         {{ doc.category }}
                       </span>
                     </td>
-                    <td class="px-6 py-4">
-                      <span
-                        :class="getStatusClass(doc.status)"
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      >
-                        <span :class="getStatusDotClass(doc.status)" class="w-1.5 h-1.5 rounded-full mr-1.5"></span>
-                        {{ getStatusText(doc.status) }}
-                      </span>
-                    </td>
                     <td class="px-6 py-4 text-sm text-neutral-600">
-                      {{ formatDate(doc.uploadDate) }}
+                      {{ formatDate(doc.downloadDate) }}
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
@@ -264,28 +268,29 @@
                           <i-lucide-eye class="w-4 h-4" />
                         </button>
                         <button
-                          @click="editDocument(doc)"
-                          class="text-amber-600 hover:text-amber-800 p-1"
-                          title="Edit"
+                          @click="downloadAgain(doc)"
+                          class="text-green-600 hover:text-green-800 p-1"
+                          title="Unduh Lagi"
                         >
-                          <i-lucide-edit class="w-4 h-4" />
+                          <i-lucide-download class="w-4 h-4" />
                         </button>
                         <button
-                          @click="deleteDocument(doc)"
-                          class="text-red-600 hover:text-red-800 p-1"
-                          title="Hapus"
+                          @click="toggleFavorite(doc)"
+                          :class="doc.isFavorite ? 'text-amber-600' : 'text-neutral-400'"
+                          class="hover:text-amber-800 p-1"
+                          title="Favorit"
                         >
-                          <i-lucide-trash-2 class="w-4 h-4" />
+                          <i-lucide-star class="w-4 h-4" :class="{ 'fill-current': doc.isFavorite }" />
                         </button>
                       </div>
                     </td>
                   </tr>
                   <tr v-if="filteredDocuments.length === 0">
-                    <td colspan="5" class="px-6 py-12 text-center">
+                    <td colspan="4" class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-neutral-400">
                         <i-lucide-inbox class="w-16 h-16 mb-4" />
-                        <p class="text-lg font-medium">Belum ada dokumen</p>
-                        <p class="text-sm mt-1">Mulai dengan mengunggah dokumen pertama Anda</p>
+                        <p class="text-lg font-medium">Belum ada dokumen yang diunduh</p>
+                        <p class="text-sm mt-1">Mulai telusuri dan unduh dokumen dari katalog</p>
                       </div>
                     </td>
                   </tr>
@@ -301,24 +306,24 @@
           <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 class="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
               <i-lucide-lightbulb class="w-5 h-5 text-amber-500" />
-              Tips Upload
+              Tips Unduh Dokumen
             </h3>
             <ul class="space-y-3 text-sm text-neutral-700">
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Pastikan file dalam format PDF atau DOCX</span>
+                <span>Gunakan fitur pencarian untuk menemukan dokumen</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Ukuran maksimal file adalah 10MB</span>
+                <span>Tandai dokumen favorit untuk akses cepat</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Gunakan judul yang deskriptif dan jelas</span>
+                <span>Filter berdasarkan kategori untuk hasil lebih spesifik</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Isi metadata dengan lengkap untuk memudahkan pencarian</span>
+                <span>Unduh ulang dokumen kapan saja dari riwayat</span>
               </li>
             </ul>
           </div>
@@ -367,29 +372,24 @@
         </div>
       </div>
     </div>
-
-    <!-- Upload Modal -->
-    <UploadDocumentModal
-      v-if="showUploadModal"
-      @close="showUploadModal = false"
-      @uploaded="handleDocumentUploaded"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-// import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
+import api from '@/services/api'
 
 const router = useRouter()
 
 // User info
 const userName = ref('')
 const userEmail = ref('')
+const userRole = ref('')
 
 // UI State for navbar
 const showProfileMenu = ref(false)
+const hasPendingRequest = ref(false)
 
 // Computed user initials
 const userInitials = computed(() => {
@@ -402,27 +402,44 @@ const userInitials = computed(() => {
     .toUpperCase()
 })
 
-// Stats
+interface DocumentItem {
+  id: number
+  title: string
+  author: string
+  category: string
+  downloadDate: string
+  isFavorite: boolean
+}
+
+interface ActivityItem {
+  id: number
+  type: string
+  title: string
+  time: string
+}
+
+interface ApiDocumentResponse {
+  id: number
+  title: string
+  author: string
+  category_name?: string
+  created_at: string
+  is_favorite?: boolean
+  [key: string]: unknown
+}
+
 const stats = ref({
-  totalDocuments: 0,
+  totalDownloads: 0,
   thisMonth: 0,
-  pending: 0,
-  approved: 0,
-  rejected: 0
+  favorites: 0,
+  categories: 0,
+  recent: 0
 })
 
-// Documents
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const documents = ref<any[]>([])
+const documents = ref<DocumentItem[]>([])
 const searchQuery = ref('')
-const filterStatus = ref('')
-
-// UI State
-const showUploadModal = ref(false)
-
-// Recent activities
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const recentActivities = ref<any[]>([])
+const filterCategory = ref('')
+const recentActivities = ref<ActivityItem[]>([])
 
 // Filtered documents
 const filteredDocuments = computed(() => {
@@ -435,8 +452,8 @@ const filteredDocuments = computed(() => {
     )
   }
 
-  if (filterStatus.value) {
-    filtered = filtered.filter(doc => doc.status === filterStatus.value)
+  if (filterCategory.value) {
+    filtered = filtered.filter(doc => doc.category === filterCategory.value)
   }
 
   return filtered
@@ -456,106 +473,82 @@ onMounted(() => {
   loadRecentActivities()
 })
 
-// Load documents
 const loadDocuments = async () => {
-  // TODO: Fetch from API
-  // For now, use dummy data
-  documents.value = [
-    {
-      id: 1,
-      title: 'Panduan Penelitian Ilmiah',
-      author: userName.value,
-      category: 'Penelitian',
-      status: 'approved',
-      uploadDate: new Date().toISOString()
-    },
-    {
-      id: 2,
-      title: 'Laporan Kegiatan 2024',
-      author: userName.value,
-      category: 'Laporan',
-      status: 'pending',
-      uploadDate: new Date().toISOString()
+  try {
+    const response = await api.documents.search('', 1, 100) as { data: ApiDocumentResponse[] }
+    if (response.data) {
+      // Filter hanya dokumen yang sudah approved untuk user
+      const approvedDocs = response.data.filter((doc: ApiDocumentResponse) => doc.status === 'approved')
+      documents.value = approvedDocs.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        author: doc.author,
+        category: doc.category_name || 'Umum',
+        downloadDate: doc.created_at,
+        isFavorite: false
+      }))
     }
-  ]
+  } catch (error) {
+    console.error('Gagal memuat dokumen:', error)
+    documents.value = []
+  }
 }
 
-// Load stats
 const loadStats = async () => {
-  // TODO: Fetch from API
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+
   stats.value = {
-    totalDocuments: documents.value.length,
-    thisMonth: 2,
-    pending: documents.value.filter(d => d.status === 'pending').length,
-    approved: documents.value.filter(d => d.status === 'approved').length,
-    rejected: documents.value.filter(d => d.status === 'rejected').length
+    totalDownloads: documents.value.length,
+    thisMonth: documents.value.filter(d => new Date(d.downloadDate) >= thisMonthStart).length,
+    favorites: documents.value.filter(d => d.isFavorite).length,
+    categories: new Set(documents.value.map(d => d.category)).size,
+    recent: documents.value.filter(d => new Date(d.downloadDate) >= sevenDaysAgo).length
   }
 }
 
-// Load recent activities
 const loadRecentActivities = async () => {
-  // TODO: Fetch from API
-  recentActivities.value = [
-    {
-      id: 1,
-      type: 'upload',
-      title: 'Dokumen berhasil diunggah',
-      time: '2 jam yang lalu'
-    },
-    {
-      id: 2,
-      type: 'approved',
-      title: 'Dokumen Anda disetujui',
-      time: '1 hari yang lalu'
-    }
-  ]
+  const latestDocs = documents.value
+    .sort((a, b) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime())
+    .slice(0, 5)
+
+  recentActivities.value = latestDocs.map((doc, index) => ({
+    id: index + 1,
+    type: 'download',
+    title: `Mengunduh: ${doc.title}`,
+    time: formatTimeAgo(doc.downloadDate)
+  }))
 }
 
-// Status helpers
-const getStatusClass = (status: string) => {
-  const classes: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800'
-  }
-  return classes[status] || 'bg-neutral-100 text-neutral-800'
-}
+const formatTimeAgo = (date: string): string => {
+  const now = new Date()
+  const past = new Date(date)
+  const diffMs = now.getTime() - past.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
 
-const getStatusDotClass = (status: string) => {
-  const classes: Record<string, string> = {
-    pending: 'bg-amber-500',
-    approved: 'bg-green-500',
-    rejected: 'bg-red-500'
-  }
-  return classes[status] || 'bg-neutral-500'
-}
-
-const getStatusText = (status: string) => {
-  const texts: Record<string, string> = {
-    pending: 'Menunggu Review',
-    approved: 'Disetujui',
-    rejected: 'Ditolak'
-  }
-  return texts[status] || status
+  if (diffMins < 60) return `${diffMins} menit yang lalu`
+  if (diffHours < 24) return `${diffHours} jam yang lalu`
+  if (diffDays < 7) return `${diffDays} hari yang lalu`
+  return formatDate(date)
 }
 
 // Activity helpers
 const getActivityIconClass = (type: string) => {
   const classes: Record<string, string> = {
-    upload: 'bg-blue-100 text-blue-600',
-    approved: 'bg-green-100 text-green-600',
-    rejected: 'bg-red-100 text-red-600',
-    comment: 'bg-purple-100 text-purple-600'
+    download: 'bg-blue-100 text-blue-600',
+    favorite: 'bg-amber-100 text-amber-600',
+    view: 'bg-green-100 text-green-600'
   }
   return classes[type] || 'bg-neutral-100 text-neutral-600'
 }
 
 const getActivityIcon = (type: string) => {
   const icons: Record<string, string> = {
-    upload: 'i-lucide-upload',
-    approved: 'i-lucide-check-circle',
-    rejected: 'i-lucide-x-circle',
-    comment: 'i-lucide-message-circle'
+    download: 'i-lucide-download',
+    favorite: 'i-lucide-star',
+    view: 'i-lucide-eye'
   }
   return icons[type] || 'i-lucide-bell'
 }
@@ -574,17 +567,40 @@ const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value
 }
 
-const openUploadModal = () => {
-  showUploadModal.value = true
-}
-
+// Navigation functions
 const goToLandingPage = () => {
   router.push('/')
+}
+
+const goToContributorRequest = () => {
+  router.push('/become-contributor')
+}
+
+const goToContributorDashboard = () => {
+  router.push('/contributor-dashboard')
+}
+
+const goToCatalog = () => {
+  router.push('/catalog')
+}
+
+const checkPendingRequest = async () => {
+  if (userRole.value === 'guest') {
+    try {
+      const response = await api.contributorRequests.checkPending() as { success: boolean; has_pending: boolean }
+      if (response.success && response.has_pending) {
+        hasPendingRequest.value = true
+      }
+    } catch (error) {
+      console.error('Gagal memeriksa status permintaan:', error)
+    }
+  }
 }
 
 const logout = () => {
   localStorage.removeItem('auth_token')
   localStorage.removeItem('user')
+  localStorage.removeItem('last_known_role')
   router.push('/login')
 }
 
@@ -596,7 +612,29 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Load user data
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      userName.value = user.name || 'User'
+      userEmail.value = user.email || ''
+      userRole.value = user.role || 'guest'
+    } catch {
+      userName.value = 'User'
+      userEmail.value = ''
+      userRole.value = 'guest'
+    }
+  }
+
+  // Check if user has pending contributor request
+  await checkPendingRequest()
+
+  // Load dashboard data
+  loadStats()
+  loadRecentActivities()
+
   document.addEventListener('click', handleClickOutside)
 })
 
@@ -604,31 +642,41 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// Document actions
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const viewDocument = (doc: any) => {
-  console.log('View document:', doc)
-  // TODO: Implement view
+const viewDocument = (doc: DocumentItem) => {
+  router.push(`/detail/${doc.id}`)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const editDocument = (doc: any) => {
-  console.log('Edit document:', doc)
-  // TODO: Implement edit
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const deleteDocument = (doc: any) => {
-  if (confirm(`Hapus dokumen "${doc.title}"?`)) {
-    documents.value = documents.value.filter(d => d.id !== doc.id)
-    loadStats()
+const downloadAgain = async (doc: DocumentItem) => {
+  try {
+    window.open(`${API_BASE_URL}/documents/${doc.id}/download`, '_blank')
+  } catch (error) {
+    console.error('Gagal mengunduh dokumen:', error)
+    alert('Gagal mengunduh dokumen. Silakan coba lagi.')
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handleDocumentUploaded = (doc: any) => {
-  documents.value.unshift(doc)
-  loadStats()
-  showUploadModal.value = false
+const toggleFavorite = async (doc: DocumentItem) => {
+  const previousState = doc.isFavorite
+  doc.isFavorite = !doc.isFavorite
+
+  try {
+    await api.documents.update(doc.id, {
+      is_favorite: doc.isFavorite
+    })
+    loadStats()
+  } catch (error) {
+    doc.isFavorite = previousState
+    console.error('Gagal mengubah status favorit:', error)
+  }
 }
+
+interface ImportMetaEnv {
+  VITE_API_BASE_URL?: string
+}
+
+interface ImportMeta {
+  env: ImportMetaEnv
+}
+
+const API_BASE_URL = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 </script>

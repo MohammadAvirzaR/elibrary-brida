@@ -21,8 +21,8 @@ class DatabaseSeeder extends Seeder
             TypesSeeder::class,
             LicensesSeeder::class,
             UnitsSeeder::class,
-            DocumentsSeeder::class,
-            DocumentSubjectSeeder::class,
+            // DocumentsSeeder::class, // Removed - no dummy data, use real upload
+            // DocumentSubjectSeeder::class, // Removed - will be created on upload
         ]);
     }
 }

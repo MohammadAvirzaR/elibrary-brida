@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RoleType } from '@/middleware/roleGuard'
 import { ROLES } from '@/middleware/roleGuard'
 
-// Extend route meta to include roles
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
@@ -12,11 +11,15 @@ declare module 'vue-router' {
   }
 }
 
+interface ImportMeta {
+  env?: {
+    BASE_URL?: string
+  }
+}
+
 const router = createRouter({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  history: createWebHistory((import.meta as any).env?.BASE_URL),
+  history: createWebHistory((import.meta as ImportMeta).env?.BASE_URL),
   routes: [
-    // ========== PUBLIC ROUTES ==========
     {
       path: '/',
       name: 'home',
@@ -81,7 +84,6 @@ const router = createRouter({
       }
     },
 
-    // ========== AUTH ROUTES ==========
     {
       path: '/login',
       name: 'login',
@@ -113,14 +115,13 @@ const router = createRouter({
       }
     },
 
-    // ========== DASHBOARD ROUTES (Protected) ==========
     {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/pages/dashboard/DashboardView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // Only super_admin and admin can access
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
         title: 'Dashboard'
       }
     },
@@ -152,14 +153,13 @@ const router = createRouter({
       }
     },
 
-    // ========== ROLES ROUTES (Protected) ==========
     {
       path: '/roles',
       name: 'roles',
       component: () => import('@/pages/dashboard/RolesView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage roles
+        roles: [ROLES.SUPER_ADMIN],
         title: 'Role Management'
       }
     },
@@ -169,48 +169,88 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/RoleManagementView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage roles (Discord-style)
+        roles: [ROLES.SUPER_ADMIN],
         title: 'Role Management (Discord Style)'
       }
     },
 
-    // ========== USER ROUTES (Protected) ==========
     {
       path: '/users',
       name: 'users',
       component: () => import('@/pages/dashboard/UsersView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN], // Only super_admin can manage users
+        roles: [ROLES.SUPER_ADMIN],
         title: 'User Management'
       }
     },
 
-    // ========== PROFILE MANAGEMENT (Admin & Super Admin) ==========
     {
       path: '/profile-management',
       name: 'profile-management',
       component: () => import('@/pages/dashboard/ProfileManagementView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], // Admin and Super Admin can manage profiles
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
         title: 'Profile Management'
       }
     },
 
-    // ========== USER DASHBOARD (For regular users) ==========
+    {
+      path: '/become-contributor',
+      name: 'become-contributor',
+      component: () => import('@/pages/dashboard/BecomeContributorView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.GUEST],
+        title: 'Become Contributor'
+      }
+    },
+
+    {
+      path: '/contributor-requests',
+      name: 'contributor-requests',
+      component: () => import('@/pages/dashboard/ContributorRequestsView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN],
+        title: 'Contributor Requests'
+      }
+    },
+
+    {
+      path: '/upload-document',
+      name: 'upload-document',
+      component: () => import('@/pages/contributor/ContributorDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.CONTRIBUTOR],
+        title: 'Upload Document'
+      }
+    },
+
+    {
+      path: '/contributor-dashboard',
+      name: 'contributor-dashboard',
+      component: () => import('@/pages/contributor/ContributorDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.CONTRIBUTOR],
+        title: 'Dashboard Kontributor'
+      }
+    },
+
     {
       path: '/my-dashboard',
       name: 'my-dashboard',
       component: () => import('@/pages/user/UserDashboard.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.GUEST, ROLES.CONTRIBUTOR, ROLES.REVIEWER], // Regular users
+        roles: [ROLES.GUEST, ROLES.CONTRIBUTOR, ROLES.REVIEWER],
         title: 'My Dashboard'
       }
     },
 
-    // ========== 404 NOT FOUND ==========
     {
       path: '/unauthorized',
       name: 'unauthorized',
@@ -230,7 +270,6 @@ const router = createRouter({
     }
   ],
 
-  // Scroll behavior - auto scroll to top saat pindah page
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
@@ -245,30 +284,19 @@ const router = createRouter({
   }
 })
 
-// ========== NAVIGATION GUARD ==========
-// Proteksi route yang perlu authentication dan role-based access control
 router.beforeEach((to, from, next) => {
-  // Update document title
   document.title = `${to.meta.title || 'E-Library'} | BRIDA Sulawesi Tenggara`
 
-  // Check if route requires authentication
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-
-  // Check if user is logged in
   const isAuthenticated = checkAuth()
-
-  // Get current user
   const user = getCurrentUser()
 
   if (requiresAuth && !isAuthenticated) {
-    // Redirect to login if not authenticated
-    // Save attempted route for redirect after login
     next({
       name: 'login',
       query: { redirect: to.fullPath }
     })
   } else if (to.name === 'login' && isAuthenticated) {
-    // Redirect to appropriate dashboard if already logged in
     const userRole = user?.role as RoleType
 
     if (userRole === ROLES.SUPER_ADMIN || userRole === ROLES.ADMIN) {
@@ -277,36 +305,24 @@ router.beforeEach((to, from, next) => {
       next({ name: 'my-dashboard' })
     }
   } else if (requiresAuth && isAuthenticated) {
-    // Check role-based access if route has role requirements
     const requiredRoles = to.meta.roles
 
     if (requiredRoles && requiredRoles.length > 0) {
-      // Check if user has required role
       const userRole = user?.role as RoleType
 
       if (!requiredRoles.includes(userRole)) {
-        // User doesn't have required role
-        console.warn(`Access denied. Required roles: ${requiredRoles.join(', ')}, User role: ${userRole}`)
-
-        // Redirect to unauthorized page
+        console.warn(`Akses ditolak. Role dibutuhkan: ${requiredRoles.join(', ')}, Role user: ${userRole}`)
         next({ name: 'unauthorized' })
         return
       }
     }
 
-    // Allow navigation
     next()
   } else {
-    // Allow navigation for public routes
     next()
   }
 })
 
-// ========== HELPER FUNCTIONS ==========
-
-/**
- * Get current user from localStorage
- */
 function getCurrentUser() {
   const userStr = localStorage.getItem('user')
   if (!userStr) return null
@@ -318,35 +334,19 @@ function getCurrentUser() {
   }
 }
 
-// ========== AUTH CHECK FUNCTION ==========
-/**
- * Check if user is authenticated
- * TODO: Replace with your actual auth logic
- */
 function checkAuth(): boolean {
-  // Simple check using localStorage
   const token = localStorage.getItem('auth_token')
 
-  // Optional: Check token expiration
   if (token) {
     try {
-      // If you have JWT, decode and check expiration
-      // const payload = JSON.parse(atob(token.split('.')[1]))
-      // return payload.exp * 1000 > Date.now()
       return true
     } catch {
-      // Invalid token
       localStorage.removeItem('auth_token')
       return false
     }
   }
 
   return false
-
-  // Alternative: Use Pinia store
-  // import { useAuthStore } from '@/stores/auth'
-  // const authStore = useAuthStore()
-  // return authStore.isAuthenticated
 }
 
 export default router

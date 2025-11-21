@@ -455,10 +455,13 @@ const handleDrop = (event: DragEvent, targetRole: Role) => {
   const draggedIndex = roles.value.findIndex(r => r.id === draggedRole.value!.id)
   const targetIndex = roles.value.findIndex(r => r.id === targetRole.id)
 
+  // Guard against undefined values
+  if (draggedIndex === -1 || targetIndex === -1) return
+
   // Swap hierarchy
-  const tempHierarchy = roles.value[draggedIndex].hierarchy
-  roles.value[draggedIndex].hierarchy = roles.value[targetIndex].hierarchy
-  roles.value[targetIndex].hierarchy = tempHierarchy
+  const tempHierarchy = roles.value[draggedIndex]!.hierarchy
+  roles.value[draggedIndex]!.hierarchy = roles.value[targetIndex]!.hierarchy
+  roles.value[targetIndex]!.hierarchy = tempHierarchy
 
   draggedRole.value = null
 }

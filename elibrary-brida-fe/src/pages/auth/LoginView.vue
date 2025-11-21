@@ -38,9 +38,15 @@
                 v-model="formData.username"
                 type="email"
                 placeholder="Email"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="[
+                  'w-full px-4 py-3 rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
+                  !isEmailValid && formData.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                ]"
                 required
               />
+              <p v-if="emailErrorMessage" class="mt-1 text-sm text-red-600">
+                {{ emailErrorMessage }}
+              </p>
             </div>
 
             <!-- Password Input -->
@@ -57,7 +63,7 @@
             <!-- Login Button -->
             <button
               type="submit"
-              :disabled="isLoading"
+              :disabled="isLoading || !isEmailValid"
               class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {{ isLoading ? 'Loading...' : 'Log in' }}
@@ -110,12 +116,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/layout/AuthLayout.vue'
 import api from '@/services/api'
+import { emailAddress } from '@form-validation/validator-email-address'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 const formData = reactive({
   username: '',
@@ -125,24 +134,49 @@ const formData = reactive({
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+const isEmailValid = computed(() => {
+  if (!formData.username) return true
+  const result = emailAddress().validate({
+    value: formData.username,
+    options: {}
+  })
+  return result.valid
+})
+
+const emailErrorMessage = computed(() => {
+  if (!formData.username || isEmailValid.value) return ''
+  return 'Please enter a valid email address'
+})
+
+interface LoginResponse {
+  token: string
+  user: {
+    id: number
+    name: string
+    email: string
+    role: string
+  }
+}
+
 const handleLogin = async () => {
+  if (!isEmailValid.value) {
+    errorMessage.value = 'Please enter a valid email address'
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    // Call API using api client
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await api.auth.login({
-      email: formData.username, // API expects email field
+    const data = await api.auth.login({
+      email: formData.username,
       password: formData.password
-    })
+    }) as LoginResponse
 
-    // Store token from API response
     if (data.token) {
       localStorage.setItem('auth_token', data.token)
     }
 
-    // Store user data
     if (data.user) {
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
@@ -153,27 +187,25 @@ const handleLogin = async () => {
       }))
     }
 
-    // Redirect based on user role
     const userRole = data.user?.role?.toLowerCase()
 
-    // Dispatch event to notify other components
     window.dispatchEvent(new Event('auth-changed'))
-
-    // Set last known role for role change detection
     localStorage.setItem('last_known_role', userRole)
 
+    toast.success('Login Berhasil', `Selamat datang, ${data.user?.name || 'User'}!`)
+
     if (userRole === 'super_admin' || userRole === 'admin') {
-      // Redirect super_admin and admin to dashboard
       router.push('/dashboard')
     } else {
-      // Redirect regular users to their dashboard
       router.push('/my-dashboard')
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
       errorMessage.value = error.message
+      toast.error('Login Gagal', error.message)
     } else {
       errorMessage.value = 'Login failed. Please try again.'
+      toast.error('Login Gagal', 'Silakan coba lagi')
     }
   } finally {
     isLoading.value = false
@@ -181,15 +213,10 @@ const handleLogin = async () => {
 }
 
 const handleSSO = () => {
-  // TODO: Implement SSO login logic
   console.log('SSO Login clicked')
-
-  // Example: Redirect to SSO provider
-  // window.location.href = 'https://your-sso-provider.com/auth?client_id=your_client_id&redirect_uri=' + encodeURIComponent(window.location.origin + '/auth/callback')
 }
 
 const handleImageError = (event: Event) => {
-  // Fallback if logo image fails to load
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
 }
