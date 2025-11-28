@@ -12,7 +12,10 @@ return new class extends Migration
     public function up()
     {
         Schema::table('documents', function (Blueprint $table) {
-            $table->timestamps();
+            // Timestamps sudah ada di create_documents_table, skip jika sudah ada
+            if (!Schema::hasColumn('documents', 'created_at') && !Schema::hasColumn('documents', 'updated_at')) {
+                $table->timestamps();
+            }
         });
     }
 

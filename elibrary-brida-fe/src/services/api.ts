@@ -84,26 +84,41 @@ export const api = {
     getAll: (page = 1, limit = 10) =>
       apiCall(`/documents?page=${page}&limit=${limit}`, { method: 'GET' }, true),
 
-    create: (data: FormData) =>
-      apiCall('/documents', {
+    create: async (data: FormData) => {
+      const token = getAuthToken()
+      // DO NOT set Content-Type when sending FormData
+      const response = await fetch(`${API_BASE_URL}/documents`, {
         method: 'POST',
         body: data,
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
-      } as RequestInit, true),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.message || 'Create failed')
+      }
+      return result
+    },
 
-    update: (id: number, data: FormData | Record<string, unknown>) => {
+    update: async (id: number, data: FormData | Record<string, unknown>) => {
       if (data instanceof FormData) {
-        return apiCall(`/documents/${id}`, {
+        const token = getAuthToken()
+        // DO NOT set Content-Type when sending FormData
+        const response = await fetch(`${API_BASE_URL}/documents/${id}`, {
           method: 'POST',
           body: data,
           headers: {
-            'Authorization': `Bearer ${getAuthToken()}`,
+            'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
           },
-        } as RequestInit, true)
+        })
+        const result = await response.json()
+        if (!response.ok) {
+          throw new Error(result.message || 'Update failed')
+        }
+        return result
       }
       return apiCall(`/documents/${id}`, {
         method: 'PUT',
@@ -114,25 +129,51 @@ export const api = {
     delete: (id: number) =>
       apiCall(`/documents/${id}`, { method: 'DELETE' }, true),
 
+    getById: (id: number) =>
+      apiCall(`/documents/${id}`, { method: 'GET' }, true),
+
     review: () => apiCall('/documents/review', { method: 'GET' }, true),
 
     upload: async (data: FormData) => {
       const token = getAuthToken()
+
+      // CRITICAL: Do NOT set Content-Type header when sending FormData
+      // Browser will automatically set it with correct boundary
+      console.log('=== Uploading to API ===')
+      console.log('Endpoint:', `${API_BASE_URL}/documents/upload`)
+      console.log('FormData entries:', Array.from(data.entries()).length)
+
       const response = await fetch(`${API_BASE_URL}/documents/upload`, {
         method: 'POST',
         body: data,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
+          // DO NOT SET Content-Type - let browser handle it for FormData
         },
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.message || `HTTP ${response.status}: Upload failed`)
+        // Log validation errors for debugging
+        if (result.errors) {
+          console.error('Validation Errors:', result.errors)
+        }
+
+        // Create detailed error message
+        let errorMessage = result.message || 'Upload failed'
+        if (result.errors) {
+          const errorDetails = Object.entries(result.errors)
+            .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
+            .join('\n')
+          errorMessage += '\n\nDetails:\n' + errorDetails
+        }
+
+        throw new Error(errorMessage)
       }
 
+      console.log('✓ Upload successful:', result)
       return result
     },
   },

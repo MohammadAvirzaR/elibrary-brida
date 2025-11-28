@@ -13,9 +13,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documents', function (Blueprint $table) {
+            // Update status enum to include 'pending'
             DB::statement("ALTER TABLE documents MODIFY COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'");
-            $table->string('publisher')->nullable()->after('supervisor');
-            $table->timestamps();
+
+            // Add publisher only if not exists
+            if (!Schema::hasColumn('documents', 'publisher')) {
+                $table->string('publisher')->nullable()->after('supervisor');
+            }
+
+            // Add timestamps only if not exists
+            if (!Schema::hasColumn('documents', 'created_at')) {
+                $table->timestamps();
+            }
         });
     }
 

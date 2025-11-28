@@ -4,9 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
-class TypesSeeder extends Seeder
+class TypeSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -24,7 +23,7 @@ class TypesSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            DB::table('types')->updateOrInsert(
+            \App\Models\Type::updateOrCreate(
                 ['id' => $type['id']],
                 ['type_name' => $type['type_name']]
             );

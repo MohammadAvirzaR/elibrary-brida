@@ -225,6 +225,7 @@
                   <tr
                     v-for="doc in filteredDocuments"
                     :key="doc.id"
+                    :data-doc-id="doc.id"
                     class="hover:bg-neutral-50 transition-colors"
                   >
                     <td class="px-6 py-4">
@@ -383,12 +384,14 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
 
 // User info
 const userName = ref('')
 const userEmail = ref('')
+const { toast } = useToast()
 
 // UI State for navbar
 const showProfileMenu = ref(false)
@@ -479,20 +482,24 @@ onMounted(async () => {
 const loadDocuments = async () => {
   try {
     const response = await api.documents.getAll() as { success: boolean; data: ApiDocumentResponse[] }
-    if (response.success && response.data) {
+
+    if (response.success && Array.isArray(response.data)) {
       documents.value = response.data.map((doc) => ({
         id: doc.id,
-        title: doc.title,
+        title: doc.title || 'Untitled',
         author: doc.author || userName.value,
         category: doc.category_name || 'Umum',
         status: (doc.status || 'pending') as 'pending' | 'approved' | 'rejected',
-        uploadDate: doc.created_at
+        uploadDate: doc.created_at || new Date().toISOString()
       }))
-
-      // Update stats setelah dokumen dimuat
-      loadStats()
-      loadRecentActivities()
+    } else {
+      console.warn('Invalid response format:', response)
+      documents.value = []
     }
+
+    // Update stats setelah dokumen dimuat
+    loadStats()
+    loadRecentActivities()
   } catch (error) {
     console.error('Gagal memuat dokumen:', error)
     documents.value = []
@@ -641,9 +648,8 @@ onMounted(async () => {
     }
   }
 
-  // Load dashboard data
-  loadStats()
-  loadRecentActivities()
+  // Load all dashboard data (READ operation)
+  await loadDocuments()
 
   document.addEventListener('click', handleClickOutside)
 })
@@ -652,31 +658,99 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const viewDocument = (doc: UploadedDocument) => {
-  router.push(`/detail/${doc.id}`)
-}
-
-const editDocument = (doc: UploadedDocument) => {
-  console.log('Edit dokumen:', doc)
-}
-
-const deleteDocument = async (doc: UploadedDocument) => {
-  if (!confirm(`Hapus dokumen "${doc.title}"?`)) return
-
+const viewDocument = async (doc: UploadedDocument) => {
   try {
-    await api.documents.delete(doc.id)
-    documents.value = documents.value.filter(d => d.id !== doc.id)
-    await loadStats()
+    // Navigate to document detail page
+    router.push({ name: 'document-detail', params: { id: doc.id } })
   } catch (error) {
-    console.error('Gagal menghapus dokumen:', error)
-    alert('Gagal menghapus dokumen. Silakan coba lagi.')
+    console.error('Error viewing document:', error)
+    toast.error('Gagal Membuka', 'Gagal membuka detail dokumen')
+
   }
 }
 
-const handleDocumentUploaded = async () => {
-  showUploadModal.value = false
-  await loadDocuments()
-  await loadStats()
-  loadRecentActivities()
+const editDocument = async (doc: UploadedDocument) => {
+  try {
+    console.log('Edit dokumen:', doc)
+    alert('Fitur edit akan segera tersedia. Untuk sementara, silakan hapus dan upload ulang.')
+
+  } catch (error) {
+    console.error('Error editing document:', error)
+    alert('Gagal mengedit dokumen')
+  }
+}
+
+const deleteDocument = async (doc: UploadedDocument) => {
+  if (!confirm(`Apakah Anda yakin ingin menghapus dokumen "${doc.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+    return
+  }
+
+  try {
+    const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
+    if (docElement) {
+      docElement.classList.add('opacity-50', 'pointer-events-none')
+    }
+
+    const response = await api.documents.delete(doc.id) as { success: boolean; message?: string }
+
+    if (response.success) {
+      documents.value = documents.value.filter(d => d.id !== doc.id)
+
+      loadStats()
+      loadRecentActivities()
+
+      alert('Dokumen berhasil dihapus')
+    } else {
+      throw new Error(response.message || 'Gagal menghapus dokumen')
+    }
+  } catch (error) {
+    console.error('Error deleting document:', error)
+
+    let errorMessage = 'Gagal menghapus dokumen. Silakan coba lagi.'
+    if (error instanceof Error) {
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        errorMessage = 'Anda tidak memiliki izin untuk menghapus dokumen ini.'
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Dokumen tidak ditemukan.'
+      } else if (error.message.includes('401')) {
+        errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.'
+        setTimeout(() => {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user')
+          router.push('/login')
+        }, 2000)
+      }
+    }
+
+    alert(errorMessage)
+
+    const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
+    if (docElement) {
+      docElement.classList.remove('opacity-50', 'pointer-events-none')
+    }
+  }
+}
+
+const handleDocumentUploaded = async (newDoc?: UploadedDocument) => {
+  try {
+    showUploadModal.value = false
+
+    if (newDoc) {
+      console.log('New document uploaded:', newDoc)
+    }
+
+    await loadDocuments()
+    loadStats()
+    loadRecentActivities()
+
+    setTimeout(() => {
+      const tableElement = document.querySelector('.overflow-x-auto')
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+  } catch (error) {
+    console.error('Error after document upload:', error)
+  }
 }
 </script>

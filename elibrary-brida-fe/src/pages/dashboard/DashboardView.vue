@@ -311,9 +311,12 @@
                       </div>
                     </td>
                     <td class="px-6 py-4 max-w-xs">
-                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium">
+                      <router-link
+                        :to="{ name: 'document-detail', params: { id: item.id } }"
+                        class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium"
+                      >
                         {{ item.title }}
-                      </a>
+                      </router-link>
                     </td>
                     <td class="px-6 py-4">
                       <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
@@ -473,9 +476,12 @@
                       </div>
                     </td>
                     <td class="px-6 py-4 max-w-xs">
-                      <a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium">
+                      <router-link
+                        :to="{ name: 'document-detail', params: { id: item.id } }"
+                        class="text-sm text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 font-medium"
+                      >
                         {{ item.title }}
-                      </a>
+                      </router-link>
                     </td>
                     <td class="px-6 py-4">
                       <span

@@ -57,17 +57,7 @@
           </span>
         </router-link>
 
-        <router-link to="/contributor-requests" class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group">
-          <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
-          <span
-            :class="[
-              'font-semibold transition-opacity duration-300',
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
-            ]"
-          >
-            Contributor Requests
-          </span>
-        </router-link>
+
 
         <router-link to="/profile-management" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
           <i-lucide-user-cog class="w-5 h-5 flex-shrink-0" />
@@ -78,6 +68,18 @@
             ]"
           >
             Profile Management
+          </span>
+        </router-link>
+
+        <router-link to="/contributor-requests" class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group">
+          <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
+          <span
+            :class="[
+              'font-semibold transition-opacity duration-300',
+              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
+            ]"
+          >
+            Contributor Requests
           </span>
         </router-link>
 

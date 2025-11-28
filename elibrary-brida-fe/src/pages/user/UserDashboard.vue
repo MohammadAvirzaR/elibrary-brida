@@ -260,13 +260,13 @@
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
-                        <button
-                          @click="viewDocument(doc)"
+                        <router-link
+                          :to="{ name: 'document-detail', params: { id: doc.id } }"
                           class="text-blue-600 hover:text-blue-800 p-1"
-                          title="Lihat"
+                          title="Lihat Detail"
                         >
                           <i-lucide-eye class="w-4 h-4" />
-                        </button>
+                        </router-link>
                         <button
                           @click="downloadAgain(doc)"
                           class="text-green-600 hover:text-green-800 p-1"
@@ -641,10 +641,6 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
-const viewDocument = (doc: DocumentItem) => {
-  router.push(`/detail/${doc.id}`)
-}
 
 const downloadAgain = async (doc: DocumentItem) => {
   try {

@@ -1,0 +1,93 @@
+### REST Client: E-Library BRIDA API Tests
+
+@baseUrl = http://127.0.0.1:8000
+@accept = application/json
+@contentType = application/json
+# Set this manually after login response
+@token = REPLACE_WITH_TOKEN
+# Timestamp helper (optional manual replacement)
+@now = 2025-11-27T12:00:00Z
+
+### Health
+GET {{baseUrl}}/
+Accept: {{accept}}
+
+### Register (Send OTP)
+POST {{baseUrl}}/api/register
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Test User",
+  "email": "test.user@example.com",
+  "institution": "Test Org",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+
+### Verify OTP
+# Replace the email and otp below with actual values returned/received
+POST {{baseUrl}}/api/verify-otp
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "test.user@example.com",
+  "otp": "123456"
+}
+
+### Resend OTP
+POST {{baseUrl}}/api/resend-otp
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "test.user@example.com"
+}
+
+### Login
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "test.user@example.com",
+  "password": "password123"
+}
+
+### Me (Profile)
+GET {{baseUrl}}/api/me
+Accept: {{accept}}
+Authorization: Bearer {{token}}
+
+### List Documents (requires auth + role)
+GET {{baseUrl}}/api/documents
+Accept: {{accept}}
+Authorization: Bearer {{token}}
+
+### Upload Document (multipart)
+# Set file path accordingly. REST Client supports local file upload with < ./relative/path
+POST {{baseUrl}}/api/documents/upload
+Accept: {{accept}}
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebKitFormBoundary7MA4YWxkTrZu0gW
+
+--WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+Sample Document via REST Client
+--WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="description"
+
+Uploaded via REST Client
+--WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ./sample.pdf
+--WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Logout
+POST {{baseUrl}}/api/logout
+Accept: {{accept}}
+Authorization: Bearer {{token}}

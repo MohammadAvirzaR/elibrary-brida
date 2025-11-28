@@ -84,12 +84,12 @@ const { searchDocuments, isLoading } = useDocumentSearch()
 const localSearch = ref(searchQuery.value)
 const isAdvancedSearchOpen = ref(false)
 
-// Sinkronisasi dengan global search state
+// syncronize localSearch with global searchQuery
 watch(searchQuery, (newValue) => {
   localSearch.value = newValue
 })
 
-// Debounce search untuk menghindari terlalu banyak API calls
+// Debounce search to avoid too many API calls
 const debouncedSearch = useDebounceFn(async (query: string) => {
   setSearchQuery(query)
   await searchDocuments(query)
@@ -100,7 +100,7 @@ const handleSearch = () => {
 }
 
 const scrollToCatalog = async () => {
-  // Redirect ke halaman search jika ada query
+  // Redirect to search page if there is a query
   if (localSearch.value.trim()) {
     setSearchQuery(localSearch.value)
     router.push({
@@ -113,7 +113,7 @@ const scrollToCatalog = async () => {
     return
   }
 
-  // Jika tidak ada query, scroll ke catalog
+  // If there is no query, scroll to catalog
   const catalogElement = document.getElementById('catalog')
   if (catalogElement) {
     catalogElement.scrollIntoView({ behavior: 'smooth' })
@@ -130,6 +130,6 @@ const closeAdvancedSearch = () => {
 
 const handleAdvancedSearch = (filters: SearchFilters) => {
   console.log('Advanced search filters:', filters)
-  // Modal akan handle redirect ke search page
+  // Modal will handle redirect to search page
 }
 </script>

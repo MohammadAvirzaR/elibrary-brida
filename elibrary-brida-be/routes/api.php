@@ -84,4 +84,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store']);
     });
+
+    // Document view - all authenticated users can view (with authorization check in controller)
+    Route::get('/documents/{id}', [DocumentController::class, 'show']);
+
+    // Serve document files
+    Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile']);
+    Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment']);
+
+    // Document CRUD operations (Contributor can only modify their own documents)
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin,reviewer')->group(function () {
+        Route::put('/documents/{id}', [DocumentController::class, 'update']);
+        Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
+    });
 });

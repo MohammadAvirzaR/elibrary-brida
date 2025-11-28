@@ -31,7 +31,11 @@
           <li><router-link to="/" class="hover:text-neutral-900 transition-colors">Home</router-link></li>
           <li><router-link to="/catalog" class="hover:text-neutral-900 transition-colors">Katalog</router-link></li>
           <li><router-link to="/faq" class="hover:text-neutral-900 transition-colors">FAQ</router-link></li>
-          <li><router-link to="/upload" class="hover:text-neutral-900 transition-colors">Unggah Mandiri</router-link></li>
+          <li>
+            <button @click="handleUploadClick" class="hover:text-neutral-900 transition-colors">
+              Unggah Mandiri
+            </button>
+          </li>
         </ul>
 
         <!-- Show Login/Register if NOT logged in -->
@@ -325,6 +329,16 @@ const searchSubmit = () => {
         page: 1
       }
     })
+  }
+}
+
+const handleUploadClick = () => {
+  if (!isAuthenticated.value) {
+    // Guest: redirect to unauthorized kontributor page
+    router.push('/unauthorized-kontributor')
+  } else {
+    // Logged in: redirect to upload document
+    router.push('/upload-document')
   }
 }
 </script>

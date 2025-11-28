@@ -47,15 +47,7 @@ const router = createRouter({
         title: 'Hasil Pencarian'
       }
     },
-    {
-      path: '/detail/:id',
-      name: 'detail',
-      component: () => import('@/pages/public/DetailView.vue'),
-      meta: {
-        requiresAuth: false,
-        title: 'Detail Buku'
-      }
-    },
+
     {
       path: '/faq',
       name: 'faq',
@@ -74,15 +66,7 @@ const router = createRouter({
         title: 'Tentang Kami'
       }
     },
-    {
-      path: '/upload',
-      name: 'upload',
-      component: () => import('@/pages/public/UploadMandiri.vue'),
-      meta: {
-        requiresAuth: false,
-        title: 'Unggah Mandiri'
-      }
-    },
+
 
     {
       path: '/login',
@@ -123,33 +107,6 @@ const router = createRouter({
         requiresAuth: true,
         roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
         title: 'Dashboard'
-      }
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('@/pages/dashboard/ProfileView.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'Profile'
-      }
-    },
-    {
-      path: '/notifications',
-      name: 'notifications',
-      component: () => import('@/pages/dashboard/NotificationView.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'Notifications'
-      }
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: () => import('@/pages/dashboard/SettingView.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'Settings'
       }
     },
 
@@ -251,7 +208,16 @@ const router = createRouter({
       }
     },
 
-
+    {
+      path: '/documents/:id',
+      name: 'document-detail',
+      component: () => import('@/pages/dashboard/DocumentDetailView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER, ROLES.CONTRIBUTOR],
+        title: 'Detail Dokumen'
+      }
+    },
 
     {
       path: '/unauthorized',
@@ -263,13 +229,15 @@ const router = createRouter({
       }
     },
     {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('@/pages/NotFoundView.vue'),
+      path: '/unauthorized-kontributor',
+      name: 'unauthorized-kontributor',
+      component: () => import('@/pages/UnauthorizedViewKontributor.vue'),
       meta: {
-        title: '404 - Page Not Found'
+        requiresAuth: false,
+        title: 'Akses Kontributor'
       }
-    }
+    },
+
   ],
 
   scrollBehavior(to, from, savedPosition) {

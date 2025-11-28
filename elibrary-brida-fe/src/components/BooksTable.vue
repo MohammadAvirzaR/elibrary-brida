@@ -91,10 +91,11 @@
         </div>
 
         <!-- Book Cards -->
-        <div
+        <router-link
           v-else
           v-for="book in filteredBooks"
           :key="book.id"
+          :to="isAuthenticated ? { name: 'document-detail', params: { id: book.id } } : '/login'"
           class="flex-shrink-0 w-44 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
         >
           <div class="p-3">
@@ -111,7 +112,7 @@
             <p class="text-xs text-neutral-500 mb-0.5">{{ book.author }}</p>
             <p class="text-xs text-neutral-400">{{ book.year }}</p>
           </div>
-        </div>
+        </router-link>
       </div>
     </div>
   </section>
@@ -128,6 +129,11 @@ const { searchResults, totalResults } = useDocumentSearch()
 const { documents, fetchDocuments, isLoading: isLoadingDocs } = useDocuments()
 const activeTab = ref("unggulan");
 const scrollContainerRef = ref<HTMLElement | null>(null);
+
+// Check if user is authenticated
+const isAuthenticated = computed(() => {
+  return !!localStorage.getItem('auth_token')
+});
 
 const tabs = [
   { label: "Unggulan", value: "unggulan", filter: "is_featured" as const },

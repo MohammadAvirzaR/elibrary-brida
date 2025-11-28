@@ -162,10 +162,22 @@
 
                   <!-- Action Buttons -->
                   <div class="flex gap-3">
-                    <button class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2">
+                    <router-link
+                      v-if="isAuthenticated"
+                      :to="{ name: 'document-detail', params: { id: document.id } }"
+                      class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
+                    >
                       <i-lucide-eye class="w-4 h-4" />
                       Preview
-                    </button>
+                    </router-link>
+                    <router-link
+                      v-else
+                      to="/login"
+                      class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
+                    >
+                      <i-lucide-eye class="w-4 h-4" />
+                      Preview
+                    </router-link>
                     <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2">
                       <i-lucide-download class="w-4 h-4" />
                       Download
@@ -246,6 +258,11 @@ const currentPage = ref(1)
 const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
 const isAdvancedSearchOpen = ref(false);
+
+// Check if user is authenticated
+const isAuthenticated = computed(() => {
+  return !!localStorage.getItem('auth_token')
+});
 
 // const openAdvancedSearch = () => {
 //   isAdvancedSearchOpen.value = true

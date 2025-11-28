@@ -14,27 +14,34 @@ class Document extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'author',        // dari remote
-        'publisher',     // dari remote
+        'author',
+        'publisher',
         'year_published',
         'type_id',
         'unit_id',
         'language',
         'email',
         'keywords',
+        'subject',
         'file_path',
         'license_id',
         'status',
         'access_right',
         'abstract_id',
         'abstract_en',
+        'translated_abstract',
         'funding_program',
+        'supervisor',
+        'advisor',
         'research_location',
         'latitude',
         'longitude',
         'embargo_until',
         'statement_agreed',
         'upload_date',
+        'view_count',
+        'download_count',
+        'is_featured',
     ];
 
     protected $casts = [
@@ -44,7 +51,27 @@ class Document extends Model
 
     public $timestamps = true;
 
-    // ===================== RELASI ======================
+    // ===================== relation ======================
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(Type::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function license()
+    {
+        return $this->belongsTo(License::class);
+    }
 
     public function authors()
     {
