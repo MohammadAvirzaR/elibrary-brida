@@ -184,15 +184,24 @@ const startTimer = () => {
     } else {
       if (timerInterval) clearInterval(timerInterval)
     }
-  }, 100)
+  }, 1000)
 }
 
 watch(() => props.expiresIn, (newValue) => {
   timeRemaining.value = newValue
+  if (timerInterval) clearInterval(timerInterval)
+  startTimer()
+})
+
+watch(() => props.isResending, (newValue, oldValue) => {
+  if (oldValue === true && newValue === false) {
+    timeRemaining.value = props.expiresIn
+    if (timerInterval) clearInterval(timerInterval)
+    startTimer()
+  }
 })
 
 onMounted(() => {
-  // Focus first input
   otpInputs.value[0]?.focus()
   startTimer()
 })

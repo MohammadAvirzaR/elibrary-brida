@@ -84,12 +84,10 @@ const { searchDocuments, isLoading } = useDocumentSearch()
 const localSearch = ref(searchQuery.value)
 const isAdvancedSearchOpen = ref(false)
 
-// syncronize localSearch with global searchQuery
 watch(searchQuery, (newValue) => {
   localSearch.value = newValue
 })
 
-// Debounce search to avoid too many API calls
 const debouncedSearch = useDebounceFn(async (query: string) => {
   setSearchQuery(query)
   await searchDocuments(query)
@@ -100,7 +98,6 @@ const handleSearch = () => {
 }
 
 const scrollToCatalog = async () => {
-  // Redirect to search page if there is a query
   if (localSearch.value.trim()) {
     setSearchQuery(localSearch.value)
     router.push({
@@ -113,7 +110,6 @@ const scrollToCatalog = async () => {
     return
   }
 
-  // If there is no query, scroll to catalog
   const catalogElement = document.getElementById('catalog')
   if (catalogElement) {
     catalogElement.scrollIntoView({ behavior: 'smooth' })
@@ -130,6 +126,5 @@ const closeAdvancedSearch = () => {
 
 const handleAdvancedSearch = (filters: SearchFilters) => {
   console.log('Advanced search filters:', filters)
-  // Modal will handle redirect to search page
 }
 </script>

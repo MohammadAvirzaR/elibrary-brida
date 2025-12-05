@@ -1,75 +1,75 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
       <div
-        class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar"
+        class="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto no-scrollbar"
         @click.stop
       >
         <!-- Header -->
-        <div class="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 rounded-t-2xl">
-          <div class="flex items-center justify-between mb-4">
+        <div class="sticky top-0 bg-white border-b border-neutral-200 px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl md:rounded-t-2xl">
+          <div class="flex items-center justify-between mb-3 sm:mb-4">
             <div>
-              <h2 class="text-2xl font-bold text-neutral-900">Upload Dokumen Baru</h2>
-              <p class="text-sm text-neutral-600 mt-1">
+              <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-neutral-900">Upload Dokumen Baru</h2>
+              <p class="text-xs sm:text-sm text-neutral-600 mt-1">
                 {{ getStepDescription() }}
               </p>
             </div>
             <button
               @click="$emit('close')"
-              class="text-neutral-400 hover:text-neutral-600 transition-colors"
+              class="text-neutral-400 hover:text-neutral-600 transition-colors p-1"
             >
-              <i-lucide-x class="w-6 h-6" />
+              <i-lucide-x class="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
           <!-- Step Progress Indicator -->
-          <div class="flex items-center justify-between">
-            <div v-for="step in 5" :key="step" class="flex items-center flex-1">
+          <div class="flex items-center justify-between overflow-x-auto scrollbar-hide">
+            <div v-for="step in 5" :key="step" class="flex items-center flex-shrink-0">
               <div class="flex items-center">
                 <div
-                  class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm transition-colors"
                   :class="currentStep >= step ? 'bg-blue-600 text-white' : 'bg-neutral-200 text-neutral-600'"
                 >
                   {{ step }}
                 </div>
-                <span class="ml-2 text-xs font-medium" :class="currentStep >= step ? 'text-blue-600' : 'text-neutral-500'">
+                <span class="ml-1.5 sm:ml-2 text-[10px] sm:text-xs font-medium whitespace-nowrap" :class="currentStep >= step ? 'text-blue-600' : 'text-neutral-500'">
                   {{ getStepName(step) }}
                 </span>
               </div>
-              <div v-if="step < 5" class="flex-1 h-1 mx-2" :class="currentStep > step ? 'bg-blue-600' : 'bg-neutral-200'"></div>
+              <div v-if="step < 5" class="w-4 sm:w-8 h-1 mx-1 sm:mx-2 flex-shrink-0" :class="currentStep > step ? 'bg-blue-600' : 'bg-neutral-200'"></div>
             </div>
           </div>
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleStepSubmit" class="p-6 space-y-6">
+        <form @submit.prevent="handleStepSubmit" class="p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           <!-- STEP 1: Metadata -->
-          <div v-if="currentStep === 1" class="space-y-5">
+          <div v-if="currentStep === 1" class="space-y-4 sm:space-y-5">
             <!-- Title -->
             <div>
-              <label class="block text-sm font-medium text-neutral-700 mb-2">
+              <label class="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 sm:mb-2">
                 Judul Dokumen <span class="text-red-500">*</span>
               </label>
               <input
                 v-model="form.title"
                 type="text"
                 placeholder="Masukkan judul dokumen"
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 :class="{ 'border-red-500': errors.title }"
               />
-              <p v-if="errors.title" class="text-red-500 text-sm mt-1">{{ errors.title }}</p>
+              <p v-if="errors.title" class="text-red-500 text-xs sm:text-sm mt-1">{{ errors.title }}</p>
             </div>
 
             <!-- Language & Document Type -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                <label class="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 sm:mb-2">
                   Bahasa <span class="text-red-500">*</span>
                 </label>
                 <select
                   v-model="form.language"
-                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   :class="{ 'border-red-500': errors.language }"
                 >
                   <option value="">Pilih Bahasa</option>
@@ -77,7 +77,7 @@
                   <option value="en">English</option>
                   <option value="other">Lainnya</option>
                 </select>
-                <p v-if="errors.language" class="text-red-500 text-sm mt-1">{{ errors.language }}</p>
+                <p v-if="errors.language" class="text-red-500 text-xs sm:text-sm mt-1">{{ errors.language }}</p>
               </div>
 
               <div>
@@ -522,12 +522,12 @@
           </div>
 
           <!-- Navigation Buttons -->
-          <div v-if="currentStep < 5" class="flex items-center justify-between gap-3 pt-4 border-t border-neutral-200">
+          <div v-if="currentStep < 5" class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-neutral-200">
             <button
               v-if="currentStep > 1"
               type="button"
               @click="previousStep"
-              class="px-6 py-2.5 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium inline-flex items-center gap-2"
+              class="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium inline-flex items-center justify-center gap-2"
             >
               <i-lucide-chevron-left class="w-4 h-4" />
               Kembali
@@ -536,7 +536,7 @@
               v-else
               type="button"
               @click="$emit('close')"
-              class="px-6 py-2.5 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium"
+              class="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium"
             >
               Batal
             </button>
@@ -544,7 +544,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              class="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
             >
               {{ getButtonText() }}
               <i-lucide-chevron-right v-if="currentStep < 4" class="w-4 h-4" />
@@ -651,6 +651,24 @@ const validateFile = (file: File) => {
     return
   }
 
+  // Check file size first (50MB to match backend validation)
+  const maxSize = 50 * 1024 * 1024
+  if (file.size > maxSize) {
+    errors.file = 'Ukuran file maksimal 50MB'
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2)
+    console.error('File too large:', sizeInMB + 'MB')
+    toast.error('File Terlalu Besar', `Ukuran file ${sizeInMB}MB melebihi batas maksimal 50MB`)
+    return
+  }
+
+  // Check if file is empty
+  if (file.size === 0) {
+    errors.file = 'File kosong atau tidak valid'
+    console.error('File size is 0 bytes')
+    toast.error('File Tidak Valid', 'File yang dipilih kosong atau rusak')
+    return
+  }
+
   // Check file extension (more reliable than MIME type)
   const fileName = file.name.toLowerCase()
   const allowedExtensions = ['.pdf', '.doc', '.docx']
@@ -669,16 +687,6 @@ const validateFile = (file: File) => {
     errors.file = 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan'
     console.error('Invalid file type:', file.type, 'and extension:', fileName)
     toast.error('Format File Tidak Valid', 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan')
-    return
-  }
-
-  // Check file size (50MB to match backend validation)
-  const maxSize = 50 * 1024 * 1024
-  if (file.size > maxSize) {
-    errors.file = 'Ukuran file maksimal 50MB'
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2)
-    console.error('File too large:', sizeInMB + 'MB')
-    toast.error('File Terlalu Besar', `Ukuran file ${sizeInMB}MB melebihi batas maksimal 50MB`)
     return
   }
 
@@ -849,7 +857,13 @@ const validateStep3 = () => {
     return false
   }
 
-  // Validate file size
+  // Validate file size (0 bytes or too large)
+  if (form.file.size === 0) {
+    errors.file = 'File kosong atau tidak valid'
+    toast.error('File Tidak Valid', 'File yang dipilih kosong atau rusak')
+    return false
+  }
+
   const maxSize = 50 * 1024 * 1024 // 50MB (matching backend validation)
   if (form.file.size > maxSize) {
     errors.file = 'Ukuran file melebihi batas maksimal 50MB'
@@ -879,7 +893,6 @@ const validateStep3 = () => {
 
 const validateStep4 = () => {
   // DUMMY MODE: Auto-pass license validation for now
-  // This will be activated when license system is ready for production
   return true
 
   /* COMMENTED OUT: Uncomment this block when ready to activate license validation
@@ -924,7 +937,6 @@ const validateStep4 = () => {
   */
 }
 
-// Helper function to get field placeholder for focusing
 const getFieldPlaceholder = (fieldName: string): string => {
   const placeholders: Record<string, string> = {
     'title': 'Masukkan judul',
@@ -1028,32 +1040,29 @@ const submitForm = async () => {
 
     const formData = new FormData()
 
-    // Append main file (ensure it's a File object)
+    // Append main file FIRST (critical for Laravel file validation)
     formData.append('file', form.file, form.file.name)
 
-    // Append attachments
-    form.attachments.forEach((file, index) => {
-      if (file instanceof File) {
-        formData.append(`attachments[${index}]`, file, file.name)
-      }
-    })
-
-    // Basic metadata
-    formData.append('title', form.title)
+    formData.append('title', form.title.trim())
     formData.append('year_published', form.publicationYear.toString())
-    formData.append('keywords', form.keywords || '')
-    formData.append('language', form.language || '')
+    formData.append('keywords', form.keywords.trim() || '')
+    formData.append('language', form.language || 'id')
 
     // Abstract
-    formData.append('abstract_id', form.description || '')
+    if (form.description.trim()) {
+      formData.append('abstract_id', form.description.trim())
+    }
 
-    // Research info
-    formData.append('funding_program', form.funding || '')
-    formData.append('research_location', form.researchLocation || '')
+    // Research info (optional)
+    if (form.funding.trim()) {
+      formData.append('funding_program', form.funding.trim())
+    }
+    if (form.researchLocation.trim()) {
+      formData.append('research_location', form.researchLocation.trim())
+    }
 
-    // REQUIRED: Authors array (backend requires at least one)
-    const authorNames = form.author.split(' ')
-    const firstName = authorNames[0] || form.author
+    const authorNames = form.author.trim().split(' ')
+    const firstName = authorNames[0] || form.author.trim()
     const lastName = authorNames.slice(1).join(' ') || ''
 
     formData.append('authors[0][first_name]', firstName)
@@ -1061,16 +1070,19 @@ const submitForm = async () => {
     formData.append('authors[0][email]', '')
     formData.append('authors[0][institution]', '')
 
-    // Access right (default to public)
-    formData.append('access_right', 'public')
-
-    // Statement agreed (send as string '1' which Laravel accepts as true)
-    formData.append('statement_agreed', '1')
-
-    // Supervisor (optional)
-    if (form.advisor) {
-      formData.append('supervisors[0][name]', form.advisor)
+    if (form.advisor && form.advisor.trim()) {
+      formData.append('supervisors[0][name]', form.advisor.trim())
+      formData.append('supervisors[0][email]', '')
+      formData.append('supervisors[0][institution]', '')
     }
+
+    formData.append('access_right', 'open')
+    formData.append('statement_agreed', '1')
+    form.attachments.forEach((file, index) => {
+      if (file instanceof File) {
+        formData.append(`attachments[${index}]`, file, file.name)
+      }
+    })
 
     // Debug: Log all form data
     console.log('=== Submitting Form Data ===')
@@ -1086,6 +1098,8 @@ const submitForm = async () => {
     const response = await api.documents.upload(formData) as { success: boolean; data: { id: number; title: string; status: string; created_at: string; [key: string]: unknown } }
 
     if (response.success && response.data) {
+      console.log('✓ Upload successful, document ID:', response.data.id)
+
       const newDocument = {
         id: response.data.id,
         title: response.data.title,
@@ -1100,6 +1114,7 @@ const submitForm = async () => {
       }
 
       currentStep.value = 5
+      toast.success('Upload Berhasil', 'Dokumen berhasil diunggah dan menunggu review admin')
 
       setTimeout(() => {
         emit('uploaded', newDocument)
@@ -1114,7 +1129,7 @@ const submitForm = async () => {
     let errorMessage = 'Terjadi kesalahan saat mengunggah dokumen.'
 
     if (error instanceof Error) {
-      // Parse error message for better display
+      // error message
       if (error.message.includes('403') || error.message.includes('Forbidden')) {
         errorMessage = 'Anda tidak memiliki izin untuk upload dokumen. Pastikan Anda login sebagai Contributor.'
       } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
@@ -1125,7 +1140,6 @@ const submitForm = async () => {
           window.location.href = '/login'
         }, 2000)
       } else if (error.message.includes('422') || error.message.includes('Unprocessable')) {
-        // Try to extract validation errors from message
         const detailsMatch = error.message.match(/Details:\n(.+)/s)
         if (detailsMatch) {
           errorMessage = 'Validasi gagal:\n' + detailsMatch[1]

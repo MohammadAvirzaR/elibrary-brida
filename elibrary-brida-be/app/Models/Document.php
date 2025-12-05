@@ -24,6 +24,7 @@ class Document extends Model
         'keywords',
         'subject',
         'file_path',
+        'thumbnail_path',
         'license_id',
         'status',
         'access_right',

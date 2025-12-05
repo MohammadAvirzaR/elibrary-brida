@@ -217,7 +217,8 @@
 
             <div class="overflow-x-auto">
               <table class="w-full">
-                <thead class="bg-neutral-50 border-b border-neutral-200">
+                <p class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">coming soon..</p>
+                <!-- <thead class="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Judul Dokumen
@@ -294,7 +295,7 @@
                       </div>
                     </td>
                   </tr>
-                </tbody>
+                </tbody> -->
               </table>
             </div>
           </div>
@@ -442,22 +443,22 @@ const filterCategory = ref('')
 const recentActivities = ref<ActivityItem[]>([])
 
 // Filtered documents
-const filteredDocuments = computed(() => {
-  let filtered = documents.value
+// const filteredDocuments = computed(() => {
+//   let filtered = documents.value
 
-  if (searchQuery.value) {
-    filtered = filtered.filter(doc =>
-      doc.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      doc.author.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-  }
+//   if (searchQuery.value) {
+//     filtered = filtered.filter(doc =>
+//       doc.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+//       doc.author.toLowerCase().includes(searchQuery.value.toLowerCase())
+//     )
+//   }
 
-  if (filterCategory.value) {
-    filtered = filtered.filter(doc => doc.category === filterCategory.value)
-  }
+//   if (filterCategory.value) {
+//     filtered = filtered.filter(doc => doc.category === filterCategory.value)
+//   }
 
-  return filtered
-})
+//   return filtered
+// })
 
 // Load user data
 onMounted(() => {
@@ -642,37 +643,37 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const downloadAgain = async (doc: DocumentItem) => {
-  try {
-    window.open(`${API_BASE_URL}/documents/${doc.id}/download`, '_blank')
-  } catch (error) {
-    console.error('Gagal mengunduh dokumen:', error)
-    alert('Gagal mengunduh dokumen. Silakan coba lagi.')
-  }
-}
+// const downloadAgain = async (doc: DocumentItem) => {
+//   try {
+//     window.open(`${API_BASE_URL}/documents/${doc.id}/download`, '_blank')
+//   } catch (error) {
+//     console.error('Gagal mengunduh dokumen:', error)
+//     alert('Gagal mengunduh dokumen. Silakan coba lagi.')
+//   }
+// }
 
-const toggleFavorite = async (doc: DocumentItem) => {
-  const previousState = doc.isFavorite
-  doc.isFavorite = !doc.isFavorite
+// const toggleFavorite = async (doc: DocumentItem) => {
+//   const previousState = doc.isFavorite
+//   doc.isFavorite = !doc.isFavorite
 
-  try {
-    await api.documents.update(doc.id, {
-      is_favorite: doc.isFavorite
-    })
-    loadStats()
-  } catch (error) {
-    doc.isFavorite = previousState
-    console.error('Gagal mengubah status favorit:', error)
-  }
-}
+//   try {
+//     await api.documents.update(doc.id, {
+//       is_favorite: doc.isFavorite
+//     })
+//     loadStats()
+//   } catch (error) {
+//     doc.isFavorite = previousState
+//     console.error('Gagal mengubah status favorit:', error)
+//   }
+// }
 
-interface ImportMetaEnv {
-  VITE_API_BASE_URL?: string
-}
+// interface ImportMetaEnv {
+//   VITE_API_BASE_URL?: string
+// }
 
-interface ImportMeta {
-  env: ImportMetaEnv
-}
+// interface ImportMeta {
+//   env: ImportMetaEnv
+// }
 
-const API_BASE_URL = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+// const API_BASE_URL = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 </script>

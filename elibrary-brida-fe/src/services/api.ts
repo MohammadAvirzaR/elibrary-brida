@@ -47,12 +47,17 @@ async function apiCall<T>(
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request gagal')
+      const errorMessage = `${response.status} - ${data.message || response.statusText || 'Request gagal'}`
+      console.error(`API Error [${endpoint}]:`, errorMessage, data)
+      throw new Error(errorMessage)
     }
 
     return data
   } catch (error) {
-    console.error('API Error:', error)
+    if (error instanceof Error && error.message.includes('-')) {
+      throw error
+    }
+    console.error('API Network Error:', error)
     throw error
   }
 }
@@ -86,7 +91,6 @@ export const api = {
 
     create: async (data: FormData) => {
       const token = getAuthToken()
-      // DO NOT set Content-Type when sending FormData
       const response = await fetch(`${API_BASE_URL}/documents`, {
         method: 'POST',
         body: data,
@@ -105,7 +109,6 @@ export const api = {
     update: async (id: number, data: FormData | Record<string, unknown>) => {
       if (data instanceof FormData) {
         const token = getAuthToken()
-        // DO NOT set Content-Type when sending FormData
         const response = await fetch(`${API_BASE_URL}/documents/${id}`, {
           method: 'POST',
           body: data,
@@ -129,16 +132,17 @@ export const api = {
     delete: (id: number) =>
       apiCall(`/documents/${id}`, { method: 'DELETE' }, true),
 
-    getById: (id: number) =>
-      apiCall(`/documents/${id}`, { method: 'GET' }, true),
+    getById: (id: number) => {
+      // Send auth token if user is logged in (to access pending docs)
+      const hasToken = getAuthToken() !== null
+      return apiCall(`/documents/${id}`, { method: 'GET' }, hasToken)
+    },
 
     review: () => apiCall('/documents/review', { method: 'GET' }, true),
 
     upload: async (data: FormData) => {
       const token = getAuthToken()
 
-      // CRITICAL: Do NOT set Content-Type header when sending FormData
-      // Browser will automatically set it with correct boundary
       console.log('=== Uploading to API ===')
       console.log('Endpoint:', `${API_BASE_URL}/documents/upload`)
       console.log('FormData entries:', Array.from(data.entries()).length)
@@ -149,19 +153,16 @@ export const api = {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
-          // DO NOT SET Content-Type - let browser handle it for FormData
         },
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        // Log validation errors for debugging
         if (result.errors) {
           console.error('Validation Errors:', result.errors)
         }
 
-        // Create detailed error message
         let errorMessage = result.message || 'Upload failed'
         if (result.errors) {
           const errorDetails = Object.entries(result.errors)

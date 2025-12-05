@@ -1,33 +1,30 @@
 <template>
   <nav class="bg-white/95 backdrop-blur-sm shadow-sm fixed w-full top-0 left-0 z-50 border-b border-neutral-100">
-    <div class="container mx-auto flex justify-between items-center py-3.5 px-6">
-      <!-- Logo + Search -->
-      <div class="flex items-center space-x-10">
-        <img src="@/assets/brin-logo-trans.png" alt="Logo BRIN" class="h-16" />
+    <div class="container mx-auto flex justify-between items-center py-3 md:py-3.5 px-4 md:px-6">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 md:gap-10 flex-shrink-0">
+        <img src="@/assets/brin-logo-trans.png" alt="Logo BRIN" class="h-12 md:h-16" />
 
-        <!-- Search bar -->
-        <div class="relative">
-          <!-- Ikon search -->
+        <!-- Search bar - Desktop Only -->
+        <div class="relative hidden lg:block">
           <i-lucide-search
-            class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"
+            class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none"
           />
-          <!-- Input -->
           <input
             type="text"
             v-model="localSearch"
             @input="handleSearch"
             @keyup.enter="searchSubmit"
             placeholder="Cari buku digital..."
-            class="bg-neutral-50 rounded-full pl-4 pr-11 py-2 text-sm placeholder-neutral-400 text-neutral-950 border border-neutral-200 hover:bg-neutral-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-64 focus:outline-none"
+            class="bg-neutral-50 rounded-full pl-4 pr-11 py-2 text-sm placeholder-neutral-400 text-neutral-950 border border-neutral-200 hover:bg-neutral-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-56 xl:w-64 focus:outline-none"
           />
         </div>
       </div>
 
-      <!-- Navigation Links -->
-      <div class="flex items-center space-x-16">
-        <ul
-          class="flex items-center space-x-8 font-heading font-semibold text-neutral-700 text-sm"
-        >
+      <!-- Desktop Navigation -->
+      <div class="hidden lg:flex items-center gap-8 xl:gap-16">
+        <!-- Navigation Links -->
+        <ul class="flex items-center gap-6 xl:gap-8 font-heading font-semibold text-neutral-700 text-sm">
           <li><router-link to="/" class="hover:text-neutral-900 transition-colors">Home</router-link></li>
           <li><router-link to="/catalog" class="hover:text-neutral-900 transition-colors">Katalog</router-link></li>
           <li><router-link to="/faq" class="hover:text-neutral-900 transition-colors">FAQ</router-link></li>
@@ -38,32 +35,25 @@
           </li>
         </ul>
 
-        <!-- Show Login/Register if NOT logged in -->
-        <ul
-          v-if="!isAuthenticated"
-          class="flex items-center space-x-4 font-heading font-semibold text-sm"
-        >
-          <li>
-            <router-link
-              to="/login"
-              class="text-neutral-700 hover:text-neutral-900 transition-colors px-4 py-2"
-            >
-              Login
-            </router-link>
-          </li>
-          <li>
-            <router-link
-              to="/register"
-              class="bg-neutral-900 text-white hover:bg-neutral-800 transition-colors px-5 py-2 rounded-full"
-            >
-              Register
-            </router-link>
-          </li>
-        </ul>
+        <!-- Auth Section -->
+        <div v-if="!isAuthenticated" class="flex items-center gap-3">
+          <router-link
+            to="/login"
+            class="text-neutral-700 hover:text-neutral-900 transition-colors px-4 py-2 text-sm font-semibold"
+          >
+            Login
+          </router-link>
+          <router-link
+            to="/register"
+            class="bg-neutral-900 text-white hover:bg-neutral-800 transition-colors px-5 py-2 rounded-full text-sm font-semibold"
+          >
+            Register
+          </router-link>
+        </div>
 
-        <!-- Show Profile if logged in -->
+        <!-- Profile Section -->
         <div v-else class="flex items-center gap-3">
-          <div class="text-right">
+          <div class="text-right hidden xl:block">
             <p class="text-sm font-semibold text-neutral-900">{{ userName }}</p>
             <p class="text-xs text-neutral-500">{{ userRole }}</p>
           </div>
@@ -115,18 +105,99 @@
               </div>
             </transition>
           </div>
-
-          <!-- Logout Button (Always Visible) -->
-          <button
-            @click="handleLogout"
-            class="ml-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 border-2 border-red-600 hover:bg-red-50 rounded-full transition-all inline-flex items-center gap-2"
-          >
-            <i-lucide-log-out class="w-4 h-4" />
-            Logout
-          </button>
         </div>
       </div>
+
+      <!-- Mobile Menu Button -->
+      <button
+        @click="toggleMobileMenu"
+        class="lg:hidden p-2 text-neutral-700 hover:text-neutral-900 transition-colors"
+        aria-label="Menu"
+      >
+        <i-lucide-menu v-if="!showMobileMenu" class="w-6 h-6" />
+        <i-lucide-x v-else class="w-6 h-6" />
+      </button>
     </div>
+
+    <!-- Mobile Menu -->
+    <transition
+      enter-active-class="transition ease-out duration-200"
+      enter-from-class="opacity-0 -translate-y-4"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-150"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-4"
+    >
+      <div v-if="showMobileMenu" class="lg:hidden border-t border-neutral-200 bg-white">
+        <div class="container mx-auto px-4 py-4 space-y-4">
+          <!-- Mobile Search -->
+          <div class="relative">
+            <i-lucide-search class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              v-model="localSearch"
+              @input="handleSearch"
+              @keyup.enter="searchSubmit"
+              placeholder="Cari buku digital..."
+              class="bg-neutral-50 rounded-full pl-4 pr-11 py-2.5 text-sm placeholder-neutral-400 text-neutral-950 border border-neutral-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full focus:outline-none"
+            />
+          </div>
+
+          <!-- Mobile Navigation Links -->
+          <nav class="space-y-1">
+            <router-link to="/" @click="closeMobileMenu" class="block px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">Home</router-link>
+            <router-link to="/catalog" @click="closeMobileMenu" class="block px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">Katalog</router-link>
+            <router-link to="/faq" @click="closeMobileMenu" class="block px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">FAQ</router-link>
+            <button @click="handleUploadClick(); closeMobileMenu()" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">Unggah Mandiri</button>
+          </nav>
+
+          <!-- Mobile Auth -->
+          <div v-if="!isAuthenticated" class="pt-4 border-t border-neutral-200 space-y-2">
+            <router-link
+              to="/login"
+              @click="closeMobileMenu"
+              class="block text-center px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              Login
+            </router-link>
+            <router-link
+              to="/register"
+              @click="closeMobileMenu"
+              class="block text-center bg-neutral-900 text-white hover:bg-neutral-800 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+            >
+              Register
+            </router-link>
+          </div>
+
+          <!-- Mobile Profile -->
+          <div v-else class="pt-4 border-t border-neutral-200 space-y-3">
+            <div class="flex items-center gap-3 px-4">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center shadow-md">
+                {{ userInitials }}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-neutral-900">{{ userName }}</p>
+                <p class="text-xs text-neutral-500">{{ userRole }}</p>
+              </div>
+            </div>
+            <nav class="space-y-1">
+              <router-link :to="dashboardLink" @click="closeMobileMenu" class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
+                <i-lucide-layout-dashboard class="w-4 h-4" />
+                Dashboard
+              </router-link>
+              <router-link to="/profile" @click="closeMobileMenu" class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
+                <i-lucide-user class="w-4 h-4" />
+                Profile
+              </router-link>
+              <button @click="handleLogout" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <i-lucide-log-out class="w-4 h-4" />
+                Logout
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </transition>
   </nav>
 </template>
 
@@ -147,6 +218,7 @@ const userName = ref('')
 const userRole = ref('')
 const userInitials = ref('')
 const showProfileMenu = ref(false)
+const showMobileMenu = ref(false)
 
 watch(() => route.path, () => {
   checkAuth()
@@ -248,6 +320,15 @@ const toggleProfileMenu = (event: Event) => {
   showProfileMenu.value = !showProfileMenu.value
 }
 
+// Toggle mobile menu
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value
+}
+
+const closeMobileMenu = () => {
+  showMobileMenu.value = false
+}
+
 // Close dropdown when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -301,7 +382,6 @@ const refreshUserData = async () => {
 
       if (oldRole && oldRole !== newRole) {
         checkAuth()
-        // Optional: Show notification or redirect
         console.log(`Role changed from ${oldRole} to ${newRole}`)
       }
     }
@@ -310,7 +390,6 @@ const refreshUserData = async () => {
   }
 }
 
-// Sinkronisasi dengan global search state
 watch(searchQuery, (newValue) => {
   localSearch.value = newValue
 })
@@ -334,10 +413,8 @@ const searchSubmit = () => {
 
 const handleUploadClick = () => {
   if (!isAuthenticated.value) {
-    // Guest: redirect to unauthorized kontributor page
-    router.push('/unauthorized-kontributor')
+    router.push('/login')
   } else {
-    // Logged in: redirect to upload document
     router.push('/upload-document')
   }
 }

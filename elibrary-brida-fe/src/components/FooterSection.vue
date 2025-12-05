@@ -4,14 +4,12 @@
       class="container mx-auto grid md:grid-cols-4 gap-10 text-sm text-neutral-950 px-6"
     >
       <div class="flex flex-col items-center">
-        <!-- Logo -->
         <img
           src="@/assets/brin-logo-trans.png"
           alt="Logo BRIN"
           class="h-20 mb-4"
         />
 
-        <!-- Ikon sosial media -->
         <div class="flex justify-center items-center gap-4">
           <a href="https://www.instagram.com/brida.provsultra/" target="_blank">
             <i-lucide-instagram
@@ -57,14 +55,13 @@
             <a href="#" class="hover:text-neutral-800 transition">Tentang Kami</a>
           </li>
           <li>
-            <a href="#" class="hover:text-neutral-800 transition"
-              >Unggah Mandiri</a
-            >
+            <button @click="handleUploadClick" class="hover:text-neutral-800 transition cursor-pointer"
+              >Unggah Mandiri</button>
           </li>
           <li><a href="#" class="hover:text-neutral-800 transition">FAQ</a></li>
-          <li><a href="#" class="hover:text-neutral-800 transition">Login</a></li>
+          <li><router-link to="/login" class="hover:text-neutral-800 transition">Login</router-link></li>
           <li>
-            <a href="#" class="hover:text-neutral-800 transition">Register</a>
+            <router-link to="/register" class="hover:text-neutral-800 transition">Register</router-link>
           </li>
         </ul>
       </div>
@@ -84,3 +81,25 @@
     </div>
   </footer>
 </template>
+<script setup lang="ts">
+import { ref} from 'vue'
+import { useRouter} from 'vue-router'
+
+const router = useRouter()
+
+
+// Authentication state
+const isAuthenticated = ref(false)
+
+
+
+const handleUploadClick = () => {
+  if (!isAuthenticated.value) {
+    router.push('/login')
+  } else {
+    router.push('/upload-document')
+  }
+}
+
+
+</script>

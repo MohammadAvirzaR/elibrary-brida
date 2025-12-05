@@ -105,8 +105,18 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/DashboardView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER],
         title: 'Dashboard'
+      }
+    },
+    {
+      path: '/review-dashboard',
+      name: 'review-dashboard',
+      component: () => import('@/pages/dashboard/ReviewerDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.REVIEWER],
+        title: 'Review Dashboard'
       }
     },
 
@@ -203,7 +213,7 @@ const router = createRouter({
       component: () => import('@/pages/user/UserDashboard.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.GUEST, ROLES.CONTRIBUTOR, ROLES.REVIEWER],
+        roles: [ROLES.GUEST, ROLES.CONTRIBUTOR],
         title: 'My Dashboard'
       }
     },
@@ -213,8 +223,7 @@ const router = createRouter({
       name: 'document-detail',
       component: () => import('@/pages/dashboard/DocumentDetailView.vue'),
       meta: {
-        requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER, ROLES.CONTRIBUTOR],
+        requiresAuth: false,
         title: 'Detail Dokumen'
       }
     },

@@ -24,22 +24,22 @@
     </div>
 
     <!-- Document Detail -->
-    <div v-else-if="document" class="container mx-auto px-4 py-8 max-w-7xl">
+    <div v-else-if="document" class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
       <!-- Header -->
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <button
           @click="router.back()"
           class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
         >
-          <i-lucide-arrow-left class="w-5 h-5" />
-          <span class="font-medium">Kembali</span>
+          <i-lucide-arrow-left class="w-4 h-4 sm:w-5 sm:h-5" />
+          <span class="text-sm sm:text-base font-medium">Kembali</span>
         </button>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <!-- Status Badge -->
           <span
             :class="[
-              'px-4 py-2 rounded-full text-sm font-semibold',
+              'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold',
               getStatusClass(document.status)
             ]"
           >
@@ -47,57 +47,69 @@
           </span>
 
           <!-- Action Buttons for Admin/Reviewer -->
-          <div v-if="canReview && document.status === 'pending'" class="flex items-center gap-2">
+          <div v-if="canReview && document.status === 'pending'" class="flex items-center gap-2 flex-1 sm:flex-initial">
             <button
               @click="approveDocument"
               :disabled="isProcessing"
-              class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50"
             >
-              <i-lucide-check class="w-4 h-4" />
-              Approve
+              <i-lucide-check class="w-3 h-3 sm:w-4 sm:h-4" />
+              <span class="hidden sm:inline">Approve</span>
+              <span class="sm:hidden">✓</span>
             </button>
             <button
               @click="showRejectModal = true"
               :disabled="isProcessing"
-              class="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50"
             >
-              <i-lucide-x class="w-4 h-4" />
-              Reject
+              <i-lucide-x class="w-3 h-3 sm:w-4 sm:h-4" />
+              <span class="hidden sm:inline">Reject</span>
+              <span class="sm:hidden">✗</span>
             </button>
           </div>
 
           <!-- Download Button -->
           <button
             @click="downloadDocument"
-            class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+            class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
           >
-            <i-lucide-download class="w-4 h-4" />
+            <i-lucide-download class="w-3 h-3 sm:w-4 sm:h-4" />
             Download
           </button>
         </div>
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         <!-- Left: Document Preview -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-4 sm:space-y-6">
           <!-- PDF Preview -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <i-lucide-file-text class="w-6 h-6" />
+          <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 sm:px-6 py-3 sm:py-4">
+              <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i-lucide-file-text class="w-5 h-5 sm:w-6 sm:h-6" />
                 Preview Dokumen
               </h2>
             </div>
-            <div class="p-6">
-              <div v-if="pdfUrl" class="w-full bg-gray-100 rounded-lg overflow-hidden" style="height: 800px;">
+            <div class="p-3 sm:p-4 md:p-6">
+              <!-- PDF Loading State -->
+              <div v-if="isPdfLoading" class="flex items-center justify-center h-96 sm:h-[600px] md:h-[800px] bg-gray-100 rounded-lg">
+                <div class="text-center">
+                  <i-lucide-loader-2 class="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                  <p class="text-gray-600 font-medium">Memuat preview dokumen...</p>
+                  <p class="text-gray-500 text-sm mt-2">Mohon tunggu sebentar</p>
+                </div>
+              </div>
+              <!-- PDF Preview -->
+              <div v-else-if="pdfUrl" class="w-full h-96 sm:h-[600px] md:h-[800px] bg-gray-100 rounded-lg overflow-hidden">
                 <iframe
                   :src="pdfUrl"
                   class="w-full h-full border-0"
                   title="Document Preview"
                 />
               </div>
-              <div v-else class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+              <!-- No Preview Available -->
+              <div v-else class="flex items-center justify-center h-64 sm:h-80 md:h-96 bg-gray-100 rounded-lg">
                 <div class="text-center">
                   <i-lucide-file class="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <p class="text-gray-600">Preview tidak tersedia</p>
@@ -113,34 +125,34 @@
           </div>
 
           <!-- Attachments -->
-          <div v-if="document.attachments && document.attachments.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <i-lucide-paperclip class="w-5 h-5" />
+          <div v-if="document.attachments && document.attachments.length > 0" class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i-lucide-paperclip class="w-4 h-4 sm:w-5 sm:h-5" />
                 File Lampiran ({{ document.attachments.length }})
               </h3>
             </div>
-            <div class="p-6">
-              <div class="space-y-3">
+            <div class="p-3 sm:p-4 md:p-6">
+              <div class="space-y-2 sm:space-y-3">
                 <div
                   v-for="(attachment, index) in document.attachments"
                   :key="index"
-                  class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                  class="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
                 >
-                  <div class="flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                      <i-lucide-file class="w-5 h-5 text-blue-600" />
+                  <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div class="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                      <i-lucide-file class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ attachment.filename || `Attachment ${index + 1}` }}</p>
-                      <p class="text-sm text-gray-500">{{ formatFileSize(attachment.file_size) }}</p>
+                    <div class="min-w-0">
+                      <p class="text-sm sm:text-base font-medium text-gray-900 truncate">{{ attachment.filename || `Attachment ${index + 1}` }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ formatFileSize(attachment.file_size) }}</p>
                     </div>
                   </div>
                   <button
                     @click="downloadAttachment(attachment)"
-                    class="p-2 hover:bg-blue-100 rounded-lg transition"
+                    class="p-1.5 sm:p-2 hover:bg-blue-100 rounded-lg transition flex-shrink-0"
                   >
-                    <i-lucide-download class="w-5 h-5 text-blue-600" />
+                    <i-lucide-download class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </button>
                 </div>
               </div>
@@ -148,52 +160,52 @@
           </div>
 
           <!-- Abstract -->
-          <div v-if="document.abstract_id || document.abstract_en" class="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-bold text-gray-900">Abstrak</h3>
+          <div v-if="document.abstract_id || document.abstract_en" class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <h3 class="text-base sm:text-lg font-bold text-gray-900">Abstrak</h3>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-4 sm:p-6 space-y-4">
               <div v-if="document.abstract_id">
-                <h4 class="font-semibold text-gray-700 mb-2">Bahasa Indonesia</h4>
-                <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ document.abstract_id }}</p>
+                <h4 class="text-sm sm:text-base font-semibold text-gray-700 mb-2">Bahasa Indonesia</h4>
+                <p class="text-sm sm:text-base text-gray-600 leading-relaxed whitespace-pre-wrap">{{ document.abstract_id }}</p>
               </div>
               <div v-if="document.abstract_en" class="pt-4 border-t border-gray-200">
-                <h4 class="font-semibold text-gray-700 mb-2">English</h4>
-                <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ document.abstract_en }}</p>
+                <h4 class="text-sm sm:text-base font-semibold text-gray-700 mb-2">English</h4>
+                <p class="text-sm sm:text-base text-gray-600 leading-relaxed whitespace-pre-wrap">{{ document.abstract_en }}</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Right: Document Details -->
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
           <!-- Basic Information -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
-              <h3 class="text-lg font-bold text-white">Informasi Dokumen</h3>
+          <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+              <h3 class="text-base sm:text-lg font-bold text-white">Informasi Dokumen</h3>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <!-- Title -->
               <div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ document.title }}</h1>
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2">{{ document.title }}</h1>
               </div>
 
               <!-- Authors -->
               <div v-if="document.authors && document.authors.length > 0">
-                <label class="text-sm font-semibold text-gray-600 block mb-2">Penulis</label>
+                <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-2">Penulis</label>
                 <div class="space-y-2">
                   <div
                     v-for="(author, index) in document.authors"
                     :key="index"
                     class="flex items-start gap-2"
                   >
-                    <i-lucide-user class="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
-                    <div>
-                      <p class="font-medium text-gray-900">
+                    <i-lucide-user class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mt-1 flex-shrink-0" />
+                    <div class="min-w-0">
+                      <p class="text-sm sm:text-base font-medium text-gray-900">
                         {{ author.first_name }} {{ author.last_name }}
                       </p>
-                      <p v-if="author.email" class="text-sm text-gray-500">{{ author.email }}</p>
-                      <p v-if="author.institution" class="text-sm text-gray-500">{{ author.institution }}</p>
+                      <p v-if="author.email" class="text-xs sm:text-sm text-gray-500 truncate">{{ author.email }}</p>
+                      <p v-if="author.institution" class="text-xs sm:text-sm text-gray-500">{{ author.institution }}</p>
                     </div>
                   </div>
                 </div>
@@ -463,12 +475,24 @@ const showRejectModal = ref(false)
 const rejectReason = ref('')
 const rejectError = ref('')
 
+const isPdfLoading = ref(false)
+
 const pdfUrl = computed(() => {
   if (!document.value?.id) return null
   const baseUrl = 'http://127.0.0.1:8000'
-  const token = localStorage.getItem('token')
-  if (!token) return null
-  return `${baseUrl}/api/documents/${document.value.id}/file?token=${token}`
+  const token = localStorage.getItem('auth_token')
+
+  // Gunakan token di URL - satu-satunya cara reliable untuk iframe
+  if (token) {
+    return `${baseUrl}/api/documents/${document.value.id}/file?token=${token}`
+  }
+
+  // Guest: approved documents
+  if (document.value.status === 'approved') {
+    return `${baseUrl}/api/documents/${document.value.id}/file`
+  }
+
+  return null
 })
 
 const userRole = ref('')
@@ -477,7 +501,6 @@ const canReview = computed(() => {
 })
 
 onMounted(async () => {
-  // Get user role
   const storedUser = localStorage.getItem('user')
   if (storedUser) {
     try {
@@ -490,6 +513,8 @@ onMounted(async () => {
 
   await loadDocument()
 })
+
+// No cleanup needed
 
 const loadDocument = async () => {
   try {
@@ -522,7 +547,6 @@ const approveDocument = async () => {
 
     toast.success('Dokumen Disetujui', 'Dokumen berhasil disetujui dan dipublikasikan')
 
-    // Reload document
     await loadDocument()
   } catch (err) {
     console.error('Error approving document:', err)
@@ -566,18 +590,56 @@ const rejectDocument = async () => {
   }
 }
 
-const downloadDocument = () => {
-  if (pdfUrl.value) {
-    window.open(pdfUrl.value, '_blank')
+const downloadDocument = async () => {
+  if (!document.value?.id) return
+
+  const baseUrl = 'http://127.0.0.1:8000'
+  const token = localStorage.getItem('auth_token')
+
+  try {
+    const headers: HeadersInit = {
+      'Accept': 'application/pdf'
+    }
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${baseUrl}/api/documents/${document.value.id}/file`, {
+      headers
+    })
+
+    if (response.ok) {
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = window.document.createElement('a')
+      a.href = url
+      a.download = `${document.value.title}.pdf`
+      window.document.body.appendChild(a)
+      a.click()
+      window.document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast.success('Download Berhasil', 'Dokumen berhasil diunduh')
+    } else {
+      toast.error('Download Gagal', 'Gagal mengunduh dokumen')
+    }
+  } catch (err) {
+    console.error('Error downloading document:', err)
+    toast.error('Download Gagal', 'Terjadi kesalahan saat mengunduh dokumen')
   }
 }
 
 const downloadAttachment = (attachment: Attachment) => {
   if (!document.value?.id || !attachment.id) return
   const baseUrl = 'http://127.0.0.1:8000'
-  const token = localStorage.getItem('token')
-  if (!token) return
-  const url = `${baseUrl}/api/documents/${document.value.id}/attachments/${attachment.id}/file?token=${token}`
+  const token = localStorage.getItem('auth_token')
+
+  let url = `${baseUrl}/api/documents/${document.value.id}/attachments/${attachment.id}/file`
+  if (token) {
+    url += `?token=${token}`
+  }
+
   window.open(url, '_blank')
 }
 

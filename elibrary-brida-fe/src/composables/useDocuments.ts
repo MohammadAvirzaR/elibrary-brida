@@ -6,6 +6,7 @@ export interface Document {
   author?: string
   description?: string
   cover_image?: string
+  thumbnail_url?: string
   file_path?: string
   category?: string
   published_date?: string

@@ -1,19 +1,19 @@
 <template>
   <PublicLayout>
-    <div class="container mx-auto px-6 py-8 min-h-screen">
+    <div class="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 min-h-screen">
       <!-- Header Section -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">Hasil Pencarian</h1>
+      <div class="mb-6 sm:mb-8">
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Hasil Pencarian</h1>
 
         <!-- Search Bar -->
         <div class="relative max-w-2xl">
           <i-lucide-search
-            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+            class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
             v-if="!isSearching && !isLoading"
           />
           <i-lucide-loader-2
             v-if="isSearching || isLoading"
-            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500"
+            class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-500"
           />
           <input
             type="text"
@@ -21,13 +21,13 @@
             @input="handleSearch"
             @keyup.enter="performSearch"
             placeholder="Cari buku digital..."
-            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <!-- Search Info -->
-        <div v-if="searchQuery || totalResults > 0" class="mt-4">
-          <p class="text-gray-600">
+        <div v-if="searchQuery || totalResults > 0" class="mt-3 sm:mt-4">
+          <p class="text-sm sm:text-base text-gray-600">
             Menampilkan
             <span class="font-semibold">{{ totalResults }}</span>
             hasil<span v-if="searchQuery"> untuk
@@ -37,26 +37,18 @@
       </div>
 
       <!-- Sidebar and Results -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
         <!-- Sidebar - Filters -->
         <aside class="lg:col-span-1">
-          <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-            <!-- <button
-              @click="openAdvancedSearch"
-              class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition mb-6 flex items-center justify-center gap-2"
-            >
-              <i-lucide-sliders-horizontal class="w-4 h-4" />
-              Advanced Search
-            </button> -->
-
+          <div class="bg-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 lg:sticky lg:top-24">
             <AdvancedSearchModal
               :is-open="isAdvancedSearchOpen"
               @close="closeAdvancedSearch"
               @search="handleAdvancedSearch"
             />
 
-            <h3 class="font-bold text-gray-900 mb-4">Subjek</h3>
-            <div class="space-y-2 mb-6">
+            <h3 class="text-sm sm:text-base font-bold text-gray-900 mb-3 sm:mb-4">Subjek</h3>
+            <div class="space-y-2 mb-4 sm:mb-6">
               <label
                 v-for="subject in subjects"
                 :key="subject.value"
@@ -69,11 +61,11 @@
                   @change="applyFilters"
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span class="text-sm text-gray-700">{{ subject.label }}</span>
+                <span class="text-xs sm:text-sm text-gray-700">{{ subject.label }}</span>
               </label>
             </div>
 
-            <h3 class="font-bold text-gray-900 mb-4">Tipe</h3>
+            <h3 class="text-sm sm:text-base font-bold text-gray-900 mb-3 sm:mb-4">Tipe</h3>
             <div class="space-y-2">
               <label
                 v-for="type in documentTypes"
@@ -87,7 +79,7 @@
                   @change="applyFilters"
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span class="text-sm text-gray-700">{{ type.label }}</span>
+                <span class="text-xs sm:text-sm text-gray-700">{{ type.label }}</span>
               </label>
             </div>
           </div>
@@ -111,82 +103,73 @@
           </div>
 
           <!-- Results Grid -->
-          <div v-else class="space-y-6">
+          <div v-else class="space-y-4 sm:space-y-6">
             <div
               v-for="(document, index) in searchResults"
               :key="document.id"
-              class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6"
+              class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6"
             >
-              <div class="flex gap-6">
-                <!-- Document Number -->
-                <div class="flex-shrink-0 w-12">
-                  <span class="text-2xl font-bold text-gray-400">{{ (currentPage - 1) * 10 + index + 1 }}</span>
+              <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6">
+                <!-- Document Number (hidden on mobile) -->
+                <div class="hidden sm:block flex-shrink-0 w-8 sm:w-10 md:w-12">
+                  <span class="text-xl sm:text-2xl font-bold text-gray-400">{{ (currentPage - 1) * 10 + index + 1 }}</span>
                 </div>
 
                 <!-- Document Cover -->
-                <div class="flex-shrink-0 w-32">
+                <div class="flex-shrink-0 w-20 sm:w-24 md:w-32 mx-auto sm:mx-0">
                   <img
                     :src="document.cover_image || 'https://via.placeholder.com/128x180?text=No+Cover'"
                     :alt="document.title"
-                    class="w-full h-48 object-cover rounded-lg shadow"
+                    class="w-full h-28 sm:h-36 md:h-48 object-cover rounded-lg shadow"
                   />
                 </div>
 
                 <!-- Document Info -->
-                <div class="flex-1">
-                  <h3 class="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2 cursor-pointer">
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base sm:text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-700 mb-1 sm:mb-2 cursor-pointer">
                     {{ document.title }}
                   </h3>
-                  <p class="text-sm text-gray-600 mb-2">
+                  <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                     by {{ document.author || 'Unknown Author' }}
                   </p>
-                  <p class="text-sm text-gray-500 mb-3">
+                  <p class="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
                     {{ document.category || 'General' }} • {{ formatDate(document.published_date) }}
                   </p>
-                  <p class="text-gray-700 text-sm line-clamp-3 mb-4">
+                  <p class="text-xs sm:text-sm text-gray-700 line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4">
                     {{ document.description || 'No description available.' }}
                   </p>
 
                   <!-- Tags -->
-                  <div class="flex gap-2 mb-4">
+                  <div class="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                     <span
                       v-if="document.category"
-                      class="inline-block px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full"
+                      class="inline-block px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold bg-orange-100 text-orange-800 rounded-full"
                     >
                       {{ document.category }}
                     </span>
-                    <span class="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                    <span class="inline-block px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                       Artikel Jurnal
                     </span>
                   </div>
 
                   <!-- Action Buttons -->
-                  <div class="flex gap-3">
+                  <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <router-link
-                      v-if="isAuthenticated"
                       :to="{ name: 'document-detail', params: { id: document.id } }"
-                      class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
+                      class="flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500 hover:bg-green-600 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      <i-lucide-eye class="w-4 h-4" />
+                      <i-lucide-eye class="w-3 h-3 sm:w-4 sm:h-4" />
                       Preview
                     </router-link>
-                    <router-link
-                      v-else
-                      to="/login"
-                      class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
-                    >
-                      <i-lucide-eye class="w-4 h-4" />
-                      Preview
-                    </router-link>
-                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2">
-                      <i-lucide-download class="w-4 h-4" />
+                    <button class="flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2">
+                      <i-lucide-download class="w-3 h-3 sm:w-4 sm:h-4" />
                       Download
                     </button>
                   </div>
                 </div>
 
-                <!-- Action Icons -->
-                <div class="flex-shrink-0 flex flex-col gap-3">
+                <!-- Action Icons (hidden on mobile) -->
+                <div class="hidden md:flex flex-shrink-0 flex-col gap-3">
                   <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Bookmark">
                     <i-lucide-bookmark class="w-5 h-5 text-gray-600" />
                   </button>
@@ -202,14 +185,15 @@
           </div>
 
           <!-- Pagination -->
-          <div v-if="searchResults.length > 0" class="mt-8 flex justify-center">
-            <nav class="flex gap-2">
+          <div v-if="searchResults.length > 0" class="mt-6 sm:mt-8 flex justify-center">
+            <nav class="flex gap-1.5 sm:gap-2">
               <button
                 @click="prevPage"
                 :disabled="currentPage === 1"
-                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                <span class="hidden sm:inline">Previous</span>
+                <span class="sm:hidden">‹</span>
               </button>
               <button
                 v-for="page in displayPages"
@@ -259,14 +243,7 @@ const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
 const isAdvancedSearchOpen = ref(false);
 
-// Check if user is authenticated
-const isAuthenticated = computed(() => {
-  return !!localStorage.getItem('auth_token')
-});
 
-// const openAdvancedSearch = () => {
-//   isAdvancedSearchOpen.value = true
-// }
 
 const closeAdvancedSearch = () => {
   isAdvancedSearchOpen.value = false
@@ -278,6 +255,7 @@ const handleAdvancedSearch = (filters: { subjects: string[], types: string[] }) 
   closeAdvancedSearch()
   applyFilters()
 }
+
 
 const subjects = [
   { label: 'Ilmu Komputer', value: 'computer-science' },
@@ -339,7 +317,6 @@ const performSearch = async () => {
         }
       })
     } else {
-      // Jika query kosong, hapus query parameter q
       router.push({
         query: {
           page: currentPage.value > 1 ? currentPage.value : undefined
@@ -382,7 +359,6 @@ const goToPage = async (page: number) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// Initialize search from URL query
 onMounted(() => {
   const query = route.query.q as string
   const page = parseInt(route.query.page as string) || 1
@@ -393,13 +369,11 @@ onMounted(() => {
     currentPage.value = page
     searchDocuments(query, page)
   } else {
-    // Jika tidak ada query, load semua dokumen
     currentPage.value = page
     searchDocuments('', page)
   }
 })
 
-// Watch route changes
 watch(() => route.query, (newQuery) => {
   const query = newQuery.q as string
   const page = parseInt(newQuery.page as string) || 1

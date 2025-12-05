@@ -1,44 +1,44 @@
 <template>
   <AuthLayout>
-    <div class="min-h-screen flex items-center justify-center p-4 relative">
+    <div class="min-h-screen flex items-center justify-center p-3 sm:p-4 relative">
       <!-- Back Button - Fixed to left side -->
       <button
         @click="router.push('/')"
-        class="fixed left-8 top-8 w-12 h-12 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg z-10"
+        class="fixed left-3 sm:left-8 top-3 sm:top-8 w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg z-10"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
 
       <div class="w-full max-w-md">
         <!-- Register Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg p-5 sm:p-8 border border-gray-200">
           <!-- Logo and Title -->
-          <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
+          <div class="text-center mb-6 sm:mb-8">
+            <div class="flex justify-center mb-3 sm:mb-4">
               <img
                 src="@/assets/brin-logo-trans.png"
                 alt="Digital Library Logo"
-                class="h-24 object-contain"
+                class="h-16 sm:h-20 md:h-24 object-contain"
                 @error="handleImageError"
               />
             </div>
-            <h1 class="text-xl font-bold text-gray-900 mb-1">Daftar Akun Baru</h1>
-            <p class="text-sm font-semibold text-gray-900">
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 mb-1">Daftar Akun Baru</h1>
+            <p class="text-xs sm:text-sm font-semibold text-gray-900">
               Badan Riset dan Inovasi Daerah<br />Sulawesi Tenggara
             </p>
           </div>
 
           <!-- Register Form -->
-          <form @submit.prevent="handleRegister" class="space-y-4">
+          <form @submit.prevent="handleRegister" class="space-y-3 sm:space-y-4">
             <!-- Nama Lengkap Input -->
             <div>
               <input
                 v-model="formData.name"
                 type="text"
                 placeholder="Nama Lengkap"
-                class="w-full px-4 py-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required
                 :disabled="isLoading"
               />
@@ -51,13 +51,13 @@
                 type="email"
                 placeholder="Email"
                 :class="[
-                  'w-full px-4 py-3 rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
+                  'w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
                   !isEmailValid && formData.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                 ]"
                 required
                 :disabled="isLoading"
               />
-              <p v-if="emailErrorMessage" class="mt-1 text-sm text-red-600">
+              <p v-if="emailErrorMessage" class="mt-1 text-xs sm:text-sm text-red-600">
                 {{ emailErrorMessage }}
               </p>
             </div>
@@ -131,14 +131,14 @@
             <button
               type="submit"
               :disabled="isLoading || !isEmailValid"
-              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center justify-center gap-2"
+              class="w-full py-2 sm:py-3 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center justify-center gap-2"
             >
               <i-lucide-loader-2 v-if="isLoading" class="w-4 h-4 animate-spin" />
               <span>{{ isLoading ? 'Mengirim OTP...' : 'Daftar' }}</span>
             </button>
 
             <!-- Error Message -->
-            <div v-if="errorMessage" class="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            <div v-if="errorMessage" class="p-2.5 sm:p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-xs sm:text-sm">
               {{ errorMessage }}
             </div>
 
@@ -199,7 +199,7 @@ const formData = reactive({
 const isLoading = ref(false)
 const errorMessage = ref('')
 const showOtpModal = ref(false)
-const otpExpiresIn = ref(600) // 10 minutes
+const otpExpiresIn = ref(60) // 1 minute
 const isResending = ref(false)
 const otpModal = ref<InstanceType<typeof OtpVerificationModal>>()
 const showPassword = ref(false)
@@ -276,7 +276,7 @@ const handleRegister = async () => {
     }
 
     toast.success('OTP Terkirim', 'Kode verifikasi telah dikirim ke email Anda')
-    otpExpiresIn.value = data.expires_in || 600
+    otpExpiresIn.value = data.expires_in || 60
     showOtpModal.value = true
 
   } catch (error: unknown) {
@@ -369,7 +369,7 @@ const handleResendOtp = async () => {
     }
 
     toast.success('OTP Terkirim', 'Kode verifikasi baru telah dikirim ke email Anda')
-    otpExpiresIn.value = data.expires_in || 600
+    otpExpiresIn.value = data.expires_in || 60
     otpModal.value?.reset()
 
   } catch (error: unknown) {
@@ -395,7 +395,6 @@ const handleImageError = (event: Event) => {
 </script>
 
 <style scoped>
-/* Additional custom styling if needed */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {

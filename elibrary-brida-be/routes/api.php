@@ -16,9 +16,17 @@ Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('login', [AuthController::class, 'login']);
 
-// Public document routes
+// Public document routes (accessible without authentication)
 Route::get('/documents/search', [DocumentController::class, 'search']);
 Route::get('/documents/featured-content', [DocumentController::class, 'featuredContent']);
+
+// Public file serving - works for both authenticated and guest users
+Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile']);
+Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment']);
+
+// View specific document (public access for approved documents) - place AFTER specific routes
+Route::get('/documents/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
+
 Route::get('/filters', [FilterController::class, 'index']);
 
 // Auth Sanctum routes
@@ -45,54 +53,41 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/contributor-requests/{id}/reject', [ContributorRequestController::class, 'reject']);
     });
 
+    // Specific document routes (must come before /documents/{id})
+    // Preview metadata (all authenticated users)
+    Route::post('/documents/preview', [DocumentController::class, 'preview']);
+
+    // List dokumen milik user
+    Route::get('/documents/my', [DocumentController::class, 'myDocuments']);
+
+    // Review route (Reviewer + Admin + Super Admin)
+    Route::get('/documents/review', [DocumentController::class, 'review'])
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,admin,super_admin');
+
+    // Upload document (Contributor + Admin + Super Admin)
+    Route::post('/documents/upload', [DocumentController::class, 'upload'])
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin');
+
     // ========== ADMIN & SUPER ADMIN ==========
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
 
-        // User Management
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}', [UserController::class, 'update']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
-        // Admin document approval
         Route::post('/admin/documents/{id}/approve', [AdminDocumentController::class, 'approve']);
         Route::post('/admin/documents/{id}/reject', [AdminDocumentController::class, 'reject']);
     });
 
-    // Review (Reviewer + Admin + Super Admin)
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,admin,super_admin')->group(function () {
-        Route::get('/documents/review', [DocumentController::class, 'review']);
-    });
-
-    // Upload document (Contributor + Admin + Super Admin)
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin')->group(function () {
-        Route::post('/documents/upload', [DocumentController::class, 'upload']);
-    });
-
-    // Preview metadata (contributor)
-    Route::post('/documents/preview', [DocumentController::class, 'preview']);
-
-    // List dokumen milik user
-    Route::get('/documents/my', [DocumentController::class, 'myDocuments']);
-
-    // Semua user login bisa lihat daftar dokumen
     Route::get('/documents', [DocumentController::class, 'index']);
 
-    // Final submit dokumen (Only contributor)
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store']);
     });
 
-    // Document view - all authenticated users can view (with authorization check in controller)
-    Route::get('/documents/{id}', [DocumentController::class, 'show']);
-
-    // Serve document files
-    Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile']);
-    Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment']);
-
-    // Document CRUD operations (Contributor can only modify their own documents)
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin,reviewer')->group(function () {
         Route::put('/documents/{id}', [DocumentController::class, 'update']);
         Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);

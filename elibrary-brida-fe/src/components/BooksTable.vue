@@ -1,23 +1,23 @@
 <template>
   <section
     id="catalog"
-    class="container mx-auto my-20 px-6 scroll-mt-20"
+    class="container mx-auto my-12 md:my-20 px-4 sm:px-6 scroll-mt-20"
   >
     <!-- Search Results Info -->
-    <div v-if="searchQuery && totalResults > 0" class="mb-8 text-center">
-      <p class="text-neutral-600 text-sm">
+    <div v-if="searchQuery && totalResults > 0" class="mb-6 md:mb-8 text-center">
+      <p class="text-sm md:text-base text-neutral-600">
         Ditemukan <span class="font-semibold text-neutral-900">{{ totalResults }}</span> hasil untuk "<span class="font-semibold text-neutral-900">{{ searchQuery }}</span>"
       </p>
     </div>
 
     <!-- Tabs -->
-    <div class="flex justify-center space-x-8 border-b border-neutral-200 pb-3 mb-10">
+    <div class="flex justify-center gap-4 sm:gap-8 border-b border-neutral-200 pb-3 mb-8 md:mb-10 overflow-x-auto scrollbar-hide">
       <button
         v-for="tab in tabs"
         :key="tab.value"
         @click="activeTab = tab.value"
         :class="[
-          'pb-3 px-1 transition-all text-sm font-medium',
+          'pb-3 px-2 sm:px-1 transition-all text-xs sm:text-sm font-medium whitespace-nowrap',
           activeTab === tab.value
             ? 'text-neutral-900 border-b-2 border-blue-600'
             : 'text-neutral-500 hover:text-neutral-900',
@@ -32,62 +32,37 @@
       <!-- Left Arrow -->
       <button
         @click="scrollContainer('left')"
-        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+        class="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white shadow-lg rounded-full p-2 md:p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
         aria-label="Scroll left"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="w-5 h-5 text-neutral-700"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
+        <i-lucide-chevron-left class="w-4 h-4 md:w-5 md:h-5 text-neutral-700" />
       </button>
 
       <!-- Right Arrow -->
       <button
         @click="scrollContainer('right')"
-        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+        class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white shadow-lg rounded-full p-2 md:p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
         aria-label="Scroll right"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="w-5 h-5 text-neutral-700"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        <i-lucide-chevron-right class="w-4 h-4 md:w-5 md:h-5 text-neutral-700" />
       </button>
 
       <!-- Book Cards Container -->
       <div
         ref="scrollContainerRef"
-        class="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth pb-6"
+        class="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide scroll-smooth pb-6"
         style="scrollbar-width: none; -ms-overflow-style: none"
       >
         <!-- Loading State -->
-        <div v-if="isLoadingDocs" class="flex gap-4 w-full justify-center items-center py-20">
-          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-          <p class="text-neutral-600 text-sm">Memuat data...</p>
+        <div v-if="isLoadingDocs" class="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full justify-center items-center py-12 md:py-20">
+          <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-b-2 border-blue-600"></div>
+          <p class="text-neutral-600 text-sm md:text-base">Memuat data...</p>
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="filteredBooks.length === 0" class="w-full text-center py-20">
-          <p class="text-neutral-500 text-sm">Tidak ada buku ditemukan</p>
+        <div v-else-if="filteredBooks.length === 0" class="w-full text-center py-12 md:py-20">
+          <i-lucide-inbox class="w-12 h-12 md:w-16 md:h-16 text-neutral-300 mx-auto mb-3" />
+          <p class="text-neutral-500 text-sm md:text-base">Tidak ada buku ditemukan</p>
         </div>
 
         <!-- Book Cards -->
@@ -95,21 +70,29 @@
           v-else
           v-for="book in filteredBooks"
           :key="book.id"
-          :to="isAuthenticated ? { name: 'document-detail', params: { id: book.id } } : '/login'"
-          class="flex-shrink-0 w-44 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          :to="{ name: 'document-detail', params: { id: book.id } }"
+          class="flex-shrink-0 w-36 sm:w-40 md:w-44 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
         >
-          <div class="p-3">
-            <div class="relative overflow-hidden rounded-lg mb-3">
+          <div class="p-2.5 sm:p-3">
+            <!-- Thumbnail -->
+            <div class="overflow-hidden rounded-lg mb-2.5 sm:mb-3 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center aspect-[3/4]">
               <img
-                :src="book.image"
+                v-if="book.thumbnail"
+                :src="book.thumbnail"
                 :alt="book.title"
-                class="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300"
+                class="w-full h-full object-cover"
+                @error="handleImageError"
               />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <i-lucide-file-text class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-blue-300" />
+              </div>
             </div>
-            <p class="font-semibold text-neutral-900 text-sm line-clamp-2 mb-1.5 leading-tight">
+
+            <!-- Document Info -->
+            <h3 class="font-semibold text-neutral-900 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-1.5 leading-tight">
               {{ book.title }}
-            </p>
-            <p class="text-xs text-neutral-500 mb-0.5">{{ book.author }}</p>
+            </h3>
+            <p class="text-xs text-neutral-500 mb-0.5 truncate">{{ book.author }}</p>
             <p class="text-xs text-neutral-400">{{ book.year }}</p>
           </div>
         </router-link>
@@ -129,11 +112,6 @@ const { searchResults, totalResults } = useDocumentSearch()
 const { documents, fetchDocuments, isLoading: isLoadingDocs } = useDocuments()
 const activeTab = ref("unggulan");
 const scrollContainerRef = ref<HTMLElement | null>(null);
-
-// Check if user is authenticated
-const isAuthenticated = computed(() => {
-  return !!localStorage.getItem('auth_token')
-});
 
 const tabs = [
   { label: "Unggulan", value: "unggulan", filter: "is_featured" as const },
@@ -169,6 +147,7 @@ const filteredBooks = computed(() => {
       author: doc.author || 'Unknown Author',
       year: doc.published_date ? new Date(doc.published_date).getFullYear() : '',
       image: doc.cover_image || 'https://via.placeholder.com/192x256?text=No+Cover',
+      thumbnail: doc.thumbnail_url || null,
     }));
   }
 
@@ -180,6 +159,7 @@ const filteredBooks = computed(() => {
       author: doc.author || 'Unknown Author',
       year: doc.published_date ? new Date(doc.published_date).getFullYear() : '',
       image: doc.cover_image || 'https://via.placeholder.com/192x256?text=No+Cover',
+      thumbnail: doc.thumbnail_url || null,
     }));
   }
 
@@ -195,6 +175,12 @@ const scrollContainer = (direction: "left" | "right") => {
       behavior: "smooth",
     });
   }
+};
+
+const handleImageError = (event: Event) => {
+  // Hide image on error, will fallback to icon
+  const target = event.target as HTMLImageElement
+  target.style.display = 'none'
 };
 </script>
 

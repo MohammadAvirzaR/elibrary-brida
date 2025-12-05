@@ -6,10 +6,10 @@ export interface Document {
   author?: string
   description?: string
   cover_image?: string
+  thumbnail_url?: string
   file_path?: string
   category?: string
   published_date?: string
-  // tambahkan field lain sesuai response API Anda
 }
 
 export interface SearchResponse {
@@ -38,7 +38,6 @@ export function useDocumentSearch() {
     error.value = null
 
     try {
-      // Bangun URL dengan query parameter yang benar
       const params = new URLSearchParams()
 
       if (query.trim()) {

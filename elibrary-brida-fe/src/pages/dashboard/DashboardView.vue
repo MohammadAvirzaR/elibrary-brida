@@ -1,10 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="min-h-screen bg-gray-50">
     <!-- Sidebar -->
     <aside
       :class="[
         'fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl transition-all duration-300 ease-in-out z-20',
-        isSidebarOpen ? 'w-60' : 'w-20'
+        isSidebarOpen ? 'w-60' : 'w-20',
+        'hidden md:block'
       ]"
     >
       <!-- Toggle Button -->
@@ -118,30 +119,38 @@
     <!-- Main Content -->
     <div
       :class="[
-        'transition-all duration-300 ease-in-out',
-        isSidebarOpen ? 'ml-60' : 'ml-20'
+        'transition-all duration-300 ease-in-out min-h-screen',
+        isSidebarOpen ? 'md:ml-60' : 'md:ml-20'
       ]"
     >
       <!-- Top Bar -->
-      <header class="bg-gradient-to-r from-blue-400 to-blue-300 shadow-md sticky top-0 z-10">
-        <div class="flex items-center justify-between px-8 py-4">
+      <header class="bg-gradient-to-r from-blue-500 to-blue-400 shadow-md sticky top-0 z-10">
+        <div class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3 md:py-4">
+          <!-- Mobile Menu Button -->
+          <button
+            @click="toggleSidebar"
+            class="md:hidden p-2 hover:bg-blue-600 rounded-lg transition text-white"
+          >
+            <i-lucide-menu class="w-5 h-5" />
+          </button>
+
           <!-- Search -->
-          <div class="relative w-96">
-            <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <div class="relative flex-1 max-w-md mx-4">
+            <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-500" />
             <input
               type="text"
               placeholder="Search"
-              class="w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full pl-9 md:pl-10 pr-4 py-2 text-sm rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-600"
             />
           </div>
 
           <!-- User Info -->
-          <div class="flex items-center gap-4">
-            <div class="text-right">
-              <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>
-              <p class="text-sm text-gray-700 capitalize">{{ userRole || 'admin' }}</p>
+          <div class="flex items-center gap-2 md:gap-4">
+            <div class="text-right hidden sm:block">
+              <p class="font-bold text-gray-900 text-sm md:text-base">{{ username || 'Admin BRIDA' }}</p>
+              <p class="text-xs md:text-sm text-gray-700 capitalize">{{ userRole || 'Super_admin' }}</p>
             </div>
-            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-700 flex items-center justify-center text-white font-bold text-sm md:text-lg shadow-md">
               {{ username ? username.charAt(0).toUpperCase() : 'A' }}
             </div>
           </div>
@@ -149,11 +158,11 @@
       </header>
 
       <!-- Dashboard Content -->
-      <main class="p-8 max-w-7xl mx-auto">
+      <main class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
         <!-- Welcome Section -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ username || 'Admin' }}</h1>
-          <p class="text-gray-600 mt-1">Here's what's happening with your library today.</p>
+        <div class="mb-6 md:mb-8">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Welcome back, {{ username || 'Admin' }}</h1>
+          <p class="text-sm md:text-base text-gray-600 mt-1">Here's what's happening with your library today.</p>
         </div>
 
         <!-- Summary Section -->
@@ -249,25 +258,25 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <!-- Table Header -->
-            <div class="flex items-center gap-4 p-5 border-b bg-gray-50">
+            <div class="flex items-center gap-2 md:gap-4 p-3 md:p-5 border-b bg-gray-50">
               <button class="p-2 hover:bg-gray-200 rounded-lg transition">
-                <i-lucide-filter class="w-5 h-5 text-gray-600" />
+                <i-lucide-filter class="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
               </button>
               <div class="relative flex-1 max-w-md">
                 <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   v-model="queueSearchQuery"
                   type="text"
-                  placeholder="Search by name, email, or title..."
-                  class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  placeholder="Search documents..."
+                  class="w-full pl-9 md:pl-10 pr-4 py-2 md:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -357,16 +366,16 @@
             </div>
 
             <!-- Pagination -->
-            <div class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-              <div class="text-sm text-gray-600">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50">
+              <div class="text-xs sm:text-sm text-gray-600">
                 1-{{ Math.min(queueRowsPerPage, queueReviews.length) }} of {{ queueReviews.length }}
               </div>
-              <div class="flex items-center gap-4">
+              <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-600">Rows per page:</span>
+                  <span class="text-xs sm:text-sm text-gray-600">Rows:</span>
                   <select
                     v-model="queueRowsPerPage"
-                    class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option :value="5">5</option>
                     <option :value="10">10</option>
@@ -375,11 +384,11 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
-                    <i-lucide-chevron-left class="w-5 h-5" />
+                    <i-lucide-chevron-left class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <span class="text-sm text-gray-600">1/{{ Math.ceil(queueReviews.length / queueRowsPerPage) }}</span>
+                  <span class="text-xs sm:text-sm text-gray-600">1/{{ Math.ceil(queueReviews.length / queueRowsPerPage) }}</span>
                   <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
-                    <i-lucide-chevron-right class="w-5 h-5" />
+                    <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
@@ -413,26 +422,26 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <!-- Table Header -->
-            <div class="flex items-center gap-4 p-5 border-b bg-gray-50">
+            <div class="flex items-center gap-2 md:gap-4 p-3 md:p-5 border-b bg-gray-50">
               <button class="p-2 hover:bg-gray-200 rounded-lg transition">
-                <i-lucide-filter class="w-5 h-5 text-gray-600" />
+                <i-lucide-filter class="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
               </button>
               <div class="relative flex-1 max-w-md">
                 <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   v-model="historySearchQuery"
                   type="text"
-                  placeholder="Search by name, email, or title..."
-                  class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  placeholder="Search history..."
+                  class="w-full pl-9 md:pl-10 pr-8 md:pr-10 py-2 md:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
-                <i-lucide-x class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" @click="historySearchQuery = ''" />
+                <i-lucide-x class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" @click="historySearchQuery = ''" />
               </div>
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -521,16 +530,16 @@
             </div>
 
             <!-- Pagination -->
-            <div class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-              <div class="text-sm text-gray-600">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50">
+              <div class="text-xs sm:text-sm text-gray-600">
                 1-{{ Math.min(historyRowsPerPage, histories.length) }} of {{ histories.length }}
               </div>
-              <div class="flex items-center gap-4">
+              <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-600">Rows per page:</span>
+                  <span class="text-xs sm:text-sm text-gray-600">Rows:</span>
                   <select
                     v-model="historyRowsPerPage"
-                    class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option :value="5">5</option>
                     <option :value="10">10</option>
@@ -539,11 +548,11 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
-                    <i-lucide-chevron-left class="w-5 h-5" />
+                    <i-lucide-chevron-left class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <span class="text-sm text-gray-600">1/{{ Math.ceil(histories.length / historyRowsPerPage) }}</span>
+                  <span class="text-xs sm:text-sm text-gray-600">1/{{ Math.ceil(histories.length / historyRowsPerPage) }}</span>
                   <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
-                    <i-lucide-chevron-right class="w-5 h-5" />
+                    <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
@@ -593,8 +602,12 @@ const queueReviews = ref<QueueItem[]>([])
 const loadPendingDocuments = async () => {
   try {
     console.log('Loading pending documents...')
+    console.log('Auth token exists:', !!localStorage.getItem('auth_token'))
+    console.log('User role:', userRole.value)
+
     const response = await api.documents.review() as { success: boolean; data: DocumentResponse[] }
     console.log('Response from /documents/review:', response)
+
     if (response.success && response.data) {
       console.log('Found', response.data.length, 'pending documents')
       queueReviews.value = response.data.map((doc) => ({
@@ -612,10 +625,26 @@ const loadPendingDocuments = async () => {
       console.log('Queue reviews updated:', queueReviews.value)
     } else {
       console.warn('No pending documents or invalid response structure')
+      queueReviews.value = []
+      queueCount.value = 0
     }
   } catch (error) {
     console.error('Gagal memuat dokumen pending:', error)
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        toast.error('Sesi Berakhir', 'Silakan login kembali')
+        router.push('/login')
+      } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk melihat queue review')
+      } else if (error.message.includes('404') || error.message.includes('not found')) {
+        console.warn('Review endpoint returned 404 - this might be a route matching issue')
+        toast.warning('Endpoint Tidak Ditemukan', 'Pastikan backend berjalan dengan benar')
+      }
+    }
     queueReviews.value = []
+    queueCount.value = 0
   }
 }
 
@@ -730,13 +759,26 @@ onMounted(() => {
       const user = JSON.parse(storedUser)
       username.value = user.name || user.username || 'Admin'
       userRole.value = user.role || ''
+      console.log('User role:', userRole.value)
+      console.log('User data:', user)
     } catch {
       username.value = 'Admin'
       userRole.value = ''
     }
   } else {
     router.push('/login')
+    return
   }
+
+
+  const allowedRoles = ['reviewer', 'admin', 'super_admin']
+  if (!allowedRoles.includes(userRole.value.toLowerCase())) {
+    console.warn('User does not have permission to view dashboard. Role:', userRole.value)
+    toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk mengakses dashboard admin')
+    router.push('/')
+    return
+  }
+
   loadPendingDocuments()
   loadHistory()
   loadStats()

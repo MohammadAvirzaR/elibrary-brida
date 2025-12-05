@@ -14,7 +14,11 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    // REGISTER - Step 1: Kirim OTP
+    private const OTP_EXPIRY_MINUTES = 1;
+    private const OTP_EXPIRY_SECONDS = 60;
+    private const SESSION_EXPIRY_MINUTES = 5;
+
+    // send otp
     public function register(Request $request)
     {
         $request->validate([
@@ -24,10 +28,8 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        // Generate OTP 6 digit
         $otp = rand(100000, 999999);
 
-        // Simpan data registrasi dan OTP di cache (expired 10 menit)
         $registrationData = [
             'name' => $request->name,
             'email' => $request->email,
@@ -36,11 +38,10 @@ class AuthController extends Controller
             'otp' => $otp,
         ];
 
-        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(1));
+        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(self::SESSION_EXPIRY_MINUTES));
 
-        // Kirim OTP via email
         try {
-            Mail::raw("Kode OTP Anda adalah: {$otp}\n\nKode ini berlaku selama 1 menit.", function ($message) use ($request) {
+            Mail::raw("Kode OTP Anda adalah: {$otp}\n\nKode ini berlaku selama " . self::OTP_EXPIRY_MINUTES . " menit.", function ($message) use ($request) {
                 $message->to($request->email)
                         ->subject('Kode Verifikasi OTP - Registrasi');
             });
@@ -49,7 +50,7 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'Kode OTP telah dikirim ke email Anda',
                 'email' => $request->email,
-                'expires_in' => 60,
+                'expires_in' => self::OTP_EXPIRY_SECONDS,
             ], 200);
 
         } catch (\Exception $e) {
@@ -61,7 +62,7 @@ class AuthController extends Controller
         }
     }
 
-    // VERIFY OTP - Step 2: Verifikasi OTP dan buat user
+    // verify otp
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -69,7 +70,6 @@ class AuthController extends Controller
             'otp' => 'required|digits:6',
         ]);
 
-        // Ambil data registrasi dari cache
         $registrationData = Cache::get('registration_' . $request->email);
 
         if (!$registrationData) {
@@ -79,7 +79,6 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Verifikasi OTP
         if ($registrationData['otp'] != $request->otp) {
             return response()->json([
                 'status' => 'error',
@@ -87,10 +86,8 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Buat user baru dengan role contributor
-        // Cari role_id yang tersedia atau gunakan default
-        $contributorRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
-        $roleId = $contributorRole ? $contributorRole->id : DB::table('roles')->min('id') ?? 5;
+        $guestRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
+        $roleId = $guestRole ? $guestRole->id : DB::table('roles')->min('id') ?? 5;
 
         $user = User::create([
             'full_name' => $registrationData['name'],
@@ -98,16 +95,13 @@ class AuthController extends Controller
             'unit_name' => $registrationData['institution'],
             'password' => $registrationData['password'],
             'role_id' => $roleId,
-            'email_verified_at' => now(), // Set email as verified
+            'email_verified_at' => now(),
         ]);
 
-        // Hapus data registrasi dari cache
         Cache::forget('registration_' . $request->email);
 
-        // Generate token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Load role relationship
         $user->load('role');
 
         return response()->json([
@@ -131,7 +125,6 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Cek apakah ada data registrasi di cache
         $registrationData = Cache::get('registration_' . $request->email);
 
         if (!$registrationData) {
@@ -141,16 +134,13 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Generate OTP baru
         $otp = rand(100000, 999999);
         $registrationData['otp'] = $otp;
 
-        // Update cache dengan OTP baru
-        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(10));
+        Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(self::SESSION_EXPIRY_MINUTES));
 
-        // Kirim OTP via email
         try {
-            Mail::raw("Kode OTP baru Anda adalah: {$otp}\n\nKode ini berlaku selama 10 menit.", function ($message) use ($request) {
+            Mail::raw("Kode OTP baru Anda adalah: {$otp}\n\nKode ini berlaku selama " . self::OTP_EXPIRY_MINUTES . " menit.", function ($message) use ($request) {
                 $message->to($request->email)
                         ->subject('Kode Verifikasi OTP Baru - Registrasi');
             });
@@ -159,7 +149,7 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'Kode OTP baru telah dikirim ke email Anda',
                 'email' => $request->email,
-                'expires_in' => 60,
+                'expires_in' => self::OTP_EXPIRY_SECONDS,
             ], 200);
 
         } catch (\Exception $e) {
@@ -186,7 +176,6 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Load role relationship
         $user->load('role');
 
         return response()->json([

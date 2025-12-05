@@ -26,11 +26,26 @@ class DocumentController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        $query = Document::where('status', self::APPROVED_STATUS);
+        $query = Document::where('status', self::APPROVED_STATUS)
+            ->with(['authors', 'subjects', 'type', 'unit']);
 
         $this->applySearchFilters($query, $request);
 
-        return response()->json($query->paginate(self::ITEMS_PER_PAGE));
+        $result = $query->paginate(self::ITEMS_PER_PAGE);
+        // thumbnail try
+        $result->getCollection()->transform(function ($document) {
+            $document->author = $document->authors->map(function ($author) {
+                return trim($author->first_name . ' ' . $author->last_name);
+            })->join(', ') ?: 'Unknown Author';
+
+            $document->thumbnail_url = $document->thumbnail_path
+                ? Storage::url($document->thumbnail_path)
+                : null;
+
+            return $document;
+        });
+
+        return response()->json($result);
     }
 
     public function featuredContent(): JsonResponse
@@ -64,18 +79,28 @@ class DocumentController extends Controller
 
             DB::commit();
 
+            $document->load(['authors', 'supervisors', 'subjects', 'attachments']);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Dokumen berhasil dikirim & menunggu persetujuan admin.',
-                'data' => $this->formatDocumentResponse($document)
-            ]);
+                'data' => [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'status' => $document->status,
+                    'file_path' => $document->file_path,
+                    'created_at' => $document->created_at->toISOString(),
+                    'upload_date' => $document->upload_date,
+                ]
+            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Document upload failed', ['error' => $e->getMessage()]);
+            Log::error('Document upload failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengunggah dokumen'
+                'message' => 'Gagal mengunggah dokumen',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -156,16 +181,19 @@ class DocumentController extends Controller
         try {
             $user = auth('sanctum')->user();
 
-            if (!$user) {
-                return $this->unauthorizedResponse();
-            }
-
             $document = Document::with([
                 'user.role', 'type', 'unit', 'license',
                 'authors', 'supervisors', 'subjects', 'attachments'
             ])->findOrFail($id);
-
-            if (!$this->canViewDocument($user, $document)) {
+            // guest can view
+            if (!$user) {
+                if ($document->status !== self::APPROVED_STATUS) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Document not found or not accessible'
+                    ], 404);
+                }
+            } elseif (!$this->canViewDocument($user, $document)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized to view this document'
@@ -242,45 +270,86 @@ class DocumentController extends Controller
         }
     }
 
-    public function serveFile(Request $request, string $id): BinaryFileResponse|JsonResponse
+
+    public function serveFile(Request $request, string $id): BinaryFileResponse|Response
     {
         try {
+            Log::info('Serving file for document', ['id' => $id, 'has_token' => $request->has('token')]);
+
             $user = $this->authenticateFromRequest($request);
 
+            Log::info('User authenticated', ['user_id' => $user?->id, 'role' => $user?->role?->name]);
+
+            $document = Document::with('user.role')->find($id);
+
+            if (!$document) {
+                Log::error('Document not found', ['id' => $id]);
+                return response('Document not found', 404)
+                    ->header('Content-Type', 'text/plain');
+            }
+
+            Log::info('Document found', [
+                'id' => $document->id,
+                'status' => $document->status,
+                'file_path' => $document->file_path
+            ]);
+
+            // Check authentication and permissions
             if (!$user) {
-                return $this->unauthorizedResponse();
+                if ($document->status !== self::APPROVED_STATUS) {
+                    Log::warning('Guest trying to access non-approved document', ['doc_id' => $id]);
+                    return response('Document not accessible (not approved)', 403)
+                        ->header('Content-Type', 'text/plain');
+                }
+            } elseif (!$this->canAccessFile($user, $document)) {
+                Log::warning('User unauthorized to access document', [
+                    'user_id' => $user->id,
+                    'doc_id' => $id
+                ]);
+                return response('Unauthorized to access this document', 403)
+                    ->header('Content-Type', 'text/plain');
             }
 
-            $document = Document::with('user.role')->findOrFail($id);
-
-            if (!$this->canAccessFile($user, $document)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized to access this document'
-                ], 403);
+            if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+                Log::error('File not found in storage', [
+                    'doc_id' => $id,
+                    'file_path' => $document->file_path
+                ]);
+                return response('File not found in storage', 404)
+                    ->header('Content-Type', 'text/plain');
             }
 
-            if (!$document->file_path || !Storage::exists($document->file_path)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File tidak ditemukan'
-                ], 404);
+            $filePath = Storage::disk('public')->path($document->file_path);
+            $fileSize = Storage::disk('public')->size($document->file_path);
+
+            if ($fileSize === 0) {
+                Log::error('File is empty or corrupted', [
+                    'doc_id' => $id,
+                    'file_size' => $fileSize
+                ]);
+                return response('File corrupted or invalid', 500)
+                    ->header('Content-Type', 'text/plain');
             }
 
-            return response()->file(
-                Storage::path($document->file_path),
-                [
-                    'Content-Type' => Storage::mimeType($document->file_path),
-                    'Content-Disposition' => 'inline; filename="' . basename($document->file_path) . '"'
-                ]
-            );
+            Log::info('Serving file', ['path' => $filePath, 'size' => $fileSize]);
+
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Accept-Ranges' => 'bytes'
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error serving file', ['id' => $id, 'error' => $e->getMessage()]);
+            Log::error('Error serving file', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error serving file'
-            ], 500);
+            return response('Error loading document: ' . $e->getMessage(), 500)
+                ->header('Content-Type', 'text/plain');
         }
     }
 
@@ -289,37 +358,39 @@ class DocumentController extends Controller
         try {
             $user = $this->authenticateFromRequest($request);
 
-            if (!$user) {
-                return $this->unauthorizedResponse();
-            }
+            $document = Document::with('user.role')->findOrFail($documentId);
 
             $attachment = DocumentAttachment::where('document_id', $documentId)
                 ->where('id', $attachmentId)
                 ->firstOrFail();
 
-            $document = Document::with('user.role')->findOrFail($documentId);
-
-            if (!$this->canAccessFile($user, $document)) {
+            if (!$user) {
+                if ($document->status !== self::APPROVED_STATUS) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Document not found or not accessible'
+                    ], 404);
+                }
+            } elseif (!$this->canAccessFile($user, $document)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized to access this document'
                 ], 403);
             }
 
-            if (!$attachment->file_path || !Storage::exists($attachment->file_path)) {
+            if (!$attachment->file_path || !Storage::disk('public')->exists($attachment->file_path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File tidak ditemukan'
                 ], 404);
             }
 
-            return response()->file(
-                Storage::path($attachment->file_path),
-                [
-                    'Content-Type' => Storage::mimeType($attachment->file_path),
-                    'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
-                ]
-            );
+            $attachmentPath = Storage::disk('public')->path($attachment->file_path);
+
+            return response()->file($attachmentPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline'
+            ]);
         } catch (\Exception $e) {
             Log::error('Error serving attachment', [
                 'documentId' => $documentId,
@@ -344,6 +415,23 @@ class DocumentController extends Controller
                     ->orWhere('abstract_id', 'like', "%$search%")
                     ->orWhere('abstract_en', 'like', "%$search%");
             });
+        }
+
+        if ($request->filled('filter')) {
+            $filter = $request->input('filter');
+
+            switch ($filter) {
+                case 'is_featured':
+                    $query->where('is_featured', true);
+                    $query->orderBy('upload_date', 'desc');
+                    break;
+                case 'upload_date':
+                    $query->orderBy('upload_date', 'desc');
+                    break;
+                case 'download_count':
+                    $query->orderBy('download_count', 'desc');
+                    break;
+            }
         }
 
         if ($request->filled('type_id')) {
@@ -397,7 +485,7 @@ class DocumentController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'subjects' => 'array',
-            'access_right' => ['required', Rule::in(['public', 'internal', 'embargo'])],
+            'access_right' => ['required', Rule::in(['open', 'public', 'internal', 'embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
             'statement_agreed' => 'required|accepted',
         ];
@@ -420,7 +508,7 @@ class DocumentController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'license_id' => 'nullable|exists:licenses,id',
-            'access_right' => ['nullable', Rule::in(['public', 'internal', 'embargo'])],
+            'access_right' => ['nullable', Rule::in(['open', 'public', 'internal', 'embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
             'statement_agreed' => 'nullable',
             'file' => 'required|file|mimes:pdf,doc,docx|max:' . self::MAX_FILE_SIZE,
@@ -476,7 +564,12 @@ class DocumentController extends Controller
 
     private function createDocument(Request $request, array $validated): Document
     {
-        $mainPath = $request->file('file')->store('documents/main');
+        $file = $request->file('file');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $mainPath = $file->storeAs('documents', $filename, 'public');
+
+        $thumbnailService = new \App\Services\ThumbnailService();
+        $thumbnailPath = $thumbnailService->generateThumbnail($mainPath, (string)time());
 
         return Document::create([
             'user_id' => auth('sanctum')->id(),
@@ -490,9 +583,10 @@ class DocumentController extends Controller
             'abstract_id' => $validated['abstract_id'] ?? null,
             'abstract_en' => $validated['abstract_en'] ?? null,
             'file_path' => $mainPath,
+            'thumbnail_path' => $thumbnailPath,
             'upload_date' => now(),
             'license_id' => $validated['license_id'] ?? null,
-            'access_right' => $validated['access_right'] ?? null,
+            'access_right' => $validated['access_right'] ?? 'open',
             'embargo_until' => $validated['embargo_until'] ?? null,
             'funding_program' => $validated['funding_program'] ?? null,
             'research_location' => $validated['research_location'] ?? null,
@@ -523,7 +617,8 @@ class DocumentController extends Controller
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('documents/attachments');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('documents/attachments', $filename, 'public');
                 $document->attachments()->create([
                     'file_path' => $path,
                     'file_name' => $file->getClientOriginalName(),

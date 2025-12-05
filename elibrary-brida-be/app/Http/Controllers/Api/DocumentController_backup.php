@@ -51,7 +51,7 @@ class DocumentController extends Controller
                 $q->whereIn('subjects.id', (array) $request->subject_id);
             });
         }
-        return $query->paginate(10);
+        return response()->json($query->paginate(10));
 
 
     }

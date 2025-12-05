@@ -29,4 +29,22 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Forward Authorization header dari request asli
+            const authHeader = req.headers['authorization']
+            if (authHeader) {
+              proxyReq.setHeader('Authorization', authHeader)
+            }
+          })
+        }
+      }
+    }
+  }
 })
