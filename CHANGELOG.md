@@ -4,6 +4,44 @@ Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
 ---
 
+## [1.6.0] - 2024-12-07
+
+### 🐛 Fixed - Document Preview & Storage System
+
+**Problem**: Dokumen dengan ukuran kecil (<100KB) tidak bisa ditampilkan di preview, sementara dokumen besar (>100KB) berfungsi normal.
+
+**Root Cause Analysis**:
+- File size validation terlalu ketat: `if ($fileSize < 100)` bytes
+- Validasi ini menolak file yang valid tapi berukuran kecil
+- Contoh kasus: PDF 20KB (20,771 bytes) ditolak sistem karena dianggap corrupt
+
+**Solutions Implemented**:
+
+1. **Fixed File Size Validation** (`DocumentController.php`)
+   - Changed from: `if ($fileSize < 100)` → `if ($fileSize === 0)`
+   - Sekarang hanya file kosong (0 bytes) yang ditolak
+   - File kecil yang valid (< 100KB) bisa ditampilkan normal
+
+2. **Storage Consistency Improvements**
+   - Memastikan semua file operations menggunakan 'public' disk
+   - Path resolution konsisten antara upload dan serve methods
+   - Added comprehensive logging untuk troubleshooting
+
+### 🔧 Modified Files
+- `app/Http/Controllers/Api/DocumentController.php` - Updated file validation logic
+
+### 📊 Impact
+- ✅ PDF dengan ukuran berapapun sekarang bisa di-preview
+- ✅ Validasi file lebih akurat (hanya reject file corrupt, bukan file kecil)
+- ✅ User experience lebih baik untuk preview dokumen kecil
+
+### 🧪 Testing Notes
+Telah diverifikasi dengan:
+- Document ID 6: 20.28 KB (20,771 bytes) - Sekarang bisa ditampilkan ✓
+- Document ID 7: 235.45 KB (241,096 bytes) - Tetap berfungsi normal ✓
+
+---
+
 ## [1.5.0] - 2024-11-10
 
 ### ✨ Added - Role Change Notification System

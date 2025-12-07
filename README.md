@@ -2,7 +2,7 @@
 
 > Sistem Manajemen E-Library untuk BRIDA Sulawesi Tenggara
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](CHANGELOG.md)
 [![Laravel](https://img.shields.io/badge/Laravel-10-red.svg)](https://laravel.com)
 [![Vue](https://img.shields.io/badge/Vue-3-green.svg)](https://vuejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org)
@@ -32,6 +32,7 @@ E-Library BRIDA adalah sistem manajemen perpustakaan digital yang dibangun untuk
 📤 **Document Upload & Management** - Upload, search, dan manage dokumen  
 🔐 **Granular Permissions** - Kontrol akses detail per role  
 📊 **Admin Dashboard** - Analytics dan user management  
+📄 **Reliable PDF Preview** - Preview dokumen langsung di browser tanpa download otomatis  
 
 ---
 
@@ -152,10 +153,12 @@ php artisan serve            # Dev server: http://localhost:8000
 - Display options (mentionable, separated)
 
 ### 📤 Document Management
-- Upload dokumen (PDF, DOC, etc.)
+- Upload dokumen (PDF, DOC, etc.) dengan validasi ukuran file
+- PDF preview yang reliable untuk semua ukuran dokumen
 - Advanced search & filters
 - Document categorization
 - Download tracking
+- Support inline preview untuk pending documents (role-based access)
 
 ### 📊 Dashboard
 - **Admin Dashboard**: User stats, document stats, activity logs
@@ -297,9 +300,11 @@ php artisan test         # Run PHPUnit tests
 - [ ] Login dengan semua role
 - [ ] Test role change notification
 - [ ] Test user CRUD
-- [ ] Test document upload
+- [ ] Test document upload (berbagai ukuran file)
+- [ ] Test PDF preview untuk dokumen kecil (<100KB) dan besar (>100KB)
 - [ ] Test responsive design
 - [ ] Check browser console errors
+- [ ] Verify file storage consistency
 
 ---
 
@@ -333,8 +338,8 @@ This project is proprietary and confidential.
 
 **Developer**: MohammadAvirzaR  
 **Project**: E-Library BRIDA  
-**Version**: 1.5.0  
-**Last Updated**: 2024-11-10
+**Version**: 1.6.0  
+**Last Updated**: 2024-12-07
 
 ---
 
