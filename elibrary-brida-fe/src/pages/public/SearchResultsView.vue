@@ -256,7 +256,6 @@ const handleAdvancedSearch = (filters: { subjects: string[], types: string[] }) 
   applyFilters()
 }
 
-
 const subjects = [
   { label: 'Ilmu Komputer', value: 'computer-science' },
   { label: 'Matematika', value: 'mathematics' },
