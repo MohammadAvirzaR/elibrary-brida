@@ -68,10 +68,10 @@ export function useDocumentSearch() {
       lastPage.value = data.last_page || 1
       perPage.value = data.per_page || 10
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch search results'
+      console.error('Search error:', err)
+      error.value = 'Gagal mencari dokumen. Silakan coba lagi.'
       searchResults.value = []
       totalResults.value = 0
-      console.error('Search error:', err)
     } finally {
       isLoading.value = false
     }

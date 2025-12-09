@@ -410,7 +410,8 @@ const confirmApprove = async () => {
       await loadRequests()
     }
   } catch (error) {
-    alert('Failed to approve request: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    console.error('Failed to approve request:', error)
+    alert('Gagal menyetujui permintaan. Silakan coba lagi.')
   } finally {
     isProcessing.value = false
   }
@@ -429,7 +430,8 @@ const confirmReject = async () => {
       await loadRequests()
     }
   } catch (error) {
-    alert('Failed to reject request: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    console.error('Failed to reject request:', error)
+    alert('Gagal menolak permintaan. Silakan coba lagi.')
   } finally {
     isProcessing.value = false
   }

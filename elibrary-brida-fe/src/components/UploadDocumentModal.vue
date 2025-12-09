@@ -1129,29 +1129,23 @@ const submitForm = async () => {
     let errorMessage = 'Terjadi kesalahan saat mengunggah dokumen.'
 
     if (error instanceof Error) {
-      // error message
       if (error.message.includes('403') || error.message.includes('Forbidden')) {
-        errorMessage = 'Anda tidak memiliki izin untuk upload dokumen. Pastikan Anda login sebagai Contributor.'
+        errorMessage = 'Kamu tidak memiliki izin untuk upload dokumen.'
       } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.'
+        errorMessage = 'Sesi kamu telah berakhir. Silakan login kembali.'
         setTimeout(() => {
           localStorage.removeItem('auth_token')
           localStorage.removeItem('user')
           window.location.href = '/login'
         }, 2000)
       } else if (error.message.includes('422') || error.message.includes('Unprocessable')) {
-        const detailsMatch = error.message.match(/Details:\n(.+)/s)
-        if (detailsMatch) {
-          errorMessage = 'Validasi gagal:\n' + detailsMatch[1]
-        } else {
-          errorMessage = 'Data tidak valid. Pastikan semua field wajib sudah diisi dengan benar.'
-        }
+        errorMessage = 'Data yang kamu masukkan tidak valid.'
       } else if (error.message.includes('413') || error.message.includes('too large')) {
-        errorMessage = 'Ukuran file terlalu besar. Maksimal 50MB untuk file utama dan 20MB untuk lampiran.'
-      } else if (error.message.includes('file')) {
-        errorMessage = 'File tidak valid. Pastikan file adalah PDF, DOC, atau DOCX.'
+        errorMessage = 'Ukuran file terlalu besar.'
+      } else if (error.message.includes('500')) {
+        errorMessage = 'Terjadi kesalahan pada server. Coba lagi nanti.'
       } else {
-        errorMessage = error.message
+        errorMessage = 'Permintaan tidak dapat diproses.'
       }
     }
 

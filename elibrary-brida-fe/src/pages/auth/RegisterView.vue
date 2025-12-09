@@ -280,13 +280,9 @@ const handleRegister = async () => {
     showOtpModal.value = true
 
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      errorMessage.value = error.message
-      toast.error('Gagal Mengirim OTP', error.message)
-    } else {
-      errorMessage.value = 'Gagal mengirim OTP. Silakan coba lagi.'
-      toast.error('Gagal Mengirim OTP', 'Silakan coba lagi')
-    }
+    console.error('Register OTP error:', error)
+    errorMessage.value = 'Gagal mengirim OTP. Silakan coba lagi.'
+    toast.error('Gagal Mengirim OTP', 'Gagal mengirim OTP. Silakan coba lagi.')
   } finally {
     isLoading.value = false
   }
@@ -339,11 +335,8 @@ const handleVerifyOtp = async (otp: string) => {
     }, 1000)
 
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      otpModal.value?.setError(error.message)
-    } else {
-      otpModal.value?.setError('Verifikasi gagal. Silakan coba lagi.')
-    }
+    console.error('Verify OTP error:', error)
+    otpModal.value?.setError('Verifikasi gagal. Silakan coba lagi.')
   }
 }
 
@@ -373,11 +366,8 @@ const handleResendOtp = async () => {
     otpModal.value?.reset()
 
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      toast.error('Gagal Mengirim OTP', error.message)
-    } else {
-      toast.error('Gagal Mengirim OTP', 'Silakan coba lagi')
-    }
+    console.error('Resend OTP error:', error)
+    toast.error('Gagal Mengirim OTP', 'Gagal mengirim ulang OTP. Silakan coba lagi.')
   } finally {
     isResending.value = false
   }

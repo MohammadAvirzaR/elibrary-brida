@@ -679,7 +679,7 @@ const loadRoles = async () => {
     }
   } catch (error) {
     console.error('Failed to load roles:', error)
-    loadError.value = error instanceof Error ? error.message : 'Failed to load roles'
+    loadError.value = 'Gagal memuat data role. Silakan coba lagi.'
   } finally {
     isLoading.value = false
   }
@@ -750,7 +750,7 @@ const handleSubmit = async () => {
     closeModal()
   } catch (error) {
     console.error('Failed to save role:', error)
-    alert(error instanceof Error ? error.message : 'Failed to save role')
+    alert('Gagal menyimpan role. Silakan coba lagi.')
   }
 }
 
@@ -788,7 +788,7 @@ const confirmDelete = async () => {
     closeDeleteModal()
   } catch (error) {
     console.error('Failed to delete role:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete role')
+    alert('Gagal menghapus role. Silakan coba lagi.')
   }
 }
 
