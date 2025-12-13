@@ -36,4 +36,5 @@ onMounted(() => {
 
 <style>
 /* Global styles sudah ada di main.css dan base.css */
+/* w */
 </style>
