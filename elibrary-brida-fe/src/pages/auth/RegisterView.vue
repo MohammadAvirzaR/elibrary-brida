@@ -254,7 +254,8 @@ const handleRegister = async () => {
   errorMessage.value = ''
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/register', {
+    const apiUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+    const response = await fetch(`${apiUrl}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -290,7 +291,8 @@ const handleRegister = async () => {
 
 const handleVerifyOtp = async (otp: string) => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
+    const apiUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+    const response = await fetch(`${apiUrl}/verify-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -341,10 +343,11 @@ const handleVerifyOtp = async (otp: string) => {
 }
 
 const handleResendOtp = async () => {
-  isResending.value = true
+  isLoading.value = true
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/resend-otp', {
+    const apiUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+    const response = await fetch(`${apiUrl}/resend-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -479,7 +479,8 @@ const isPdfLoading = ref(false)
 
 const pdfUrl = computed(() => {
   if (!document.value?.id) return null
-  const baseUrl = 'http://127.0.0.1:8000'
+  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+  const baseUrl = apiBaseUrl.replace('/api', '')
   const token = localStorage.getItem('auth_token')
 
   // Gunakan token di URL - satu-satunya cara reliable untuk iframe
@@ -593,7 +594,8 @@ const rejectDocument = async () => {
 const downloadDocument = async () => {
   if (!document.value?.id) return
 
-  const baseUrl = 'http://127.0.0.1:8000'
+  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+  const baseUrl = apiBaseUrl.replace('/api', '')
   const token = localStorage.getItem('auth_token')
 
   try {
@@ -632,7 +634,8 @@ const downloadDocument = async () => {
 
 const downloadAttachment = (attachment: Attachment) => {
   if (!document.value?.id || !attachment.id) return
-  const baseUrl = 'http://127.0.0.1:8000'
+  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+  const baseUrl = apiBaseUrl.replace('/api', '')
   const token = localStorage.getItem('auth_token')
 
   let url = `${baseUrl}/api/documents/${document.value.id}/attachments/${attachment.id}/file`
