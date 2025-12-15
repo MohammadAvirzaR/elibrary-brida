@@ -37,7 +37,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'institution' => $request->institution,
-                'password' => $request->password,
+                'password' => Hash::make($request->password),
                 'otp' => $otp,
             ],
             now()->addMinutes(self::SESSION_EXPIRY_MINUTES)
@@ -56,8 +56,6 @@ class AuthController extends Controller
             'email' => $request->email,
             'expires_in' => self::OTP_EXPIRY_SECONDS,
         ], 200);
-
-
 
     }
 
@@ -139,10 +137,11 @@ class AuthController extends Controller
         Cache::put('registration_' . $request->email, $registrationData, now()->addMinutes(self::SESSION_EXPIRY_MINUTES));
 
         try {
-            Mail::raw("Kode OTP baru Anda adalah: {$otp}\n\nKode ini berlaku selama " . self::OTP_EXPIRY_MINUTES . " menit.", function ($message) use ($request) {
-                $message->to($request->email)
-                        ->subject('Kode Verifikasi OTP Baru - Registrasi');
-            });
+            SendOtpEmailJob::dispatch(
+                $request->email,
+                $otp,
+                self::OTP_EXPIRY_MINUTES
+            );
 
             return response()->json([
                 'status' => 'success',
