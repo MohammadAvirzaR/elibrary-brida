@@ -18,7 +18,7 @@ return new class extends Migration
 
             // Add publisher only if not exists
             if (!Schema::hasColumn('documents', 'publisher')) {
-                $table->string('publisher')->nullable()->after('supervisor');
+                $table->string('publisher')->nullable();
             }
 
             // Add timestamps only if not exists
