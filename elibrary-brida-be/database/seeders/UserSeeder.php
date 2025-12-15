@@ -17,7 +17,6 @@ class UserSeeder extends Seeder
 
         DB::table('users')->insert([
             [
-                'id' => 1,
                 'role_id' => $adminRoleId,
                 'full_name' => 'Admin BRIDA',
                 'email' => 'admin@brida.com',
@@ -26,7 +25,6 @@ class UserSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id' => 2,
                 'role_id' => $guestRoleId,
                 'full_name' => 'User Demo',
                 'email' => 'user@brida.com',
