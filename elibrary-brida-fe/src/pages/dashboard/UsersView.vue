@@ -837,7 +837,7 @@ const loadUsers = async () => {
     }
   } catch (error) {
     console.error('Failed to load users:', error)
-    loadError.value = 'Gagal memuat data pengguna. Silakan coba lagi.'
+    loadError.value = error instanceof Error ? error.message : 'Failed to load users'
   } finally {
     isLoading.value = false
   }
@@ -1018,7 +1018,7 @@ const handleSubmit = async () => {
     closeModal()
   } catch (error) {
     console.error('Failed to save user:', error)
-    alert('Gagal menyimpan data pengguna. Silakan coba lagi.')
+    alert(error instanceof Error ? error.message : 'Failed to save user')
   }
 }
 
@@ -1055,7 +1055,7 @@ const confirmDelete = async () => {
     closeDeleteModal()
   } catch (error) {
     console.error('Failed to delete user:', error)
-    alert('Gagal menghapus pengguna. Silakan coba lagi.')
+    alert(error instanceof Error ? error.message : 'Failed to delete user')
   }
 }
 

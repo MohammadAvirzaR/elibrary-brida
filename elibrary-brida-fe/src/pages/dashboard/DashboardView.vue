@@ -631,13 +631,16 @@ const loadPendingDocuments = async () => {
   } catch (error) {
     console.error('Gagal memuat dokumen pending:', error)
     if (error instanceof Error) {
+      console.error('Error message:', error.message)
+
       if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        toast.error('Sesi Berakhir', 'Sesi kamu telah berakhir. Silakan login kembali.')
+        toast.error('Sesi Berakhir', 'Silakan login kembali')
         router.push('/login')
       } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
-        toast.error('Akses Ditolak', 'Kamu tidak memiliki akses ke resource ini.')
-      } else {
-        toast.error('Gagal Memuat Data', 'Tidak dapat memuat data. Silakan coba lagi.')
+        toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk melihat queue review')
+      } else if (error.message.includes('404') || error.message.includes('not found')) {
+        console.warn('Review endpoint returned 404 - this might be a route matching issue')
+        toast.warning('Endpoint Tidak Ditemukan', 'Pastikan backend berjalan dengan benar')
       }
     }
     queueReviews.value = []

@@ -365,8 +365,8 @@ const submitRequest = async () => {
       }, 3000)
     }
   } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Gagal mengirim permintaan'
     console.error('Failed to submit request:', error)
-    errorMessage.value = 'Gagal mengirim permintaan. Silakan coba lagi.'
   } finally {
     isSubmitting.value = false
   }

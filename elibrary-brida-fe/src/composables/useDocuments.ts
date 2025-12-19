@@ -50,10 +50,10 @@ export function useDocuments() {
       documents.value = data.data || []
       totalDocuments.value = data.total || 0
     } catch (err) {
-      console.error('Fetch documents error:', err)
-      error.value = 'Gagal memuat dokumen. Silakan coba lagi.'
+      error.value = err instanceof Error ? err.message : 'Failed to fetch documents'
       documents.value = []
       totalDocuments.value = 0
+      console.error('Fetch documents error:', err)
     } finally {
       isLoading.value = false
     }

@@ -596,7 +596,7 @@ const loadUsers = async () => {
     }
   } catch (error) {
     console.error('Failed to load users:', error)
-    loadError.value = 'Gagal memuat data profil. Silakan coba lagi.'
+    loadError.value = error instanceof Error ? error.message : 'Failed to load users'
   } finally {
     console.log('Loading complete. isLoading:', isLoading.value) // Debug log
     isLoading.value = false
@@ -645,7 +645,7 @@ const handleUpdateProfile = async () => {
     }
   } catch (error) {
     console.error('Failed to update profile:', error)
-    alert('Gagal memperbarui profil. Silakan coba lagi.')
+    alert(error instanceof Error ? error.message : 'Failed to update profile')
   }
 }
 
@@ -687,7 +687,7 @@ const handleResetPassword = async () => {
     }
   } catch (error) {
     console.error('Failed to reset password:', error)
-    alert('Gagal mereset password. Silakan coba lagi.')
+    alert(error instanceof Error ? error.message : 'Failed to reset password')
   }
 }
 

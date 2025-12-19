@@ -227,9 +227,13 @@ const handleLogin = async () => {
       router.push('/my-dashboard')
     }
   } catch (error: unknown) {
-    console.error('Login error:', error)
-    errorMessage.value = 'Email atau password salah. Silakan coba lagi.'
-    toast.error('Login Gagal', 'Email atau password salah. Silakan coba lagi.')
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+      toast.error('Login Gagal', error.message)
+    } else {
+      errorMessage.value = 'Login failed. Please try again.'
+      toast.error('Login Gagal', 'Silakan coba lagi')
+    }
   } finally {
     isLoading.value = false
   }
