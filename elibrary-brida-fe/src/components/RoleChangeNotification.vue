@@ -81,8 +81,8 @@
         <!-- Progress Bar -->
         <div class="h-1 bg-gray-200">
           <div
-            class="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-[10000ms] ease-linear"
-            :style="{ width: show ? '0%' : '100%' }"
+            class="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all ease-linear"
+            :style="{ width: show ? '0%' : '100%', transitionDuration: '10000ms' }"
           ></div>
         </div>
       </div>

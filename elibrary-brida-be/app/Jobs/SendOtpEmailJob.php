@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SendOtpEmailJob implements ShouldQueue
 {
@@ -21,12 +22,20 @@ class SendOtpEmailJob implements ShouldQueue
 
     public function handle(): void
     {
-        Mail::raw(
-            "Kode OTP Anda adalah: {$this->otp}\n\nKode ini berlaku selama {$this->expiryMinutes} menit.",
-            function ($message) {
-                $message->to($this->email)
-                        ->subject('Kode Verifikasi OTP - Registrasi');
-            }
-        );
+        try {
+            Mail::raw(
+                "Kode OTP Anda adalah: {$this->otp}\n\nKode ini berlaku selama {$this->expiryMinutes} menit.",
+                function ($message) {
+                    $message->to($this->email)
+                            ->subject('Kode Verifikasi OTP - Registrasi')
+                            ->from(config('mail.from.address'), config('mail.from.name'));
+                }
+            );
+
+            Log::info("OTP email sent successfully to {$this->email}");
+        } catch (\Exception $e) {
+            Log::error("Failed to send OTP email to {$this->email}: " . $e->getMessage());
+            throw $e;
+        }
     }
 }
