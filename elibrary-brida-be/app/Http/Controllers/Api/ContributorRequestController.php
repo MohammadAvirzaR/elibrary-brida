@@ -120,25 +120,41 @@ class ContributorRequestController extends Controller
     }
 
     /**
-     * Check if user has pending request
+     * Check if user has pending or rejected request
      */
     public function checkPending()
     {
         try {
             $user = Auth::user();
+            
+            // Check for pending request
             $pendingRequest = ContributorRequest::where('user_id', $user->id)
                 ->where('status', 'pending')
+                ->first();
+            
+            // Check for rejected request
+            $rejectedRequest = ContributorRequest::where('user_id', $user->id)
+                ->where('status', 'rejected')
+                ->orderBy('created_at', 'desc')
                 ->first();
 
             return response()->json([
                 'success' => true,
                 'has_pending' => $pendingRequest ? true : false,
+                'has_rejected' => $rejectedRequest ? true : false,
                 'data' => $pendingRequest ? [
                     'id' => $pendingRequest->id,
                     'status' => $pendingRequest->status,
                     'message' => $pendingRequest->message,
                     'created_at' => $pendingRequest->created_at,
-                ] : null
+                ] : ($rejectedRequest ? [
+                    'id' => $rejectedRequest->id,
+                    'status' => $rejectedRequest->status,
+                    'message' => $rejectedRequest->message,
+                    'admin_notes' => $rejectedRequest->admin_notes,
+                    'created_at' => $rejectedRequest->created_at,
+                    'reviewed_at' => $rejectedRequest->reviewed_at,
+                ] : null)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

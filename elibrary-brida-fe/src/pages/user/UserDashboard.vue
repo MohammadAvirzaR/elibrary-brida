@@ -588,9 +588,18 @@ const goToCatalog = () => {
 const checkPendingRequest = async () => {
   if (userRole.value === 'guest') {
     try {
-      const response = await api.contributorRequests.checkPending() as { success: boolean; has_pending: boolean }
-      if (response.success && response.has_pending) {
-        hasPendingRequest.value = true
+      const response = await api.contributorRequests.checkPending() as { 
+        success: boolean; 
+        has_pending: boolean;
+        has_rejected: boolean;
+      }
+      if (response.success) {
+        if (response.has_pending) {
+          hasPendingRequest.value = true
+        } else if (response.has_rejected) {
+          // User has rejected request, they can submit new request
+          hasPendingRequest.value = false
+        }
       }
     } catch (error) {
       console.error('Gagal memeriksa status permintaan:', error)

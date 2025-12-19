@@ -88,6 +88,26 @@
       ]"
     >
       <div class="max-w-2xl mx-auto">
+        <!-- Rejected Status Card -->
+        <div v-if="hasRejectedRequest" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+          <div class="flex items-center gap-3">
+            <i-lucide-x-circle class="w-6 h-6 text-red-600" />
+            <div class="flex-1">
+              <h3 class="font-bold text-red-900">Permintaan Ditolak</h3>
+              <p class="text-sm text-red-700 mt-1">
+                Maaf, permintaan Anda untuk menjadi kontributor telah ditolak.
+              </p>
+              <div v-if="rejectedRequestData?.admin_notes" class="mt-3 p-3 bg-red-100 rounded">
+                <p class="text-xs font-semibold text-red-800 mb-1">Catatan Admin:</p>
+                <p class="text-sm text-red-700">{{ rejectedRequestData.admin_notes }}</p>
+              </div>
+              <p class="text-xs text-red-600 mt-3">
+                Anda dapat mengajukan permintaan baru dengan memperbaiki alasan Anda.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Status Card -->
         <div v-if="hasPendingRequest" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
           <div class="flex items-center gap-3">
@@ -226,7 +246,7 @@
                   <i-lucide-loader-2 class="w-5 h-5 animate-spin" />
                   Mengirim...
                 </span>
-                <span v-else>Ajukan Permintaan</span>
+                <span v-else>{{ hasRejectedRequest ? 'Ajukan Ulang Permintaan' : 'Ajukan Permintaan' }}</span>
               </button>
               <router-link
                 to="/my-dashboard"
@@ -277,6 +297,8 @@ const isSidebarOpen = ref(true)
 const username = ref('')
 const isSubmitting = ref(false)
 const hasPendingRequest = ref(false)
+const hasRejectedRequest = ref(false)
+const rejectedRequestData = ref<{ admin_notes?: string; created_at?: string; reviewed_at?: string } | null>(null)
 const showSuccess = ref(false)
 const errorMessage = ref('')
 
@@ -302,8 +324,15 @@ const checkPendingRequest = async () => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await api.contributorRequests.checkPending()
-    if (response.success && response.has_pending) {
-      hasPendingRequest.value = true
+    if (response.success) {
+      if (response.has_pending) {
+        hasPendingRequest.value = true
+        hasRejectedRequest.value = false
+      } else if (response.has_rejected) {
+        hasRejectedRequest.value = true
+        hasPendingRequest.value = false
+        rejectedRequestData.value = response.data
+      }
     }
   } catch (error) {
     console.error('Failed to check pending request:', error)
@@ -327,6 +356,8 @@ const submitRequest = async () => {
       showSuccess.value = true
       form.value.message = ''
       hasPendingRequest.value = true
+      hasRejectedRequest.value = false
+      rejectedRequestData.value = null
 
       // Auto-redirect after 3 seconds
       setTimeout(() => {
