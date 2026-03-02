@@ -98,6 +98,26 @@ const router = createRouter({
         title: 'Forgot Password'
       }
     },
+    {
+      path: '/auth/google/callback',
+      name: 'google-callback',
+      component: () => import('@/pages/auth/GoogleCallback.vue'),
+      meta: {
+        requiresAuth: false,
+        layout: 'auth',
+        title: 'Google Login'
+      }
+    },
+    {
+      path: '/register/google',
+      name: 'google-register',
+      component: () => import('@/pages/auth/GoogleRegisterView.vue'),
+      meta: {
+        requiresAuth: false,
+        layout: 'auth',
+        title: 'Lengkapi Data Diri'
+      }
+    },
 
     {
       path: '/dashboard',

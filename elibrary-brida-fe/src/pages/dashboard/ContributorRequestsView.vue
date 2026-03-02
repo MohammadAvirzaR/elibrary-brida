@@ -71,7 +71,7 @@
           </span>
         </router-link>
 
-        <router-link to="/contributor-requests" class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group">
+        <router-link to="/contributor-requests" class="flex items-center gap-4 px-6 py-3 bg-blue-800 transition group">
           <i-lucide-file-check class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
