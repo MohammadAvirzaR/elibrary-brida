@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -191,6 +192,123 @@ class AuthController extends Controller
         ]);
     }
 
+    // GOOGLE OAUTH - Redirect ke halaman consent Google
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    // GOOGLE OAUTH - Callback setelah user login Google
+    public function handleGoogleCallback()
+    {
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Exception $e) {
+            return redirect($frontendUrl . '/login?error=google_failed');
+        }
+
+        // Cari user berdasarkan email Google
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if (!$user) {
+            // User belum terdaftar → simpan data Google ke Cache, arahkan isi data diri
+            $ref = Str::uuid()->toString();
+
+            Cache::put('google_register_' . $ref, [
+                'name'   => $googleUser->getName(),
+                'email'  => $googleUser->getEmail(),
+                'sso_id' => $googleUser->getId(),
+            ], now()->addMinutes(15));
+
+            $name  = urlencode($googleUser->getName());
+            $email = urlencode($googleUser->getEmail());
+
+            return redirect("{$frontendUrl}/register/google?ref={$ref}&name={$name}&email={$email}");
+        }
+
+        // User sudah terdaftar → langsung login
+        if (!$user->sso_id) {
+            $user->update(['sso_id' => $googleUser->getId()]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        $user->load('role');
+
+        $userData = base64_encode(json_encode([
+            'id'          => $user->id,
+            'name'        => $user->full_name,
+            'username'    => $user->username ?? $user->full_name,
+            'email'       => $user->email,
+            'institution' => $user->unit_name,
+            'role'        => $user->role->name ?? 'guest',
+        ]));
+
+        return redirect("{$frontendUrl}/auth/google/callback?token={$token}&user={$userData}");
+    }
+
+    // GOOGLE OAUTH - Selesaikan registrasi setelah isi data diri
+    public function completeGoogleRegistration(Request $request)
+    {
+        $request->validate([
+            'ref'                   => 'required|string',
+            'name'                  => 'required|string|max:255',
+            'institution'           => 'nullable|string|max:255',
+            'password'              => 'required|string|min:6|confirmed',
+        ]);
+
+        $googleData = Cache::get('google_register_' . $request->ref);
+
+        if (!$googleData) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Sesi pendaftaran sudah kadaluarsa atau tidak valid. Silakan login dengan Google ulang.',
+            ], 400);
+        }
+
+        // Cek email belum terdaftar (antisipasi race condition)
+        if (User::where('email', $googleData['email'])->exists()) {
+            Cache::forget('google_register_' . $request->ref);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Email ini sudah terdaftar. Silakan login.',
+            ], 409);
+        }
+
+        $guestRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
+        $roleId = $guestRole ? $guestRole->id : (DB::table('roles')->min('id') ?? 5);
+
+        $user = User::create([
+            'full_name'         => $request->name,
+            'email'             => $googleData['email'],
+            'sso_id'            => $googleData['sso_id'],
+            'unit_name'         => $request->institution,
+            'password'          => $request->password,
+            'role_id'           => $roleId,
+            'email_verified_at' => now(),
+        ]);
+
+        Cache::forget('google_register_' . $request->ref);
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        $user->load('role');
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Registrasi berhasil!',
+            'user'    => [
+                'id'          => $user->id,
+                'name'        => $user->full_name,
+                'username'    => $user->username ?? $user->full_name,
+                'email'       => $user->email,
+                'institution' => $user->unit_name,
+                'role'        => $user->role->name ?? 'guest',
+            ],
+            'token'   => $token,
+        ], 201);
+    }
+
     // LOGOUT
     public function logout(Request $request)
     {
@@ -227,4 +345,6 @@ class AuthController extends Controller
             ],
         ]);
     }
+
+
 }

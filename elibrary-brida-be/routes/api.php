@@ -15,6 +15,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('login', [AuthController::class, 'login']);
+Route::post('register/google-complete', [AuthController::class, 'completeGoogleRegistration']);
 
 // Public document routes (accessible without authentication)
 Route::get('/documents/search', [DocumentController::class, 'search']);
