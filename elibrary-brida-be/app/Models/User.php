@@ -49,16 +49,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Hash password secara otomatis setiap kali diset.
-     */
-    public function setPasswordAttribute($value)
-    {
-        if (!empty($value)) {
-            $this->attributes['password'] = bcrypt($value);
-        }
-    }
-
-    /**
      * Relasi: User -> Role
      * Satu user punya satu role.
      */
