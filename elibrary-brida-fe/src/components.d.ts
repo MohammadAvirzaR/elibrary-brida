@@ -37,8 +37,10 @@ declare module 'vue' {
     ILucideArrowRight: typeof import('~icons/lucide/arrow-right')['default']
     ILucideAward: typeof import('~icons/lucide/award')['default']
     ILucideBarChart: typeof import('~icons/lucide/bar-chart')['default']
+    ILucideBarChart3: typeof import('~icons/lucide/bar-chart3')['default']
     ILucideBookmark: typeof import('~icons/lucide/bookmark')['default']
     ILucideBookOpen: typeof import('~icons/lucide/book-open')['default']
+    ILucideBuilding2: typeof import('~icons/lucide/building2')['default']
     ILucideCheck: typeof import('~icons/lucide/check')['default']
     ILucideCheckCircle: typeof import('~icons/lucide/check-circle')['default']
     ILucideCheckCircle2: typeof import('~icons/lucide/check-circle2')['default']
@@ -79,6 +81,7 @@ declare module 'vue' {
     ILucidePanelLeftOpen: typeof import('~icons/lucide/panel-left-open')['default']
     ILucidePaperclip: typeof import('~icons/lucide/paperclip')['default']
     ILucidePencil: typeof import('~icons/lucide/pencil')['default']
+    ILucidePieChart: typeof import('~icons/lucide/pie-chart')['default']
     ILucidePlus: typeof import('~icons/lucide/plus')['default']
     ILucideQuote: typeof import('~icons/lucide/quote')['default']
     ILucideRefreshCw: typeof import('~icons/lucide/refresh-cw')['default']
@@ -108,5 +111,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     ToastNotification: typeof import('./components/ToastNotification.vue')['default']
     UploadDocumentModal: typeof import('./components/UploadDocumentModal.vue')['default']
+    WebsiteProfile: typeof import('./components/WebsiteProfile.vue')['default']
   }
 }

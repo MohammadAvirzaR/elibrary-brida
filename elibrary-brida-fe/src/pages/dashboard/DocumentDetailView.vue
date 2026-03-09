@@ -181,7 +181,7 @@
         <div class="space-y-4 sm:space-y-6">
           <!-- Basic Information -->
           <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
-            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-lg">
               <h3 class="text-base sm:text-lg font-bold text-white">Informasi Dokumen</h3>
             </div>
             <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
@@ -245,7 +245,7 @@
               </div>
 
               <!-- Keywords -->
-              <div v-if="document.keywords" class="pt-4 border-t border-gray-200">
+              <!-- <div v-if="document.keywords" class="pt-4 border-t border-gray-200">
                 <label class="text-sm font-semibold text-gray-600 block mb-2">Kata Kunci</label>
                 <div class="flex flex-wrap gap-2">
                   <span
@@ -256,7 +256,7 @@
                     {{ keyword.trim() }}
                   </span>
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 

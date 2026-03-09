@@ -90,13 +90,9 @@
                   :class="{ 'border-red-500': errors.documentType }"
                 >
                   <option value="">Pilih Jenis</option>
-                  <option value="penelitian">Penelitian</option>
-                  <option value="laporan">Laporan</option>
-                  <option value="artikel">Artikel</option>
-                  <option value="jurnal">Jurnal</option>
-                  <option value="skripsi">Skripsi/Tesis</option>
-                  <option value="buku">Buku</option>
-                  <option value="lainnya">Lainnya</option>
+                  <option v-for="type in documentTypes" :key="type.id" :value="type.type_name">
+                    {{ type.type_name }}
+                  </option>
                 </select>
                 <p v-if="errors.documentType" class="text-red-500 text-sm mt-1">{{ errors.documentType }}</p>
               </div>
@@ -149,7 +145,7 @@
 
             <!-- Keywords & Subject -->
             <div class="grid grid-cols-2 gap-4">
-              <div>
+              <!-- <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">
                   Kata Kunci <span class="text-red-500">*</span>
                 </label>
@@ -161,29 +157,28 @@
                   :class="{ 'border-red-500': errors.keywords }"
                 />
                 <p v-if="errors.keywords" class="text-red-500 text-sm mt-1">{{ errors.keywords }}</p>
-              </div>
+              </div> -->
 
               <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">
                   Subjek <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="form.subject"
-                  type="text"
-                  placeholder="Bidang ilmu/topik"
-                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  :class="{ 'border-red-500': errors.subject }"
-                />
+                <select name="subject" id="subject" v-model="form.subject" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="">Pilih Subjek</option>
+                  <option v-for="subject in subjects" :key="subject.id" :value="subject.subject_name">
+                    {{ subject.subject_name }}
+                  </option>
+                </select>
                 <p v-if="errors.subject" class="text-red-500 text-sm mt-1">{{ errors.subject }}</p>
               </div>
             </div>
 
             <!-- Optional Fields -->
             <div class="border-t border-neutral-200 pt-4 mt-4">
-              <p class="text-sm font-medium text-neutral-700 mb-3">Informasi Opsional</p>
+              <!-- <p class="text-sm font-medium text-neutral-700 mb-3">Informasi Opsional</p> -->
 
               <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <!-- <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-neutral-600 mb-2">Pembimbing</label>
                     <input
@@ -213,7 +208,7 @@
                     placeholder="Tempat penelitian dilakukan"
                     class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
+                </div> -->
 
                 <div>
                   <label class="block text-sm font-medium text-neutral-600 mb-2">
@@ -585,6 +580,8 @@ const currentStep = ref(1)
 const isTranslating = ref(false)
 const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
 const currentUserName = ref('') // Nama user yang sedang login
+const subjects = ref<Array<{ id: number; subject_name: string }>>([])
+const documentTypes = ref<Array<{ id: number; type_name: string }>>([])
 
 const form = reactive({
   // Step 1 - Metadata
@@ -1184,8 +1181,8 @@ const toggleAuthorField = () => {
   }
 }
 
-// Load current user name on mount
-onMounted(() => {
+// Load current user name and subjects on mount
+onMounted(async () => {
   try {
     const userJson = localStorage.getItem('user')
     if (userJson) {
@@ -1194,6 +1191,19 @@ onMounted(() => {
     }
   } catch (error) {
     console.error('Failed to load user data:', error)
+  }
+
+  // Fetch subjects and document types from API
+  try {
+    const response = await api.filters.getAll() as {
+      subjects: Array<{ id: number; subject_name: string }>
+      types: Array<{ id: number; type_name: string }>
+    }
+    subjects.value = response.subjects || []
+    documentTypes.value = response.types || []
+  } catch (error) {
+    console.error('Failed to load filters:', error)
+    toast.error('Gagal Memuat Data', 'Tidak dapat memuat daftar subjek dan jenis dokumen')
   }
 })
 </script>

@@ -281,7 +281,14 @@
                   {{ user.institution }}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-900">
-                  {{ user.role }}
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      getRoleBadgeClass(user.role)
+                    ]"
+                  >
+                    {{ formatRole(user.role) }}
+                  </span>
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3 justify-end">
@@ -402,7 +409,7 @@
         <!-- Modal Body -->
         <form @submit.prevent="handleSubmit" class="p-6">
           <!-- Name -->
-          <div class="mb-6">
+          <!-- <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Nama Lengkap <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -416,10 +423,10 @@
             <p v-if="isEditMode && !formData.name" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div>
+          </div> -->
 
           <!-- Email -->
-          <div class="mb-6">
+          <!-- <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Email <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -433,10 +440,10 @@
             <p v-if="isEditMode && !formData.email" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div>
+          </div> -->
 
           <!-- Institution -->
-          <div class="mb-6">
+          <!-- <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Unit/Instansi <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -450,7 +457,7 @@
             <p v-if="isEditMode && !formData.institution" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div>
+          </div> -->
 
           <!-- Role Selection -->
           <div class="mb-6">
@@ -477,7 +484,7 @@
           </div>
 
           <!-- Change Password Toggle (only for edit mode) -->
-          <div v-if="isEditMode" class="mb-6">
+          <!-- <div v-if="isEditMode" class="mb-6">
             <label class="flex items-center cursor-pointer">
               <input
                 v-model="changePassword"
@@ -488,10 +495,10 @@
                 Ubah Password
               </span>
             </label>
-          </div>
+          </div> -->
 
           <!-- Password (for new user or when changing password) -->
-          <div v-if="!isEditMode || changePassword" class="mb-6">
+          <!-- <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Password <span class="text-red-500">*</span>
             </label>
@@ -502,10 +509,10 @@
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Minimal 8 karakter"
             />
-          </div>
+          </div> -->
 
           <!-- Password Confirmation (for new user or when changing password) -->
-          <div v-if="!isEditMode || changePassword" class="mb-6">
+          <!-- <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Konfirmasi Password <span class="text-red-500">*</span>
             </label>
@@ -516,7 +523,7 @@
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Ulangi password"
             />
-          </div>
+          </div> -->
 
           <!-- Modal Actions -->
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
@@ -755,6 +762,27 @@ const getRoleLabel = (roleName: string): string => {
     'guest': 'Guest'
   }
   return roleLabels[roleName] || roleName
+}
+const formatRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    super_admin: 'Super Admin',
+    admin: 'Admin',
+    contributor: 'Contributor',
+    reviewer: 'Reviewer',
+    guest: 'Guest'
+  }
+  return roleMap[role] || role
+}
+
+const getRoleBadgeClass = (role: string): string => {
+  const classMap: Record<string, string> = {
+    super_admin: 'bg-purple-100 text-purple-800',
+    admin: 'bg-blue-100 text-blue-800',
+    contributor: 'bg-green-100 text-green-800',
+    reviewer: 'bg-yellow-100 text-yellow-800',
+    guest: 'bg-gray-100 text-gray-800'
+  }
+  return classMap[role] || 'bg-gray-100 text-gray-800'
 }
 
 // Computed

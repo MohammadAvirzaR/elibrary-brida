@@ -167,7 +167,7 @@
 
         <!-- Summary Section -->
         <section class="mb-12">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
+          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">Document Overview</h2>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Queue Review Card -->
@@ -221,6 +221,95 @@
               <p class="text-4xl font-bold text-white">{{ totalPapers }}</p>
               <p class="text-white text-opacity-70 text-xs mt-2">Documents in library</p>
             </div>
+          </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <i-lucide-bar-chart-3 class="w-6 h-6 text-blue-600" />
+            Statistik Penelitian
+          </h2>
+
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+            <!-- Total Research Card -->
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-file-text class="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p class="text-white text-opacity-90 text-sm font-medium mb-1">JUMLAH KESELURUHAN PENELITIAN</p>
+              <p class="text-4xl font-bold text-white">{{ totalResearch }}</p>
+            </div>
+
+            <!-- BRIDA Research Card -->
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-award class="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p class="text-white text-opacity-90 text-sm font-medium mb-1">JUMLAH PENELITIAN BRIDA</p>
+              <p class="text-4xl font-bold text-white">{{ bridaResearch }}</p>
+            </div>
+
+            <!-- Non-BRIDA Research Card -->
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-white bg-opacity-30 rounded-xl">
+                  <i-lucide-book-open class="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p class="text-white text-opacity-90 text-sm font-medium mb-1">JUMLAH PENELITIAN NON-BRIDA</p>
+              <p class="text-4xl font-bold text-white">{{ nonBridaResearch }}</p>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Pie Chart - Category -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i-lucide-pie-chart class="w-5 h-5 text-blue-600" />
+                Jumlah Penelitian per Kategori
+              </h3>
+              <VueApexCharts
+                type="pie"
+                :options="categoryChartOptions"
+                :series="categoryChartSeries"
+                height="350"
+              />
+            </div>
+
+            <!-- Line Chart - Trend -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i-lucide-trending-up class="w-5 h-5 text-green-600" />
+                Tren Penelitian per Bulan dan Tahun
+              </h3>
+              <VueApexCharts
+                type="line"
+                :options="trendChartOptions"
+                :series="trendChartSeries"
+                height="350"
+              />
+            </div>
+          </div>
+
+          <!-- Bar Chart - Institution -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <i-lucide-building-2 class="w-5 h-5 text-orange-600" />
+              Jumlah Penelitian per Instansi
+            </h3>
+            <VueApexCharts
+              type="bar"
+              :options="institutionChartOptions"
+              :series="institutionChartSeries"
+              height="400"
+            />
           </div>
         </section>
 
@@ -459,7 +548,7 @@
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Update</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">More</th>
+                    <!-- <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">More</th> -->
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
@@ -519,11 +608,11 @@
                         Delete
                       </button>
                     </td>
-                    <td class="px-6 py-4">
+                    <!-- <td class="px-6 py-4">
                       <button class="group p-2.5 rounded-lg hover:bg-blue-100 transition-colors duration-200">
                         <i-lucide-mail class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                       </button>
-                    </td>
+                    </td> -->
                   </tr>
                 </tbody>
               </table>
@@ -569,6 +658,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import VueApexCharts from 'vue3-apexcharts'
 
 const router = useRouter()
 const { toast } = useToast()
@@ -580,6 +670,172 @@ const queueCount = ref(0)
 const topContributor = ref('Memuat...')
 const topArticle = ref('Memuat...')
 const totalPapers = ref(0)
+
+// Statistics Data
+const totalResearch = ref(0)
+const bridaResearch = ref(0)
+const nonBridaResearch = ref(0)
+
+// Chart Options & Series
+const categoryChartOptions = ref({
+  chart: {
+    type: 'pie' as const,
+    height: 350
+  },
+  labels: ['BRIDA', 'D1', 'D2', 'S1', 'S2'],
+  colors: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+  legend: {
+    position: 'bottom' as const,
+    fontSize: '12px',
+    fontFamily: 'inherit'
+  },
+  dataLabels: {
+    style: {
+      fontSize: '12px',
+      fontWeight: 500
+    }
+  },
+  responsive: [{
+    breakpoint: 480,
+    options: {
+      chart: {
+        height: 300
+      },
+      legend: {
+        position: 'bottom' as const,
+        fontSize: '11px'
+      }
+    }
+  }]
+})
+const categoryChartSeries = ref([5, 400, 380, 450, 405])
+
+const trendChartOptions = ref({
+  chart: {
+    type: 'line' as const,
+    height: 350,
+    toolbar: {
+      show: false
+    }
+  },
+  stroke: {
+    curve: 'smooth' as const,
+    width: 3
+  },
+  colors: ['#3B82F6', '#F59E0B', '#10B981'],
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    labels: {
+      style: {
+        fontSize: '11px'
+      }
+    }
+  },
+  yaxis: {
+    title: {
+      text: 'Jumlah Penelitian',
+      style: {
+        fontSize: '12px',
+        fontWeight: 500
+      }
+    },
+    labels: {
+      style: {
+        fontSize: '11px'
+      }
+    }
+  },
+  legend: {
+    position: 'top' as const,
+    fontSize: '12px',
+    fontFamily: 'inherit'
+  },
+  grid: {
+    borderColor: '#e5e7eb'
+  }
+})
+const trendChartSeries = ref([
+  {
+    name: 'Tahun 2024',
+    data: [12, 18, 25, 30, 45, 55, 60, 72, 80, 85, 90, 95]
+  },
+  {
+    name: 'Tahun 2025',
+    data: [8, 15, 22, 35, 50, 65, 75, 88, 95, 100, 105, 110]
+  },
+  {
+    name: 'Tahun 2026',
+    data: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+  }
+])
+
+const institutionChartOptions = ref({
+  chart: {
+    type: 'bar' as const,
+    height: 400,
+    toolbar: {
+      show: false
+    }
+  },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      borderRadius: 4
+    }
+  },
+  colors: ['#3B82F6'],
+  xaxis: {
+    categories: [
+      'UNIVERSITAS HALU OLEO',
+      'STIKES KARYA KESEHATAN KENDARI',
+      'UNIVERSITAS SULAWESI TENGGARA',
+      'INSTITUT TEKNOLOGI DAN KESEHATAN AVICENNA',
+      'UNIVERSITAS MANDIRI LUWUK BANGGAI',
+      'UNIVERSITAS MUHAMMADIYAH KENDARI',
+      'UNIVERSITAS LAKIDENDE',
+      'UNIVERSITAS ISLAM NEGERI ALAUDDIN MAKASSAR'
+    ],
+    title: {
+      text: 'Instansi',
+      style: {
+        fontSize: '12px',
+        fontWeight: 500
+      }
+    },
+    labels: {
+      style: {
+        fontSize: '10px'
+      }
+    }
+  },
+  yaxis: {
+    title: {
+      text: 'Jumlah Penelitian',
+      style: {
+        fontSize: '12px',
+        fontWeight: 500
+      }
+    },
+    labels: {
+      style: {
+        fontSize: '11px'
+      }
+    }
+  },
+  grid: {
+    borderColor: '#e5e7eb'
+  },
+  dataLabels: {
+    enabled: true,
+    style: {
+      fontSize: '11px'
+    }
+  }
+})
+const institutionChartSeries = ref([{
+  name: 'Jumlah Penelitian',
+  data: [1200, 800, 600, 400, 350, 300, 250, 200]
+}])
 
 const selectedQueue = ref<number[]>([])
 const queueSearchQuery = ref('')
@@ -738,6 +994,45 @@ const loadStats = async () => {
   }
 }
 
+// TODO: Backend API - Create endpoint for statistics data
+// Endpoint: GET /api/statistics
+// Response structure:
+// {
+//   success: true,
+//   data: {
+//     total_research: 1640,
+//     brida_research: 5,
+//     non_brida_research: 1635,
+//     category_data: { labels: [...], values: [...] },
+//     trend_data: { years: [...], months: [...], values: [...] },
+//     institution_data: { institutions: [...], counts: [...] }
+//   }
+// }
+const loadStatistics = async () => {
+  try {
+    // TODO: Replace with actual API call
+    // const response = await api.statistics.getAll()
+    // if (response.success && response.data) {
+    //   totalResearch.value = response.data.total_research
+    //   bridaResearch.value = response.data.brida_research
+    //   nonBridaResearch.value = response.data.non_brida_research
+    //   categoryChartSeries.value = response.data.category_data.values
+    //   trendChartSeries.value = response.data.trend_data.series
+    //   institutionChartSeries.value = response.data.institution_data.series
+    // }
+
+    // MOCK DATA - Remove this when backend is ready
+    totalResearch.value = 1640
+    bridaResearch.value = 5
+    nonBridaResearch.value = 1635
+
+    // Mock data for charts (already set in initial ref values)
+    console.log('Statistics loaded (mock data)')
+  } catch (error) {
+    console.error('Gagal memuat statistik:', error)
+  }
+}
+
 const filteredHistories = computed(() => {
   if (!historySearchQuery.value) return histories.value
   const query = historySearchQuery.value.toLowerCase()
@@ -771,9 +1066,16 @@ onMounted(() => {
   }
 
 
-  const allowedRoles = ['reviewer', 'admin', 'super_admin']
+  const allowedRoles = ['reviewer', 'super_admin']
   if (!allowedRoles.includes(userRole.value.toLowerCase())) {
     console.warn('User does not have permission to view dashboard. Role:', userRole.value)
+
+    // Redirect admin to profile management
+    if (userRole.value.toLowerCase() === 'admin') {
+      router.push('/profile-management')
+      return
+    }
+
     toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk mengakses dashboard admin')
     router.push('/')
     return
@@ -782,11 +1084,13 @@ onMounted(() => {
   loadPendingDocuments()
   loadHistory()
   loadStats()
+  loadStatistics()
 
   refreshInterval = setInterval(() => {
     loadPendingDocuments()
     loadHistory()
     loadStats()
+    loadStatistics()
   }, 30000)
 })
 

@@ -237,8 +237,10 @@ const handleLogin = async () => {
     toast.success('Login Berhasil', `Selamat datang, ${data.user?.name || 'User'}!`)
 
     // Redirect based on role
-    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'reviewer') {
+    if (userRole === 'super_admin' || userRole === 'reviewer') {
       router.push('/dashboard')
+    } else if (userRole === 'admin') {
+      router.push('/profile-management')
     } else {
       router.push('/my-dashboard')
     }

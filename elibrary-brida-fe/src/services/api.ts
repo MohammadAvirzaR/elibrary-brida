@@ -227,6 +227,14 @@ export const api = {
     reject: (id: number, admin_notes: string) =>
       apiCall(`/contributor-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
   },
+
+  // TODO: Backend API - Implement statistics endpoint
+  // Create controller: app/Http/Controllers/Api/StatisticsController.php
+  // Route: Route::get('/statistics', [StatisticsController::class, 'index'])->middleware('auth:sanctum');
+  statistics: {
+    // Get all statistics data for dashboard
+    getAll: () => apiCall('/statistics', { method: 'GET' }, true),
+  },
 }
 
 export default api
