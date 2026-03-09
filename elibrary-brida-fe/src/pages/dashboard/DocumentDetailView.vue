@@ -241,7 +241,21 @@
               <!-- Document Type -->
               <div v-if="document.type" class="pt-4 border-t border-gray-200">
                 <label class="text-sm font-semibold text-gray-600 block mb-1">Jenis Dokumen</label>
-                <p class="text-gray-900">{{ document.type.name || document.type }}</p>
+                <p class="text-gray-900">{{ document.type.type_name }}</p>
+              </div>
+
+              <!-- Subjects -->
+              <div v-if="document.subjects && document.subjects.length > 0" class="pt-4 border-t border-gray-200">
+                <label class="text-sm font-semibold text-gray-600 block mb-2">Subjek</label>
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-for="subject in document.subjects"
+                    :key="subject.id"
+                    class="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full font-medium"
+                  >
+                    {{ subject.subject_name }}
+                  </span>
+                </div>
               </div>
 
               <!-- Keywords -->
@@ -419,7 +433,12 @@ interface Attachment {
 
 interface DocumentType {
   id: number
-  name: string
+  type_name: string
+}
+
+interface Subject {
+  id: number
+  subject_name: string
 }
 
 interface User {
@@ -454,6 +473,7 @@ interface Document {
   user?: User
   authors?: Author[]
   supervisors?: Supervisor[]
+  subjects?: Subject[]
   attachments?: Attachment[]
 }
 

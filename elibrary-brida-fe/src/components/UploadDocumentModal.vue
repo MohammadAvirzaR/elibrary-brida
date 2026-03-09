@@ -85,12 +85,12 @@
                   Jenis Dokumen <span class="text-red-500">*</span>
                 </label>
                 <select
-                  v-model="form.documentType"
+                  v-model.number="form.documentType"
                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   :class="{ 'border-red-500': errors.documentType }"
                 >
                   <option value="">Pilih Jenis</option>
-                  <option v-for="type in documentTypes" :key="type.id" :value="type.type_name">
+                  <option v-for="type in documentTypes" :key="type.id" :value="type.id">
                     {{ type.type_name }}
                   </option>
                 </select>
@@ -163,9 +163,9 @@
                 <label class="block text-sm font-medium text-neutral-700 mb-2">
                   Subjek <span class="text-red-500">*</span>
                 </label>
-                <select name="subject" id="subject" v-model="form.subject" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="subject" id="subject" v-model.number="form.subject" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Subjek</option>
-                  <option v-for="subject in subjects" :key="subject.id" :value="subject.subject_name">
+                  <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
                     {{ subject.subject_name }}
                   </option>
                 </select>
@@ -251,16 +251,16 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-neutral-600">Jenis Dokumen</p>
-                  <p class="text-sm text-neutral-900">{{ formatDocumentType(form.documentType) }}</p>
+                  <p class="text-sm text-neutral-900">{{ getDocumentTypeName(form.documentType) }}</p>
                 </div>
                 <div>
                   <p class="text-sm font-medium text-neutral-600">Subjek</p>
-                  <p class="text-sm text-neutral-900">{{ form.subject }}</p>
+                  <p class="text-sm text-neutral-900">{{ getSubjectName(form.subject) }}</p>
                 </div>
-                <div class="col-span-2">
+                <!-- <div class="col-span-2">
                   <p class="text-sm font-medium text-neutral-600">Kata Kunci</p>
                   <p class="text-sm text-neutral-900">{{ form.keywords }}</p>
-                </div>
+                </div> -->
               </div>
 
               <div v-if="form.advisor || form.funding || form.researchLocation" class="border-t border-neutral-200 pt-4 mt-4">
@@ -590,8 +590,8 @@ const form = reactive({
   author: '',
   publicationYear: new Date().getFullYear(),
   keywords: '',
-  subject: '',
-  documentType: '',
+  subject: null as number | null,
+  documentType: null as number | null,
   advisor: '',
   funding: '',
   researchLocation: '',
@@ -760,17 +760,16 @@ const formatLanguage = (lang: string) => {
   return map[lang] || lang
 }
 
-const formatDocumentType = (type: string) => {
-  const map: Record<string, string> = {
-    'penelitian': 'Penelitian',
-    'laporan': 'Laporan',
-    'artikel': 'Artikel',
-    'jurnal': 'Jurnal',
-    'skripsi': 'Skripsi/Tesis',
-    'buku': 'Buku',
-    'lainnya': 'Lainnya'
-  }
-  return map[type] || type
+const getDocumentTypeName = (typeId: number | null) => {
+  if (!typeId) return '-'
+  const type = documentTypes.value.find(t => t.id === typeId)
+  return type ? type.type_name : '-'
+}
+
+const getSubjectName = (subjectId: number | null) => {
+  if (!subjectId) return '-'
+  const subject = subjects.value.find(s => s.id === subjectId)
+  return subject ? subject.subject_name : '-'
 }
 
 // Step validation functions with toast notifications and field focusing
@@ -796,7 +795,7 @@ const validateStep1 = () => {
     isValid = false
     if (!firstErrorField) firstErrorField = 'language'
   }
-  if (!form.documentType) {
+  if (!form.documentType || form.documentType === 0) {
     errors.documentType = 'Jenis dokumen harus dipilih'
     isValid = false
     if (!firstErrorField) firstErrorField = 'documentType'
@@ -811,12 +810,12 @@ const validateStep1 = () => {
     isValid = false
     if (!firstErrorField) firstErrorField = 'publicationYear'
   }
-  if (!form.keywords.trim()) {
-    errors.keywords = 'Kata kunci harus diisi'
-    isValid = false
-    if (!firstErrorField) firstErrorField = 'keywords'
-  }
-  if (!form.subject.trim()) {
+  // if (!form.keywords.trim()) {
+  //   errors.keywords = 'Kata kunci harus diisi'
+  //   isValid = false
+  //   if (!firstErrorField) firstErrorField = 'keywords'
+  // }
+  if (!form.subject || form.subject === 0) {
     errors.subject = 'Subjek harus diisi'
     isValid = false
     if (!firstErrorField) firstErrorField = 'subject'
@@ -1058,6 +1057,16 @@ const submitForm = async () => {
     formData.append('year_published', form.publicationYear.toString())
     formData.append('keywords', form.keywords.trim() || '')
     formData.append('language', form.language || 'id')
+
+    // Document Type ID
+    if (form.documentType) {
+      formData.append('type_id', form.documentType.toString())
+    }
+
+    // Subject ID(s) - backend expects subjects[] array
+    if (form.subject) {
+      formData.append('subjects[]', form.subject.toString())
+    }
 
     // Abstract
     if (form.description.trim()) {

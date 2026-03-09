@@ -24,8 +24,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -63,8 +61,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -97,8 +93,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'institution' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id'
         ]);
@@ -117,8 +111,6 @@ class UserController extends Controller
                 'full_name' => $request->name, // Sync with name
                 'email' => $request->email,
                 'institution' => $request->institution,
-                'phone' => $request->phone,
-                'address' => $request->address,
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
             ]);
@@ -131,8 +123,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                 ]
@@ -156,13 +146,11 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'institution' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
             'password' => 'nullable|string|min:8',
-            'role_id' => 'sometimes|required|exists:roles,id'
+            'role_id' => 'sometimes|integer|exists:roles,id'
         ]);
 
         if ($validator->fails()) {
@@ -177,20 +165,37 @@ class UserController extends Controller
             $user = User::findOrFail($id);
 
             $updateData = [];
-            if ($request->has('name')) {
+
+            // Handle name field - sync between name and full_name
+            if ($request->has('name') && $request->filled('name')) {
                 $updateData['name'] = $request->name;
-                $updateData['full_name'] = $request->name; // Sync with name
+                $updateData['full_name'] = $request->name;
             }
-            if ($request->has('email')) $updateData['email'] = $request->email;
-            if ($request->has('institution')) $updateData['institution'] = $request->institution;
-            if ($request->has('phone')) $updateData['phone'] = $request->phone;
-            if ($request->has('address')) $updateData['address'] = $request->address;
-            if ($request->has('role_id')) $updateData['role_id'] = $request->role_id;
+
+            if ($request->has('email') && $request->filled('email')) {
+                $updateData['email'] = $request->email;
+            }
+
+            if ($request->has('institution') && $request->filled('institution')) {
+                $updateData['institution'] = $request->institution;
+            }
+
+            if ($request->has('role_id') && $request->filled('role_id')) {
+                $updateData['role_id'] = $request->role_id;
+            }
+
+            // Hash password only if provided
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($request->password);
             }
 
-            $user->update($updateData);
+            // Only update if there's data to update
+            if (!empty($updateData)) {
+                $user->update($updateData);
+            }
+
+            // Refresh user data
+            $user->refresh();
 
             return response()->json([
                 'success' => true,
@@ -200,10 +205,9 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
+                    'created_at' => $user->created_at,
                 ]
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -212,14 +216,15 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         } catch (\Exception $e) {
-            Log::error('Failed to update user: ' . $e->getMessage(), [
-                'user_id' => $id,
+            Log::error('User update failed for ID ' . $id, [
+                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update user'
+                'message' => 'Failed to update user',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

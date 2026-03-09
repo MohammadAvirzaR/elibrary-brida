@@ -3,6 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Welcome to eLibrary API',
+        'version' => '1.0.0',
+        'status' => 'running'
+    ]);
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

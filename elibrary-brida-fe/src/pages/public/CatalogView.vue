@@ -234,6 +234,7 @@ import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
 import NavigationBar from '@/components/NavigationBar.vue'
 import FooterSection from '@/components/FooterSection.vue'
+import api from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -246,26 +247,18 @@ const currentPage = ref(1)
 const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
 
+// Maps to store ID lookups
+const subjectMap = ref<Map<string, number>>(new Map())
+const typeMap = ref<Map<string, number>>(new Map())
+
 // Check if user is authenticated
 const isAuthenticated = computed(() => {
   return !!localStorage.getItem('auth_token')
 });
 
-const subjects = [
-  { label: 'Ilmu Komputer', value: 'computer-science' },
-  { label: 'Matematika', value: 'mathematics' },
-  { label: 'Hukum', value: 'law' },
-  { label: 'Seni', value: 'art' },
-  { label: 'Psikologi', value: 'psychology' },
-  { label: 'Lainnya', value: 'others' },
-]
-
-const documentTypes = [
-  { label: 'Artikel Jurnal', value: 'journal' },
-  { label: 'Buku', value: 'book' },
-  { label: 'Thesis', value: 'thesis' },
-  { label: 'Prosiding', value: 'proceeding' },
-]
+// Dynamic filters from API
+const subjects = ref<Array<{ label: string; value: string }>>([])
+const documentTypes = ref<Array<{ label: string; value: string }>>([])
 
 const totalPages = computed(() => lastPage.value || Math.ceil(totalResults.value / 10))
 
@@ -300,7 +293,24 @@ const handleSearch = () => {
 const performSearch = async () => {
   try {
     searchQuery.value = localSearchQuery.value
-    await searchDocuments(searchQuery.value, currentPage.value)
+
+    // Get selected subject IDs
+    const subjectIds = selectedSubjects.value
+      .map(name => subjectMap.value.get(name))
+      .filter((id): id is number => id !== undefined)
+
+    // Get selected type IDs
+    const typeIds = selectedTypes.value
+      .map(name => typeMap.value.get(name))
+      .filter((id): id is number => id !== undefined)
+
+    await searchDocuments(
+      searchQuery.value,
+      currentPage.value,
+      undefined,
+      subjectIds.length > 0 ? subjectIds : undefined,
+      typeIds.length > 0 ? typeIds : undefined
+    )
 
     // Update URL query parameter
     if (searchQuery.value.trim()) {
@@ -322,8 +332,16 @@ const performSearch = async () => {
   }
 }
 
-const applyFilters = () => {
-  console.log('Filters:', { selectedSubjects: selectedSubjects.value, selectedTypes: selectedTypes.value })
+const applyFilters = async () => {
+  console.log('Applying filters:', {
+    selectedSubjects: selectedSubjects.value,
+    selectedTypes: selectedTypes.value
+  })
+
+  // Reset to page 1 when applying filters
+  currentPage.value = 1
+  await performSearch()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const formatDate = (date?: string) => {
@@ -353,8 +371,8 @@ const goToPage = async (page: number) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// Initialize - load all documents
-onMounted(() => {
+// Initialize - load all documents and filters
+onMounted(async () => {
   const query = route.query.q as string
   const page = parseInt(route.query.page as string) || 1
 
@@ -365,6 +383,41 @@ onMounted(() => {
 
   currentPage.value = page
   searchDocuments(query || '', page)
+
+  // Fetch filters from API
+  try {
+    const response = await api.filters.getAll() as {
+      subjects: Array<{ id: number; subject_name: string }>
+      types: Array<{ id: number; type_name: string }>
+    }
+
+    console.log('API Response:', response)
+
+    // Map subjects to label-value format and create ID map
+    subjects.value = response.subjects?.map(s => {
+      subjectMap.value.set(s.subject_name, s.id)
+      return {
+        label: s.subject_name,
+        value: s.subject_name
+      }
+    }) || []
+
+    // Map document types to label-value format and create ID map
+    documentTypes.value = response.types?.map(t => {
+      typeMap.value.set(t.type_name, t.id)
+      return {
+        label: t.type_name,
+        value: t.type_name
+      }
+    }) || []
+
+    console.log('Loaded subjects:', subjects.value)
+    console.log('Loaded document types:', documentTypes.value)
+    console.log('Subject ID map:', Object.fromEntries(subjectMap.value))
+    console.log('Type ID map:', Object.fromEntries(typeMap.value))
+  } catch (error) {
+    console.error('Failed to load filters:', error)
+  }
 })
 
 // Watch route changes

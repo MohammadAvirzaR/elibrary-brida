@@ -33,7 +33,7 @@ export function useDocumentSearch() {
   const lastPage = ref(1)
   const perPage = ref(10)
 
-  const searchDocuments = async (query: string, page: number = 1, filter?: string) => {
+  const searchDocuments = async (query: string, page: number = 1, filter?: string, subjectIds?: number[], typeIds?: number[]) => {
     isLoading.value = true
     error.value = null
 
@@ -50,6 +50,20 @@ export function useDocumentSearch() {
 
       if (filter) {
         params.append('filter', filter)
+      }
+
+      // Add subject filters
+      if (subjectIds && subjectIds.length > 0) {
+        subjectIds.forEach(id => {
+          params.append('subject_id[]', id.toString())
+        })
+      }
+
+      // Add type filters
+      if (typeIds && typeIds.length > 0) {
+        typeIds.forEach(id => {
+          params.append('type_id[]', id.toString())
+        })
       }
 
       const url = `${API_BASE_URL}/documents/search?${params.toString()}`

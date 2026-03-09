@@ -25,9 +25,6 @@ class User extends Authenticatable
         'sso_id',
         'unit_name',
         'institution', // For frontend compatibility
-        'contact',
-        'phone', // For frontend compatibility
-        'address', // For frontend compatibility
         'bio',
         'membership_proof',
         'profession',
@@ -47,16 +44,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    /**
-     * Hash password secara otomatis setiap kali diset.
-     */
-    public function setPasswordAttribute($value)
-    {
-        if (!empty($value)) {
-            $this->attributes['password'] = bcrypt($value);
-        }
-    }
 
     /**
      * Relasi: User -> Role

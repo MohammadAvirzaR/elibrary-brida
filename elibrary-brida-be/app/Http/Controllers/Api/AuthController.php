@@ -195,7 +195,10 @@ class AuthController extends Controller
     // GOOGLE OAUTH - Redirect ke halaman consent Google
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->redirect();
+        /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+        $driver = Socialite::driver('google');
+        return $driver->stateless()->redirect();
+        //dd(config('services.google.redirect'));
     }
 
     // GOOGLE OAUTH - Callback setelah user login Google
@@ -204,7 +207,9 @@ class AuthController extends Controller
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
 
         try {
-            $googleUser = Socialite::driver('google')->user();
+            /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+            $driver = Socialite::driver('google');
+            $googleUser = $driver->stateless()->user();
         } catch (\Exception $e) {
             return redirect($frontendUrl . '/login?error=google_failed');
         }

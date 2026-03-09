@@ -411,7 +411,6 @@ class DocumentController extends Controller
             $search = $request->input('q') ?: $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                    ->orWhere('keywords', 'like', "%$search%")
                     ->orWhere('abstract_id', 'like', "%$search%")
                     ->orWhere('abstract_en', 'like', "%$search%");
             });
@@ -477,11 +476,8 @@ class DocumentController extends Controller
             'supervisors' => 'array',
             'year_published' => 'nullable|integer',
             'language' => 'nullable|string',
-            'keywords' => 'nullable|string',
             'abstract_id' => 'nullable|string',
             'abstract_en' => 'nullable|string',
-            'funding_program' => 'nullable|string',
-            'research_location' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'subjects' => 'array',
@@ -500,11 +496,8 @@ class DocumentController extends Controller
             'unit_id' => 'nullable|exists:units,id',
             'language' => 'nullable|string',
             'email' => 'nullable|email',
-            'keywords' => 'nullable|string',
             'abstract_id' => 'nullable|string',
             'abstract_en' => 'nullable|string',
-            'funding_program' => 'nullable|string',
-            'research_location' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'license_id' => 'nullable|exists:licenses,id',
@@ -536,12 +529,9 @@ class DocumentController extends Controller
             'year' => 'nullable|integer',
             'author' => 'required|string|max:255',
             'publisher' => 'nullable|string|max:255',
-            'keywords' => 'nullable|string',
             'language' => 'nullable|string',
             'subject' => 'nullable|string',
             'advisor' => 'nullable|string',
-            'funding' => 'nullable|string',
-            'research_location' => 'nullable|string',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:pdf|max:10240',
         ];
@@ -558,7 +548,6 @@ class DocumentController extends Controller
             'year' => 'sometimes|integer',
             'author' => 'sometimes|string|max:255',
             'publisher' => 'sometimes|string|max:255',
-            'keywords' => 'sometimes|string',
         ];
     }
 
@@ -579,7 +568,6 @@ class DocumentController extends Controller
             'unit_id' => $validated['unit_id'] ?? null,
             'language' => $validated['language'] ?? null,
             'email' => $validated['email'] ?? null,
-            'keywords' => $validated['keywords'] ?? null,
             'abstract_id' => $validated['abstract_id'] ?? null,
             'abstract_en' => $validated['abstract_en'] ?? null,
             'file_path' => $mainPath,
@@ -588,8 +576,6 @@ class DocumentController extends Controller
             'license_id' => $validated['license_id'] ?? null,
             'access_right' => $validated['access_right'] ?? 'open',
             'embargo_until' => $validated['embargo_until'] ?? null,
-            'funding_program' => $validated['funding_program'] ?? null,
-            'research_location' => $validated['research_location'] ?? null,
             'latitude' => $validated['latitude'] ?? null,
             'longitude' => $validated['longitude'] ?? null,
             'statement_agreed' => $request->has('statement_agreed'),
@@ -644,7 +630,6 @@ class DocumentController extends Controller
             'author' => $validated['author'],
             'publisher' => $validated['publisher'] ?? null,
             'year_published' => $validated['year'] ?? now()->year,
-            'keywords' => $validated['keywords'] ?? null,
             'file_path' => $filePath,
             'status' => self::PENDING_STATUS,
             'type_id' => $this->mapCategoryToTypeId($validated['category'] ?? null),
@@ -652,8 +637,6 @@ class DocumentController extends Controller
             'language' => $validated['language'] ?? null,
             'subject' => $validated['subject'] ?? null,
             'advisor' => $validated['advisor'] ?? null,
-            'funding_program' => $validated['funding'] ?? null,
-            'research_location' => $validated['research_location'] ?? null,
             'upload_date' => now(),
             'statement_agreed' => true,
         ]);
