@@ -27,7 +27,7 @@ class DocumentController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = Document::where('status', self::APPROVED_STATUS)
-            ->with(['authors', 'subjects', 'type', 'unit']);
+            ->with(['authors', 'subject', 'type', 'unit']);
 
         $this->applySearchFilters($query, $request);
 
@@ -79,7 +79,7 @@ class DocumentController extends Controller
 
             DB::commit();
 
-            $document->load(['authors', 'supervisors', 'subjects', 'attachments']);
+            $document->load(['authors', 'supervisors', 'subject', 'attachments']);
 
             return response()->json([
                 'success' => true,
@@ -107,7 +107,7 @@ class DocumentController extends Controller
 
     public function myDocuments(): JsonResponse
     {
-        $documents = Document::with(['authors', 'supervisors', 'subjects'])
+        $documents = Document::with(['authors', 'supervisors', 'subject'])
             ->where('user_id', auth('sanctum')->id())
             ->orderBy('upload_date', 'desc')
             ->get();
@@ -183,7 +183,7 @@ class DocumentController extends Controller
 
             $document = Document::with([
                 'user.role', 'type', 'unit', 'license',
-                'authors', 'supervisors', 'subjects', 'attachments'
+                'authors', 'supervisors', 'subject', 'attachments'
             ])->findOrFail($id);
             // guest can view
             if (!$user) {
@@ -411,7 +411,6 @@ class DocumentController extends Controller
             $search = $request->input('q') ?: $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                    ->orWhere('keywords', 'like', "%$search%")
                     ->orWhere('abstract_id', 'like', "%$search%")
                     ->orWhere('abstract_en', 'like', "%$search%");
             });
@@ -448,9 +447,7 @@ class DocumentController extends Controller
         }
 
         if ($request->filled('subject_id')) {
-            $query->whereHas('subjects', function ($q) use ($request) {
-                $q->whereIn('subjects.id', (array) $request->subject_id);
-            });
+            $query->where('subject_id', (array) $request->subject_id);
         }
     }
 
@@ -477,14 +474,9 @@ class DocumentController extends Controller
             'supervisors' => 'array',
             'year_published' => 'nullable|integer',
             'language' => 'nullable|string',
-            'keywords' => 'nullable|string',
             'abstract_id' => 'nullable|string',
             'abstract_en' => 'nullable|string',
-            'funding_program' => 'nullable|string',
-            'research_location' => 'nullable|string',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
-            'subjects' => 'array',
+            'subject_id' => 'nullable|integer|exists:subjects,id',
             'access_right' => ['required', Rule::in(['open', 'public', 'internal', 'embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
             'statement_agreed' => 'required|accepted',
@@ -500,13 +492,8 @@ class DocumentController extends Controller
             'unit_id' => 'nullable|exists:units,id',
             'language' => 'nullable|string',
             'email' => 'nullable|email',
-            'keywords' => 'nullable|string',
             'abstract_id' => 'nullable|string',
             'abstract_en' => 'nullable|string',
-            'funding_program' => 'nullable|string',
-            'research_location' => 'nullable|string',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
             'license_id' => 'nullable|exists:licenses,id',
             'access_right' => ['nullable', Rule::in(['open', 'public', 'internal', 'embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
@@ -517,10 +504,7 @@ class DocumentController extends Controller
             'authors.*.last_name' => 'nullable|string',
             'authors.*.email' => 'nullable|email',
             'authors.*.institution' => 'nullable|string',
-            'supervisors' => 'nullable|array',
-            'supervisors.*.name' => 'nullable|string',
-            'subjects' => 'nullable|array',
-            'subjects.*' => 'exists:subjects,id',
+            'subject_id' => 'nullable|integer|exists:subjects,id',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:20000',
         ];
@@ -536,12 +520,10 @@ class DocumentController extends Controller
             'year' => 'nullable|integer',
             'author' => 'required|string|max:255',
             'publisher' => 'nullable|string|max:255',
-            'keywords' => 'nullable|string',
             'language' => 'nullable|string',
-            'subject' => 'nullable|string',
+            'subject_id' => 'nullable|integer|exists:subjects,id',
             'advisor' => 'nullable|string',
             'funding' => 'nullable|string',
-            'research_location' => 'nullable|string',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:pdf|max:10240',
         ];
@@ -558,7 +540,6 @@ class DocumentController extends Controller
             'year' => 'sometimes|integer',
             'author' => 'sometimes|string|max:255',
             'publisher' => 'sometimes|string|max:255',
-            'keywords' => 'sometimes|string',
         ];
     }
 
@@ -579,7 +560,6 @@ class DocumentController extends Controller
             'unit_id' => $validated['unit_id'] ?? null,
             'language' => $validated['language'] ?? null,
             'email' => $validated['email'] ?? null,
-            'keywords' => $validated['keywords'] ?? null,
             'abstract_id' => $validated['abstract_id'] ?? null,
             'abstract_en' => $validated['abstract_en'] ?? null,
             'file_path' => $mainPath,
@@ -588,10 +568,6 @@ class DocumentController extends Controller
             'license_id' => $validated['license_id'] ?? null,
             'access_right' => $validated['access_right'] ?? 'open',
             'embargo_until' => $validated['embargo_until'] ?? null,
-            'funding_program' => $validated['funding_program'] ?? null,
-            'research_location' => $validated['research_location'] ?? null,
-            'latitude' => $validated['latitude'] ?? null,
-            'longitude' => $validated['longitude'] ?? null,
             'statement_agreed' => $request->has('statement_agreed'),
             'status' => self::PENDING_STATUS
         ]);
@@ -609,10 +585,6 @@ class DocumentController extends Controller
             foreach ($request->supervisors as $supervisor) {
                 $document->supervisors()->create($supervisor);
             }
-        }
-
-        if ($request->subjects) {
-            $document->subjects()->sync($request->subjects);
         }
 
         if ($request->hasFile('attachments')) {
@@ -644,16 +616,13 @@ class DocumentController extends Controller
             'author' => $validated['author'],
             'publisher' => $validated['publisher'] ?? null,
             'year_published' => $validated['year'] ?? now()->year,
-            'keywords' => $validated['keywords'] ?? null,
             'file_path' => $filePath,
             'status' => self::PENDING_STATUS,
             'type_id' => $this->mapCategoryToTypeId($validated['category'] ?? null),
             'access_right' => 'public',
             'language' => $validated['language'] ?? null,
-            'subject' => $validated['subject'] ?? null,
+            'subject_id' => $validated['subject_id'] ?? null,
             'advisor' => $validated['advisor'] ?? null,
-            'funding_program' => $validated['funding'] ?? null,
-            'research_location' => $validated['research_location'] ?? null,
             'upload_date' => now(),
             'statement_agreed' => true,
         ]);
@@ -763,14 +732,21 @@ class DocumentController extends Controller
 
     private function deleteDocumentAndFiles(Document $document): void
     {
+        // Hapus file dokumen
         if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
             Storage::disk('public')->delete($document->file_path);
         }
 
+        // Hapus thumbnail
+        if ($document->thumbnail_path && Storage::disk('public')->exists($document->thumbnail_path)) {
+            Storage::disk('public')->delete($document->thumbnail_path);
+        }
+
+        // Hapus relasi dan dokumen
         $document->authors()->delete();
         $document->supervisors()->delete();
         $document->attachments()->delete();
-        $document->subjects()->detach();
+        $document->reviews()->delete();
         $document->delete();
     }
 

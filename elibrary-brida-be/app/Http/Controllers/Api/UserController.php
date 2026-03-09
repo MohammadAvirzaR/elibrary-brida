@@ -24,8 +24,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -60,8 +58,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
@@ -90,8 +86,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'institution' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id'
         ]);
@@ -110,8 +104,6 @@ class UserController extends Controller
                 'full_name' => $request->name, // Sync with name
                 'email' => $request->email,
                 'institution' => $request->institution,
-                'phone' => $request->phone,
-                'address' => $request->address,
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
             ]);
@@ -124,8 +116,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                 ]
@@ -148,8 +138,6 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'institution' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
             'password' => 'nullable|string|min:8',
             'role_id' => 'sometimes|integer|exists:roles,id'
         ]);
@@ -181,14 +169,6 @@ class UserController extends Controller
                 $updateData['institution'] = $request->institution;
             }
             
-            if ($request->has('phone') && $request->filled('phone')) {
-                $updateData['phone'] = $request->phone;
-            }
-            
-            if ($request->has('address') && $request->filled('address')) {
-                $updateData['address'] = $request->address;
-            }
-            
             if ($request->has('role_id') && $request->filled('role_id')) {
                 $updateData['role_id'] = $request->role_id;
             }
@@ -214,8 +194,6 @@ class UserController extends Controller
                     'name' => $user->name ?? $user->full_name,
                     'email' => $user->email,
                     'institution' => $user->institution,
-                    'phone' => $user->phone,
-                    'address' => $user->address,
                     'role' => $user->role ? $user->role->name : 'Guest',
                     'role_id' => $user->role_id,
                     'created_at' => $user->created_at,
