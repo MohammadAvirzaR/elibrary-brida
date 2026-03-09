@@ -77,7 +77,7 @@ class AuthController extends Controller
             ], 400);
         }
 
-        if ($registrationData['otp'] != $request->otp) {
+        if ($registrationData['otp'] !== (int)$request->otp) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Kode OTP tidak valid',

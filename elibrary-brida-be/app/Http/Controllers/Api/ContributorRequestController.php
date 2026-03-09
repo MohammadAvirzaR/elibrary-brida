@@ -7,6 +7,7 @@ use App\Models\ContributorRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ContributorRequestController extends Controller
@@ -45,10 +46,13 @@ class ContributorRequestController extends Controller
                 'data' => $requests
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch contributor requests: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch contributor requests',
-                'error' => $e->getMessage()
+                'message' => 'Failed to fetch contributor requests'
             ], 500);
         }
     }
@@ -111,10 +115,14 @@ class ContributorRequestController extends Controller
                 ]
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Failed to submit contributor request: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to submit contributor request',
-                'error' => $e->getMessage()
+                'message' => 'Failed to submit contributor request'
             ], 500);
         }
     }
@@ -126,12 +134,12 @@ class ContributorRequestController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             // Check for pending request
             $pendingRequest = ContributorRequest::where('user_id', $user->id)
                 ->where('status', 'pending')
                 ->first();
-            
+
             // Check for rejected request
             $rejectedRequest = ContributorRequest::where('user_id', $user->id)
                 ->where('status', 'rejected')
@@ -157,10 +165,14 @@ class ContributorRequestController extends Controller
                 ] : null)
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to check pending request: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to check pending request',
-                'error' => $e->getMessage()
+                'message' => 'Failed to check pending request'
             ], 500);
         }
     }
@@ -214,10 +226,14 @@ class ContributorRequestController extends Controller
                 'message' => 'Contributor request not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to approve contributor request: ' . $e->getMessage(), [
+                'request_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to approve contributor request',
-                'error' => $e->getMessage()
+                'message' => 'Failed to approve contributor request'
             ], 500);
         }
     }
@@ -271,10 +287,14 @@ class ContributorRequestController extends Controller
                 'message' => 'Contributor request not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to reject contributor request: ' . $e->getMessage(), [
+                'request_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to reject contributor request',
-                'error' => $e->getMessage()
+                'message' => 'Failed to reject contributor request'
             ], 500);
         }
     }

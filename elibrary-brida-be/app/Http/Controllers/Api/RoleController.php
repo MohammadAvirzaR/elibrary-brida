@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class RoleController extends Controller
@@ -22,10 +23,13 @@ class RoleController extends Controller
                 'data' => $roles
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch roles: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch roles',
-                'error' => $e->getMessage()
+                'message' => 'Failed to fetch roles'
             ], 500);
         }
     }
@@ -63,10 +67,14 @@ class RoleController extends Controller
                 'data' => $role
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Failed to create role: ' . $e->getMessage(), [
+                'role_name' => $request->name ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create role',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create role'
             ], 500);
         }
     }
@@ -111,10 +119,14 @@ class RoleController extends Controller
                 'message' => 'Role not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to update role: ' . $e->getMessage(), [
+                'role_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update role',
-                'error' => $e->getMessage()
+                'message' => 'Failed to update role'
             ], 500);
         }
     }
@@ -147,10 +159,14 @@ class RoleController extends Controller
                 'message' => 'Role not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to delete role: ' . $e->getMessage(), [
+                'role_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete role',
-                'error' => $e->getMessage()
+                'message' => 'Failed to delete role'
             ], 500);
         }
     }
@@ -178,10 +194,13 @@ class RoleController extends Controller
                 'data' => $permissions
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch permissions: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch permissions',
-                'error' => $e->getMessage()
+                'message' => 'Failed to fetch permissions'
             ], 500);
         }
     }

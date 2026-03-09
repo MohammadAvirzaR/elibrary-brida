@@ -8,12 +8,12 @@
         <!-- Search Bar -->
         <div class="relative max-w-2xl">
           <i-lucide-search
-            class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
             v-if="!isSearching && !isLoading"
+            class="absolute left-3 sm:left-4 top-2 sm:top-3 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
           />
           <i-lucide-loader-2
             v-if="isSearching || isLoading"
-            class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-500"
+            class="absolute left-3 sm:left-4 top-2 sm:top-3 w-4 h-4 sm:w-5 sm:h-5 text-blue-500 animate-spin"
           />
           <input
             type="text"
@@ -116,13 +116,13 @@
                 </div>
 
                 <!-- Document Cover -->
-                <div class="flex-shrink-0 w-20 sm:w-24 md:w-32 mx-auto sm:mx-0">
+                <!-- <div class="flex-shrink-0 w-20 sm:w-24 md:w-32 mx-auto sm:mx-0">
                   <img
                     :src="document.cover_image || 'https://via.placeholder.com/128x180?text=No+Cover'"
                     :alt="document.title"
                     class="w-full h-28 sm:h-36 md:h-48 object-cover rounded-lg shadow"
                   />
-                </div>
+                </div> -->
 
                 <!-- Document Info -->
                 <div class="flex-1 min-w-0">

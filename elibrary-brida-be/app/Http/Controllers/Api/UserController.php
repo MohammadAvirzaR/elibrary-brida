@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -36,10 +37,13 @@ class UserController extends Controller
                 'data' => $users
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch users: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch users',
-                'error' => $e->getMessage()
+                'message' => 'Failed to fetch users'
             ], 500);
         }
     }
@@ -72,10 +76,14 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch user: ' . $e->getMessage(), [
+                'user_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch user',
-                'error' => $e->getMessage()
+                'message' => 'Failed to fetch user'
             ], 500);
         }
     }
@@ -130,10 +138,14 @@ class UserController extends Controller
                 ]
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Failed to create user: ' . $e->getMessage(), [
+                'email' => $request->email,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create user',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create user'
             ], 500);
         }
     }
@@ -200,10 +212,14 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to update user: ' . $e->getMessage(), [
+                'user_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update user',
-                'error' => $e->getMessage()
+                'message' => 'Failed to update user'
             ], 500);
         }
     }
@@ -237,10 +253,14 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to delete user: ' . $e->getMessage(), [
+                'user_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete user',
-                'error' => $e->getMessage()
+                'message' => 'Failed to delete user'
             ], 500);
         }
     }

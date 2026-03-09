@@ -105,6 +105,17 @@
             <!-- Author & Year -->
             <div class="grid grid-cols-2 gap-4">
               <div>
+                <div class="mb-2">
+                  <label class="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">
+                    <input
+                      v-model="isMyDocument"
+                      type="checkbox"
+                      class="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-2 focus:ring-blue-500"
+                      @change="toggleAuthorField"
+                    />
+                    <span>Dokumen ini adalah karya saya</span>
+                  </label>
+                </div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">
                   Penulis <span class="text-red-500">*</span>
                 </label>
@@ -112,7 +123,8 @@
                   v-model="form.author"
                   type="text"
                   placeholder="Nama penulis"
-                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :disabled="isMyDocument"
+                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-neutral-100 disabled:cursor-not-allowed"
                   :class="{ 'border-red-500': errors.author }"
                 />
                 <p v-if="errors.author" class="text-red-500 text-sm mt-1">{{ errors.author }}</p>
@@ -317,7 +329,7 @@
               <input
                 ref="fileInput"
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf"
                 @change="handleFileSelect"
                 class="hidden"
               />
@@ -327,7 +339,7 @@
                   Klik untuk upload atau drag & drop
                 </p>
                 <p class="text-sm text-neutral-500">
-                  PDF, DOC, atau DOCX (Maks. 10MB)
+                  PDF (Maks. 10MB)
                 </p>
                 <button
                   type="button"
@@ -558,7 +570,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 
@@ -571,6 +583,8 @@ const isDragging = ref(false)
 const isSubmitting = ref(false)
 const currentStep = ref(1)
 const isTranslating = ref(false)
+const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
+const currentUserName = ref('') // Nama user yang sedang login
 
 const form = reactive({
   // Step 1 - Metadata
@@ -1160,4 +1174,26 @@ const submitForm = async () => {
     isSubmitting.value = false
   }
 }
+
+// Toggle author field based on checkbox
+const toggleAuthorField = () => {
+  if (isMyDocument.value) {
+    form.author = currentUserName.value
+  } else {
+    form.author = ''
+  }
+}
+
+// Load current user name on mount
+onMounted(() => {
+  try {
+    const userJson = localStorage.getItem('user')
+    if (userJson) {
+      const user = JSON.parse(userJson)
+      currentUserName.value = user.name || ''
+    }
+  } catch (error) {
+    console.error('Failed to load user data:', error)
+  }
+})
 </script>

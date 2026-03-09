@@ -10,12 +10,17 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminDocumentController;
 use App\Http\Controllers\Api\ContributorRequestController;
 
-// AUTH
-Route::post('register', [AuthController::class, 'register']);
-Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('resend-otp', [AuthController::class, 'resendOtp']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('register/google-complete', [AuthController::class, 'completeGoogleRegistration']);
+// AUTH - dengan rate limiting untuk keamanan (update)
+Route::post('register', [AuthController::class, 'register'])
+    ->middleware('throttle:3,1'); // Max 3/menit
+Route::post('verify-otp', [AuthController::class, 'verifyOtp'])
+    ->middleware('throttle:5,1'); // Max 5/menit
+Route::post('resend-otp', [AuthController::class, 'resendOtp'])
+    ->middleware('throttle:2,1'); // Max 2/menit
+Route::post('login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1'); // Max 5/menit
+Route::post('register/google-complete', [AuthController::class, 'completeGoogleRegistration'])
+    ->middleware('throttle:5,1'); // Max 5/menit
 
 // Public document routes (accessible without authentication)
 Route::get('/documents/search', [DocumentController::class, 'search']);

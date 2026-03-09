@@ -33,7 +33,7 @@
                   v-model="searchQuery"
                   type="text"
                   placeholder="Hinted search text"
-                  class="w-full px-4 py-3 bg-neutral-200  rounded-lg focus:outline-none   focus:border-transparent text-neutral-950 placeholder-neutral-400"
+                  class="w-full px-4 py-3 bg-white rounded-lg focus:outline-none   focus:border-transparent text-neutral-950 placeholder-neutral-400 shadow-sm border border-neutral-200  focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 />
                 <i-lucide-search class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-950" />
               </div>

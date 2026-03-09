@@ -65,11 +65,11 @@
               <!-- Dropdown Menu -->
               <div
                 v-if="showProfileMenu"
-                class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-neutral-200 py-2"
+                class="absolute right-0 mt-2 w-max min-w-56 max-w-sm bg-white rounded-lg shadow-lg border border-neutral-200 py-2"
               >
                 <div class="px-4 py-3 border-b border-neutral-200">
                   <p class="text-sm font-semibold text-neutral-900">{{ userName }}</p>
-                  <p class="text-xs text-neutral-500">{{ userEmail }}</p>
+                  <p class="text-xs text-neutral-500 whitespace-nowrap">{{ userEmail }}</p>
                 </div>
                 <button
                   @click="logout"
@@ -588,8 +588,8 @@ const goToCatalog = () => {
 const checkPendingRequest = async () => {
   if (userRole.value === 'guest') {
     try {
-      const response = await api.contributorRequests.checkPending() as { 
-        success: boolean; 
+      const response = await api.contributorRequests.checkPending() as {
+        success: boolean;
         has_pending: boolean;
         has_rejected: boolean;
       }

@@ -511,7 +511,7 @@ class DocumentController extends Controller
             'access_right' => ['nullable', Rule::in(['open', 'public', 'internal', 'embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
             'statement_agreed' => 'nullable',
-            'file' => 'required|file|mimes:pdf,doc,docx|max:' . self::MAX_FILE_SIZE,
+            'file' => 'required|file|mimes:pdf|max:' . self::MAX_FILE_SIZE,
             'authors' => 'required|array|min:1',
             'authors.*.first_name' => 'required|string',
             'authors.*.last_name' => 'nullable|string',
