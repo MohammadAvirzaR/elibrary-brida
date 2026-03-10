@@ -511,7 +511,7 @@
                 <span class="font-bold text-blue-600">{{ selectedHistory.length }}</span>
               </div>
               <button
-                @click="deleteSelected"
+                @click="askDeleteSelected"
                 :disabled="selectedHistory.length === 0"
                 class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-sm hover:shadow"
               >
@@ -611,7 +611,7 @@
                     </td>
                     <td class="px-6 py-4">
                       <button
-                        @click="deleteItem(item.id)"
+                        @click="askDeleteItem(item.id)"
                         class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 hover:shadow-md transition-all duration-200"
                       >
                         <i-lucide-trash-2 class="w-4 h-4" />
@@ -670,6 +670,16 @@
         </section>
       </main>
     </div>
+
+    <ConfirmModal
+      :show="showDeleteConfirm"
+      :message="deleteConfirmMessage"
+      title="Hapus Dokumen"
+      confirm-text="Ya, Hapus"
+      cancel-text="Batal"
+      @confirm="confirmDeleteAction"
+      @cancel="cancelDeleteAction"
+    />
   </div>
 </template>
 
@@ -679,9 +689,43 @@ import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import VueApexCharts from 'vue3-apexcharts'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
 const router = useRouter()
 const { toast } = useToast()
+
+const showDeleteConfirm = ref(false)
+const deleteConfirmMessage = ref('')
+const pendingDeleteFn = ref<(() => Promise<void>) | null>(null)
+
+const askDeleteItem = (id: number) => {
+  const item = histories.value.find(h => h.id === id)
+  if (!item) return
+  deleteConfirmMessage.value = `Apakah Anda yakin ingin menghapus dokumen "${item.title}"?\n\nTindakan ini tidak dapat dibatalkan.`
+  pendingDeleteFn.value = async () => { await deleteItem(id) }
+  showDeleteConfirm.value = true
+}
+
+const askDeleteSelected = () => {
+  const count = selectedHistory.value.length
+  if (count === 0) return
+  deleteConfirmMessage.value = `Apakah Anda yakin ingin menghapus ${count} dokumen?\n\nTindakan ini tidak dapat dibatalkan.`
+  pendingDeleteFn.value = async () => { await deleteSelected() }
+  showDeleteConfirm.value = true
+}
+
+const confirmDeleteAction = async () => {
+  showDeleteConfirm.value = false
+  if (pendingDeleteFn.value) {
+    await pendingDeleteFn.value()
+    pendingDeleteFn.value = null
+  }
+}
+
+const cancelDeleteAction = () => {
+  showDeleteConfirm.value = false
+  pendingDeleteFn.value = null
+}
 const username = ref('')
 const userRole = ref('')
 const isSidebarOpen = ref(true)
@@ -1281,10 +1325,6 @@ const deleteItem = async (id: number) => {
     return
   }
 
-  if (!confirm(`Apakah Anda yakin ingin menghapus dokumen "${item.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
-    return
-  }
-
   try {
     const response = await api.documents.delete(id) as { success: boolean; message?: string }
 
@@ -1318,10 +1358,6 @@ const deleteSelected = async () => {
   const count = selectedHistory.value.length
 
   if (count === 0) {
-    return
-  }
-
-  if (!confirm(`Apakah Anda yakin ingin menghapus ${count} dokumen?\n\nTindakan ini tidak dapat dibatalkan.`)) {
     return
   }
 

@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AdvancedSearchModal: typeof import('./components/AdvancedSearchModal.vue')['default']
     BooksTable: typeof import('./components/BooksTable.vue')['default']
+    ConfirmModal: typeof import('./components/ConfirmModal.vue')['default']
     DropdownMenu: typeof import('./components/ui/dropdown-menu/DropdownMenu.vue')['default']
     DropdownMenuCheckboxItem: typeof import('./components/ui/dropdown-menu/DropdownMenuCheckboxItem.vue')['default']
     DropdownMenuContent: typeof import('./components/ui/dropdown-menu/DropdownMenuContent.vue')['default']
@@ -103,6 +104,7 @@ declare module 'vue' {
     ILucideX: typeof import('~icons/lucide/x')['default']
     ILucideXCircle: typeof import('~icons/lucide/x-circle')['default']
     ILucideYoutube: typeof import('~icons/lucide/youtube')['default']
+    ImageSlider: typeof import('./components/ImageSlider.vue')['default']
     ISimpleIconsX: typeof import('~icons/simple-icons/x')['default']
     NavigationBar: typeof import('./components/NavigationBar.vue')['default']
     OtpVerificationModal: typeof import('./components/OtpVerificationModal.vue')['default']

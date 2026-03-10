@@ -634,8 +634,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 // Types
 interface User {
@@ -945,11 +947,11 @@ const handleSubmit = async () => {
   // Validate password match for new user or when changing password
   if (!isEditMode.value || changePassword.value) {
     if (formData.value.password !== formData.value.password_confirmation) {
-      alert('Password tidak cocok!')
+      toast.error('Validasi Gagal', 'Password tidak cocok!')
       return
     }
     if (formData.value.password.length < 8) {
-      alert('Password minimal 8 karakter!')
+      toast.error('Validasi Gagal', 'Password minimal 8 karakter!')
       return
     }
   }
@@ -959,7 +961,7 @@ const handleSubmit = async () => {
       // Find role_id from role name
       const role = roles.value.find(r => r.name === formData.value.role)
       if (!role) {
-        alert('Role tidak valid!')
+        toast.error('Validasi Gagal', 'Role tidak valid!')
         return
       }
 
@@ -1011,19 +1013,19 @@ const handleSubmit = async () => {
           }
         }
 
-        alert('User berhasil diupdate!')
+        toast.success('Berhasil', 'User berhasil diperbarui')
       }
     } else {
       // Validasi untuk add user baru - semua field wajib
       if (!formData.value.name || !formData.value.email || !formData.value.institution) {
-        alert('Semua field wajib diisi untuk user baru!')
+        toast.error('Validasi Gagal', 'Semua field wajib diisi untuk user baru!')
         return
       }
 
       // Find role_id from role name
       const role = roles.value.find(r => r.name === formData.value.role)
       if (!role) {
-        alert('Role tidak valid!')
+        toast.error('Validasi Gagal', 'Role tidak valid!')
         return
       }
 
@@ -1039,14 +1041,14 @@ const handleSubmit = async () => {
 
       if (response.success) {
         await loadUsers()
-        alert('User berhasil ditambahkan!')
+        toast.success('Berhasil', 'User berhasil ditambahkan')
       }
     }
 
     closeModal()
   } catch (error) {
     console.error('Failed to save user:', error)
-    alert(error instanceof Error ? error.message : 'Failed to save user')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal menyimpan user')
   }
 }
 
@@ -1083,7 +1085,7 @@ const confirmDelete = async () => {
     closeDeleteModal()
   } catch (error) {
     console.error('Failed to delete user:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete user')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal menghapus user')
   }
 }
 

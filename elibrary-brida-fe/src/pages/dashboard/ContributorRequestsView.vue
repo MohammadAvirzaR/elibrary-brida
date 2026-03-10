@@ -315,8 +315,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 interface ContributorRequest {
   id: number
@@ -405,12 +407,12 @@ const confirmApprove = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await api.contributorRequests.approve(selectedRequest.value.id, approveNotes.value)
     if (response.success) {
-      alert('Request approved successfully!')
+      toast.success('Berhasil', 'Permintaan berhasil disetujui')
       showApproveModal.value = false
       await loadRequests()
     }
   } catch (error) {
-    alert('Failed to approve request: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    toast.error('Gagal', 'Gagal menyetujui permintaan: ' + (error instanceof Error ? error.message : 'Unknown error'))
   } finally {
     isProcessing.value = false
   }
@@ -424,12 +426,12 @@ const confirmReject = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await api.contributorRequests.reject(selectedRequest.value.id, rejectNotes.value)
     if (response.success) {
-      alert('Request rejected successfully!')
+      toast.success('Berhasil', 'Permintaan berhasil ditolak')
       showRejectModal.value = false
       await loadRequests()
     }
   } catch (error) {
-    alert('Failed to reject request: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    toast.error('Gagal', 'Gagal menolak permintaan: ' + (error instanceof Error ? error.message : 'Unknown error'))
   } finally {
     isProcessing.value = false
   }

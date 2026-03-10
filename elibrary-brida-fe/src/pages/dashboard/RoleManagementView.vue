@@ -256,16 +256,29 @@
       </div>
     </main>
   </div>
+
+  <ConfirmModal
+    :show="showDeleteRoleConfirm"
+    title="Hapus Role"
+    :message="selectedRole ? `Apakah Anda yakin ingin menghapus role \"${selectedRole.name}\"?` : 'Apakah Anda yakin?'"
+    confirm-text="Ya, Hapus"
+    cancel-text="Batal"
+    @confirm="confirmDeleteRole"
+    @cancel="showDeleteRoleConfirm = false"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
 const router = useRouter()
+const { toast } = useToast()
 
-// UI State
 const isSidebarOpen = ref(true)
+const showDeleteRoleConfirm = ref(false)
 const selectedRole = ref<Role | null>(null)
 const draggedRole = ref<Role | null>(null)
 
@@ -427,18 +440,21 @@ const saveRole = () => {
   const index = roles.value.findIndex(r => r.id === selectedRole.value!.id)
   if (index !== -1) {
     roles.value[index] = { ...selectedRole.value }
-    alert('Role saved successfully!')
+    toast.success('Berhasil', 'Role berhasil disimpan')
   }
 }
 
 const deleteRole = () => {
   if (!selectedRole.value) return
+  showDeleteRoleConfirm.value = true
+}
 
-  if (confirm(`Are you sure you want to delete "${selectedRole.value.name}"?`)) {
-    roles.value = roles.value.filter(r => r.id !== selectedRole.value!.id)
-    selectedRole.value = null
-    alert('Role deleted successfully!')
-  }
+const confirmDeleteRole = () => {
+  if (!selectedRole.value) return
+  roles.value = roles.value.filter(r => r.id !== selectedRole.value!.id)
+  selectedRole.value = null
+  showDeleteRoleConfirm.value = false
+  toast.success('Berhasil', 'Role berhasil dihapus')
 }
 
 // Drag and Drop

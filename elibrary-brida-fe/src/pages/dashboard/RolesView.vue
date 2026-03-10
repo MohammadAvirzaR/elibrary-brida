@@ -486,8 +486,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 // Types
 interface Role {
@@ -750,7 +752,7 @@ const handleSubmit = async () => {
     closeModal()
   } catch (error) {
     console.error('Failed to save role:', error)
-    alert(error instanceof Error ? error.message : 'Failed to save role')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal menyimpan role')
   }
 }
 
@@ -788,7 +790,7 @@ const confirmDelete = async () => {
     closeDeleteModal()
   } catch (error) {
     console.error('Failed to delete role:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete role')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal menghapus role')
   }
 }
 

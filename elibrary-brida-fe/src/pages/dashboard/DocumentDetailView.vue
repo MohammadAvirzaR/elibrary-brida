@@ -49,7 +49,7 @@
           <!-- Action Buttons for Admin/Reviewer -->
           <div v-if="canReview && document.status === 'pending'" class="flex items-center gap-2 flex-1 sm:flex-initial">
             <button
-              @click="approveDocument"
+              @click="askApproveDocument"
               :disabled="isProcessing"
               class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50"
             >
@@ -386,6 +386,16 @@
         </div>
       </div>
     </Teleport>
+
+    <ConfirmModal
+      :show="showApproveConfirm"
+      title="Setujui Dokumen"
+      message="Apakah Anda yakin ingin menyetujui dokumen ini? Dokumen akan dipublikasikan."
+      confirm-text="Ya, Setujui"
+      cancel-text="Batal"
+      @confirm="approveDocument"
+      @cancel="showApproveConfirm = false"
+    />
   </div>
 </template>
 
@@ -394,6 +404,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
 interface Author {
   id?: number
@@ -541,8 +552,16 @@ const loadDocument = async () => {
   }
 }
 
+const showApproveConfirm = ref(false)
+
+const askApproveDocument = () => {
+  if (!document.value) return
+  showApproveConfirm.value = true
+}
+
 const approveDocument = async () => {
-  if (!document.value || !confirm('Apakah Anda yakin ingin menyetujui dokumen ini?')) return
+  showApproveConfirm.value = false
+  if (!document.value) return
 
   try {
     isProcessing.value = true

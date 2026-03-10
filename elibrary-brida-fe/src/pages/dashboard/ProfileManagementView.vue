@@ -21,7 +21,12 @@
 
       <!-- Menu -->
       <nav class="mt-6">
-        <router-link to="/dashboard" class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group">
+        <!-- Dashboard - Super Admin Only -->
+        <router-link
+          v-if="userRole === 'super_admin'"
+          to="/dashboard"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
           <i-lucide-layout-dashboard class="w-5 h-5 flex-shrink-0" />
           <span
             :class="[
@@ -69,6 +74,7 @@
 
         <!-- Profile Management - Admin & Super Admin -->
         <router-link
+          v-if="userRole === 'admin' || userRole === 'super_admin'"
           to="/profile-management"
           class="flex items-center gap-4 px-6 py-3 bg-blue-800 border-l-4 border-white group"
         >
@@ -466,8 +472,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const { toast } = useToast()
 
 // Types
 interface User {
@@ -641,11 +649,11 @@ const handleUpdateProfile = async () => {
     if (response.success) {
       await loadUsers()
       closeEditModal()
-      alert('Profile updated successfully!')
+      toast.success('Berhasil', 'Profil berhasil diperbarui')
     }
   } catch (error) {
     console.error('Failed to update profile:', error)
-    alert(error instanceof Error ? error.message : 'Failed to update profile')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal memperbarui profil')
   }
 }
 
@@ -671,7 +679,7 @@ const handleResetPassword = async () => {
   if (!resetPasswordUser.value) return
 
   if (resetPasswordForm.value.password !== resetPasswordForm.value.password_confirmation) {
-    alert('Passwords do not match!')
+    toast.error('Gagal', 'Password tidak cocok!')
     return
   }
 
@@ -683,11 +691,11 @@ const handleResetPassword = async () => {
 
     if (response.success) {
       closeResetPasswordModal()
-      alert('Password reset successfully!')
+      toast.success('Berhasil', 'Password berhasil direset')
     }
   } catch (error) {
     console.error('Failed to reset password:', error)
-    alert(error instanceof Error ? error.message : 'Failed to reset password')
+    toast.error('Gagal', error instanceof Error ? error.message : 'Gagal mereset password')
   }
 }
 

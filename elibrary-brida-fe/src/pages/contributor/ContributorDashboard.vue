@@ -273,7 +273,7 @@
                           <i-lucide-edit class="w-4 h-4" />
                         </button>
                         <button
-                          @click="deleteDocument(doc)"
+                          @click="askDeleteDocument(doc)"
                           class="text-red-600 hover:text-red-800 p-1"
                           title="Hapus"
                         >
@@ -370,11 +370,20 @@
       </div>
     </div>
 
-    <!-- Upload Modal -->
     <UploadDocumentModal
       v-if="showUploadModal"
       @close="showUploadModal = false"
       @uploaded="handleDocumentUploaded"
+    />
+
+    <ConfirmModal
+      :show="showDeleteConfirm"
+      title="Hapus Dokumen"
+      :message="deleteConfirmMessage"
+      confirm-text="Ya, Hapus"
+      cancel-text="Batal"
+      @confirm="confirmDeleteDocument"
+      @cancel="cancelDeleteDocument"
     />
   </div>
 </template>
@@ -384,6 +393,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
@@ -396,6 +406,14 @@ const { toast } = useToast()
 // UI State for navbar
 const showProfileMenu = ref(false)
 const showUploadModal = ref(false)
+const showDeleteConfirm = ref(false)
+const docToDelete = ref<UploadedDocument | null>(null)
+
+const deleteConfirmMessage = computed(() =>
+  docToDelete.value
+    ? `Apakah Anda yakin ingin menghapus dokumen "${docToDelete.value.title}"?\n\nTindakan ini tidak dapat dibatalkan.`
+    : 'Apakah Anda yakin ingin menghapus dokumen ini?'
+)
 
 // Computed user initials
 const userInitials = computed(() => {
@@ -670,24 +688,30 @@ const viewDocument = async (doc: UploadedDocument) => {
 }
 
 const editDocument = async (doc: UploadedDocument) => {
-  try {
-    console.log('Edit dokumen:', doc)
-    alert('Fitur edit akan segera tersedia. Untuk sementara, silakan hapus dan upload ulang.')
+  console.log('Edit dokumen:', doc)
+  toast.info('Info', 'Fitur edit akan segera tersedia. Untuk sementara, silakan hapus dan upload ulang.')
+}
 
-  } catch (error) {
-    console.error('Error editing document:', error)
-    alert('Gagal mengedit dokumen')
-  }
+const askDeleteDocument = (doc: UploadedDocument) => {
+  docToDelete.value = doc
+  showDeleteConfirm.value = true
+}
+
+const cancelDeleteDocument = () => {
+  showDeleteConfirm.value = false
+  docToDelete.value = null
+}
+
+const confirmDeleteDocument = async () => {
+  if (!docToDelete.value) return
+  const target = docToDelete.value
+  showDeleteConfirm.value = false
+  docToDelete.value = null
+  await deleteDocument(target)
 }
 
 const deleteDocument = async (doc: UploadedDocument) => {
-  if (!confirm(`Apakah Anda yakin ingin menghapus dokumen "${doc.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
-    return
-  }
-
   try {
-    console.log(`Attempting to delete document ${doc.id}: ${doc.title}`)
-
     const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
     if (docElement) {
       docElement.classList.add('opacity-50', 'pointer-events-none')
@@ -695,26 +719,16 @@ const deleteDocument = async (doc: UploadedDocument) => {
 
     const response = await api.documents.delete(doc.id) as { success: boolean; message?: string }
 
-    console.log('Delete response:', response)
-
     if (response.success) {
-      // Remove from local array first for immediate UI feedback
       documents.value = documents.value.filter(d => d.id !== doc.id)
-
-      // Reload documents from server to ensure sync
       await loadDocuments()
-
-      alert('Dokumen berhasil dihapus')
+      toast.success('Berhasil', 'Dokumen berhasil dihapus')
     } else {
       throw new Error(response.message || 'Gagal menghapus dokumen')
     }
   } catch (error) {
-    console.error('Error deleting document:', error)
-
     let errorMessage = 'Gagal menghapus dokumen. Silakan coba lagi.'
     if (error instanceof Error) {
-      console.error('Error details:', error.message)
-
       if (error.message.includes('403') || error.message.includes('Forbidden')) {
         errorMessage = 'Anda tidak memiliki izin untuk menghapus dokumen ini.'
       } else if (error.message.includes('404')) {
@@ -727,20 +741,17 @@ const deleteDocument = async (doc: UploadedDocument) => {
           router.push('/login')
         }, 2000)
       } else {
-        // Include actual error message for debugging
         errorMessage = `Gagal menghapus dokumen: ${error.message}`
       }
     }
 
-    alert(errorMessage)
+    toast.error('Gagal Menghapus', errorMessage)
 
-    // Restore UI state on error
     const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
     if (docElement) {
       docElement.classList.remove('opacity-50', 'pointer-events-none')
     }
 
-    // Reload documents to ensure UI is in sync with server
     await loadDocuments()
   }
 }
