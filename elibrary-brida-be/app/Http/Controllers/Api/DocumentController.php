@@ -636,6 +636,39 @@ class DocumentController extends Controller
                     'message' => 'Dokumen berhasil dihapus'
                 ]);
             }
+
+            // Delete attachment files before deleting records
+            foreach ($document->attachments as $attachment) {
+                if ($attachment->file_path) {
+                    // Try 'local' disk first
+                    if (Storage::disk('local')->exists($attachment->file_path)) {
+                        Storage::disk('local')->delete($attachment->file_path);
+                        Log::info("Deleted attachment from local disk: {$attachment->file_path}");
+                    }
+                    // Fallback to 'public' disk
+                    elseif (Storage::disk('public')->exists($attachment->file_path)) {
+                        Storage::disk('public')->delete($attachment->file_path);
+                        Log::info("Deleted attachment from public disk: {$attachment->file_path}");
+                    } else {
+                        Log::warning("Attachment file not found in any disk: {$attachment->file_path}");
+                    }
+                }
+            }
+
+            // Delete related database records
+            $document->authors()->delete();
+            $document->supervisors()->delete();
+            $document->attachments()->delete();
+
+            // Delete the document itself
+            $document->delete();
+
+            Log::info("Document {$id} successfully deleted by user {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil dihapus'
+            ]);
         } catch (\Exception $e) {
             Log::error("Error deleting resource {$id}: " . $e->getMessage());
 
