@@ -70,6 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/documents/review', [DocumentController::class, 'review'])
         ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,admin,super_admin');
 
+    // Review history endpoint (Admin + Super Admin)
+    Route::get('/documents/review-history', [DocumentController::class, 'getReviewHistory'])
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':admin,super_admin');
+
     // Upload document (Contributor + Admin + Super Admin)
     Route::post('/documents/upload', [DocumentController::class, 'upload'])
         ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin');

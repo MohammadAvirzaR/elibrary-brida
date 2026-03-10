@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\DocumentAttachment;
+use App\Models\Review;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -312,6 +314,67 @@ class DocumentController extends Controller
         ]);
     }
 
+    public function getReviewHistory()
+    {
+        try {
+            Log::info("getReviewHistory called");
+            
+            // First check total review count
+            $totalReviews = Review::count();
+            Log::info("Total reviews in database: {$totalReviews}");
+            
+            // Get all reviews (before filtering)
+            $allReviews = Review::with(['document', 'document.user', 'user'])->get();
+            Log::info("Reviews with joined data: " . count($allReviews));
+            
+            // Now apply whereHas filter
+            $reviews = Review::with(['document', 'document.user', 'user'])
+                ->whereHas('document') // Only include reviews for documents that still exist
+                ->orderBy('review_date', 'desc')
+                ->get();
+
+            Log::info("getReviewHistory: Found " . count($reviews) . " reviews after filtering");
+            
+            // Log each review
+            foreach ($reviews as $review) {
+                Log::info("Review ID: {$review->id}, Doc ID: {$review->document_id}, Status: {$review->status_review}, Date: {$review->review_date}");
+            }
+
+            $mappedReviews = $reviews->map(function ($review) {
+                Log::info("Mapping review {$review->id}: document={$review->document?->title}");
+                return [
+                    'id' => $review->id, // review record ID for deletion
+                    'document_id' => $review->document_id,
+                    'name' => $review->document->user?->name ?? 'Unknown',
+                    'email' => $review->document->user?->email ?? '',
+                    'title' => $review->document->title,
+                    'status' => $review->status_review === 'approved' ? 'Accepted' : 'Rejected',
+                    'lastUpdate' => [
+                        'date' => Carbon::parse($review->review_date)->format('d/m/Y'),
+                        'time' => Carbon::parse($review->review_date)->format('H:i') . ' WIB'
+                    ],
+                    'review_comment' => $review->comment,
+                    'reviewer_name' => $review->user?->name ?? 'Unknown',
+                ];
+            });
+
+            $result = $mappedReviews->values()->all();
+            Log::info("Final result count: " . count($result));
+            
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error fetching review history: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat history review: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -520,8 +583,6 @@ class DocumentController extends Controller
     public function destroy($id)
     {
         try {
-            $document = Document::with(['attachments'])->findOrFail($id);
-
             $user = auth('sanctum')->user();
 
             if (!$user) {
@@ -531,40 +592,49 @@ class DocumentController extends Controller
                 ], 401);
             }
 
-            // Load user with role relationship
-            $user = User::with('role')->find($user->id);
+            // Check if ID refers to a review (history delete) or document (document delete)
+            $review = Review::find($id);
+            
+            if ($review) {
+                // Case 1: Delete review record (history delete)
+                $documentTitle = $review->document?->title ?? 'Unknown Document';
+                $review->delete();
 
-            if (!$user || !$user->role) {
+                Log::info("Review record {$id} deleted by user {$user->id} for document: {$documentTitle}");
+
                 return response()->json([
-                    'success' => false,
-                    'message' => 'User role not found'
-                ], 403);
-            }
-
-            // Check permission for contributors
-            if ($user->role->name === 'contributor' && $document->user_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
-                ], 403);
-            }
-
-            Log::info("Starting delete process for document {$id} by user {$user->id} (role: {$user->role->name})");
-
-            // Delete main document file with multi-disk fallback
-            if ($document->file_path) {
-                // Try 'local' disk first (new documents)
-                if (Storage::disk('local')->exists($document->file_path)) {
-                    Storage::disk('local')->delete($document->file_path);
-                    Log::info("Deleted main file from local disk: {$document->file_path}");
+                    'success' => true,
+                    'message' => 'History berhasil dihapus'
+                ]);
+            } else {
+                // Case 2: Delete document (contributor deleting their own document)
+                $document = Document::findOrFail($id);
+                
+                // Authorization: only contributor who uploaded or admin can delete
+                if ($user->id !== $document->user_id && !in_array($user->role, ['admin', 'super_admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
+                    ], 403);
                 }
-                // Fallback to 'public' disk (old documents)
-                elseif (Storage::disk('public')->exists($document->file_path)) {
+
+                // Delete associated file
+                if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
                     Storage::disk('public')->delete($document->file_path);
-                    Log::info("Deleted main file from public disk: {$document->file_path}");
-                } else {
-                    Log::warning("Main file not found in any disk: {$document->file_path}");
                 }
+
+                // Delete associated reviews
+                Review::where('document_id', $document->id)->delete();
+
+                // Delete the document
+                $document->delete();
+
+                Log::info("Document {$id} ('{$document->title}') deleted by user {$user->id}");
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil dihapus'
+                ]);
             }
 
             // Delete attachment files before deleting records
@@ -600,12 +670,11 @@ class DocumentController extends Controller
                 'message' => 'Dokumen berhasil dihapus'
             ]);
         } catch (\Exception $e) {
-            Log::error("Error deleting document {$id}: " . $e->getMessage());
-            Log::error("Stack trace: " . $e->getTraceAsString());
+            Log::error("Error deleting resource {$id}: " . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
+                'message' => 'Gagal menghapus: ' . $e->getMessage()
             ], 500);
         }
     }
