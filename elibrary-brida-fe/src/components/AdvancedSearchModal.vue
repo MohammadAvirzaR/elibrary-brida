@@ -32,6 +32,8 @@
                 <input
                   v-model="searchQuery"
                   type="text"
+
+                  @keyup.enter="scrollToCatalog"
                   placeholder="Hinted search text"
                   class="w-full px-4 py-3 bg-white rounded-lg focus:outline-none   focus:border-transparent text-neutral-950 placeholder-neutral-400 shadow-sm border border-neutral-200  focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 />
@@ -39,51 +41,49 @@
               </div>
             </div>
 
-            <!-- License & Access Rights -->
-            <div class="grid grid-cols-2 gap-6">
-              <!-- Filter Lisensi -->
+            <!-- License & Access Rights (Commented out - not ready yet) -->
+            <!-- <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-bold text-gray-900 mb-3">
                   Filter Lisensi
                 </label>
                 <div class="space-y-2">
-                  <label class="flex items-center space-x-3 cursor-pointer">
+                  <label
+                    v-for="license in licenses"
+                    :key="license.value"
+                    class="flex items-center space-x-3 cursor-pointer"
+                  >
                     <input
                       v-model="selectedLicense"
                       type="radio"
-                      value="cc"
+                      :value="license.value"
                       class="w-4 h-4 text-purple-600 focus:ring-purple-500"
                     />
-                    <span class="text-sm text-gray-700">CC</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      v-model="selectedLicense"
-                      type="radio"
-                      value="all-rights-reserved"
-                      class="w-4 h-4 text-purple-600 focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">All Rights Reserved</span>
+                    <span class="text-sm text-gray-700">{{ license.label }}</span>
                   </label>
                 </div>
               </div>
 
-              <!-- Filter Hak Akses -->
               <div>
                 <label class="block text-sm font-bold text-gray-900 mb-3">
                   Filter Hak Akses
                 </label>
                 <select
                   v-model="selectedAccessRight"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 >
                   <option value="">Pilih Hak Akses</option>
-                  <option value="public">Public</option>
-                  <option value="restricted">Restricted</option>
-                  <option value="private">Private</option>
+                  <option
+                    v-for="accessRight in accessRights"
+                    :key="accessRight"
+                    :value="accessRight"
+                  >
+                    {{ accessRight.charAt(0).toUpperCase() + accessRight.slice(1) }}
+                  </option>
                 </select>
               </div>
-            </div>
+            </div> -->
+
 
             <!-- Filters Grid -->
             <div class="grid grid-cols-3 gap-6">
@@ -92,69 +92,19 @@
                 <label class="block text-sm font-bold text-gray-900 mb-3">
                   Filter Subjek
                 </label>
-                <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
-                  <label class="flex items-center space-x-3 cursor-pointer">
+                <div class="space-y-2 max-h-64  pr-2">
+                  <label
+                    v-for="subject in subjects"
+                    :key="subject.value"
+                    class="flex items-center space-x-3 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
-                      value="name"
+                      :value="subject.value"
                       v-model="selectedSubjects"
                       class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                     />
-                    <span class="text-sm text-gray-700">Name</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="ilmu-komputer"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Ilmu Komputer</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="matematika"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Matematika</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="hukum"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Hukum</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="seni"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Seni</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="psikologi"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Psikologi</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="lainnya"
-                      v-model="selectedSubjects"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Lainnya</span>
+                    <span class="text-sm text-gray-700">{{ subject.label }}</span>
                   </label>
                 </div>
               </div>
@@ -165,59 +115,18 @@
                   Filter Tipe
                 </label>
                 <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
-                  <label class="flex items-center space-x-3 cursor-pointer">
+                  <label
+                    v-for="type in documentTypes"
+                    :key="type.value"
+                    class="flex items-center space-x-3 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
-                      value="name"
+                      :value="type.value"
                       v-model="selectedTypes"
                       class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                     />
-                    <span class="text-sm text-gray-700">Name</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="artikel-jurnal"
-                      v-model="selectedTypes"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Artikel Jurnal</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="skripsi"
-                      v-model="selectedTypes"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Skripsi</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="tesis"
-                      v-model="selectedTypes"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Tesis</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="disertasi"
-                      v-model="selectedTypes"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Disertasi</span>
-                  </label>
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="laporan-penelitian"
-                      v-model="selectedTypes"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Laporan Penelitian</span>
+                    <span class="text-sm text-gray-700">{{ type.label }}</span>
                   </label>
                 </div>
               </div>
@@ -228,27 +137,18 @@
                   Filter Tahun
                 </label>
                 <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
-                  <label class="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="name"
-                      v-model="selectedYears"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm text-gray-700">Name</span>
-                  </label>
                   <label
                     v-for="year in years"
                     :key="year"
                     class="flex items-center space-x-3 cursor-pointer"
                   >
                     <input
-                      type="checkbox"
-                      :value="year.toString()"
-                      v-model="selectedYears"
-                      class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                      type="radio"
+                      :value="year"
+                      v-model="selectedYear"
+                      class="w-4 h-4 text-purple-600 focus:ring-purple-500"
                     />
-                    <span class="text-sm text-gray-700">{{ year }}</span>
+                    <span class="text-sm text-gray-700">Last {{ year }} years</span>
                   </label>
                 </div>
               </div>
@@ -272,8 +172,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
 interface SearchFilters {
   query: string
@@ -281,7 +182,7 @@ interface SearchFilters {
   accessRight: string
   subjects: string[]
   types: string[]
-  years: string[]
+  year: number | null
 }
 
 defineProps<{
@@ -296,52 +197,166 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const searchQuery = ref('')
+const setSearchQuery = (query: string) => {
+  searchQuery.value = query
+}
 const selectedLicense = ref('')
 const selectedAccessRight = ref('')
 const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
-const selectedYears = ref<string[]>([])
+const selectedYear = ref<number | null>(null)
 
-const currentYear = new Date().getFullYear()
-const years = computed(() => {
-  const yearList = []
-  for (let i = currentYear; i >= currentYear - 30; i -= 5) {
-    yearList.push(i)
+// Dynamic filters from API
+const subjects = ref<Array<{ label: string; value: string; id: number }>>([])
+const documentTypes = ref<Array<{ label: string; value: string; id: number }>>([])
+const licenses = ref<Array<{ label: string; value: string; id: number }>>([])
+const accessRights = ref<string[]>([])
+const years = ref<number[]>([])
+
+// Maps to store ID lookups
+const subjectMap = ref<Map<string, number>>(new Map())
+const typeMap = ref<Map<string, number>>(new Map())
+const licenseMap = ref<Map<string, number>>(new Map())
+
+const localSearch = ref(searchQuery.value)
+
+// enter to search
+const scrollToCatalog = async () => {
+  if (localSearch.value.trim()) {
+    setSearchQuery(localSearch.value)
+    router.push({
+      name: 'search',
+      query: {
+        q: localSearch.value,
+        page: 1
+      }
+    })
+    return
   }
-  return yearList
-})
+
+  const catalogElement = document.getElementById('catalog')
+  if (catalogElement) {
+    catalogElement.scrollIntoView({ behavior: 'smooth' })
+  }
+}
 
 const closeModal = () => {
   emit('close')
 }
 
 const performSearch = () => {
+  // Get selected subject IDs
+  const subjectIds = selectedSubjects.value
+    .map(name => subjectMap.value.get(name))
+    .filter((id): id is number => id !== undefined)
+
+  // Get selected type IDs
+  const typeIds = selectedTypes.value
+    .map(name => typeMap.value.get(name))
+    .filter((id): id is number => id !== undefined)
+
+  // Get selected license ID (if license filter is enabled) - Not ready yet
+  // const licenseId = selectedLicense.value
+  //   ? licenseMap.value.get(selectedLicense.value)
+  //   : undefined
+
   const filters = {
     query: searchQuery.value,
     license: selectedLicense.value,
     accessRight: selectedAccessRight.value,
     subjects: selectedSubjects.value,
     types: selectedTypes.value,
-    years: selectedYears.value,
+    year: selectedYear.value,
   }
 
   emit('search', filters)
 
-  // Navigate to search page with filters
+  // Navigate to catalog page with filter IDs
+  const queryParams: Record<string, string> = {}
+
+  if (searchQuery.value.trim()) {
+    queryParams.q = searchQuery.value
+  }
+
+  if (subjectIds.length > 0) {
+    queryParams.subject_id = subjectIds.join(',')
+  }
+
+  if (typeIds.length > 0) {
+    queryParams.type_id = typeIds.join(',')
+  }
+
+  // Commented out - not ready yet
+  // if (licenseId) {
+  //   queryParams.license_id = licenseId.toString()
+  // }
+
+  // if (selectedAccessRight.value) {
+  //   queryParams.access_right = selectedAccessRight.value
+  // }
+
+  if (selectedYear.value) {
+    queryParams.year = selectedYear.value.toString()
+  }
+
   router.push({
-    name: 'search',
-    query: {
-      q: searchQuery.value,
-      license: selectedLicense.value,
-      access: selectedAccessRight.value,
-      subjects: selectedSubjects.value.join(','),
-      types: selectedTypes.value.join(','),
-      years: selectedYears.value.join(','),
-    }
+    name: 'catalog',
+    query: queryParams
   })
 
   closeModal()
 }
+
+// Load filters on mount
+onMounted(async () => {
+  try {
+    const response = await api.filters.getAll() as {
+      subjects: Array<{ id: number; subject_name: string }>
+      types: Array<{ id: number; type_name: string }>
+      licenses: Array<{ id: number; license_name: string }>
+      access_rights: string[]
+      years: number[]
+    }
+
+    // Map subjects to label-value format and create ID map
+    subjects.value = response.subjects?.map(s => {
+      subjectMap.value.set(s.subject_name, s.id)
+      return {
+        id: s.id,
+        label: s.subject_name,
+        value: s.subject_name
+      }
+    }) || []
+
+    // Map document types to label-value format and create ID map
+    documentTypes.value = response.types?.map(t => {
+      typeMap.value.set(t.type_name, t.id)
+      return {
+        id: t.id,
+        label: t.type_name,
+        value: t.type_name
+      }
+    }) || []
+
+    // Map licenses to label-value format and create ID map
+    licenses.value = response.licenses?.map(l => {
+      licenseMap.value.set(l.license_name, l.id)
+      return {
+        id: l.id,
+        label: l.license_name,
+        value: l.license_name
+      }
+    }) || []
+
+    // Set access rights from API
+    accessRights.value = response.access_rights || []
+
+    // Set years from API
+    years.value = response.years || []
+  } catch (error) {
+    console.error('Failed to load filters:', error)
+  }
+})
 </script>
 
 <style scoped>

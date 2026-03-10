@@ -77,6 +77,71 @@
                 <span class="text-sm text-gray-700">{{ type.label }}</span>
               </label>
             </div>
+
+            <!-- License Filter (Commented out - not ready yet) -->
+            <!-- <h3 class="font-bold text-gray-900 mb-4 mt-6">Lisensi</h3>
+            <div class="space-y-2">
+              <label
+                v-for="license in licenses"
+                :key="license.value"
+                class="flex items-center space-x-2 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  :value="license.value"
+                  v-model="selectedLicense"
+                  @change="applyFilters"
+                  class="border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-sm text-gray-700">{{ license.label }}</span>
+              </label>
+            </div> -->
+
+            <!-- Access Right Filter (Commented out - not ready yet) -->
+            <!-- <h3 class="font-bold text-gray-900 mb-4 mt-6">Hak Akses</h3>
+            <select
+              v-model="selectedAccessRight"
+              @change="applyFilters"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="">Semua</option>
+              <option
+                v-for="accessRight in accessRights"
+                :key="accessRight"
+                :value="accessRight"
+              >
+                {{ accessRight.charAt(0).toUpperCase() + accessRight.slice(1) }}
+              </option>
+            </select> -->
+
+            <!-- Year Filter -->
+            <h3 class="font-bold text-gray-900 mb-4 mt-6">Tahun</h3>
+            <div class="space-y-2">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value=""
+                  v-model="selectedYear"
+                  @change="applyFilters"
+                  class="border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-sm text-gray-700">Semua</span>
+              </label>
+              <label
+                v-for="year in years"
+                :key="year"
+                class="flex items-center space-x-2 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  :value="year"
+                  v-model="selectedYear"
+                  @change="applyFilters"
+                  class="border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-sm text-gray-700">Last {{ year }} years</span>
+              </label>
+            </div>
           </div>
         </aside>
 
@@ -125,25 +190,22 @@
                     {{ document.title }}
                   </h3>
                   <p class="text-sm text-gray-600 mb-2">
-                    by {{ document.author || 'Unknown Author' }}
+                    by {{ getAuthorsDisplay(document) }}
                   </p>
                   <p class="text-sm text-gray-500 mb-3">
-                    {{ document.category || 'General' }} • {{ formatDate(document.published_date) }}
+                    {{ document.subject?.subject_name || 'General' }} • {{ formatDate(document.year_published) }}
                   </p>
                   <p class="text-gray-700 text-sm line-clamp-3 mb-4">
-                    {{ document.description || 'No description available.' }}
+                    {{ document.abstract_id || 'No description available.' }}
                   </p>
 
                   <!-- Tags -->
                   <div class="flex gap-2 mb-4">
                     <span
-                      v-if="document.category"
-                      class="inline-block px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full"
+                      v-if="document.type"
+                      class="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full"
                     >
-                      {{ document.category }}
-                    </span>
-                    <span class="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                      Artikel Jurnal
+                      {{ document.type.type_name }}
                     </span>
                   </div>
 
@@ -228,7 +290,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
@@ -246,10 +308,17 @@ const isSearching = ref(false)
 const currentPage = ref(1)
 const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
+// const selectedLicense = ref('')           // Not ready yet
+// const selectedAccessRight = ref('')       // Not ready yet
+const selectedYear = ref<number | string>('')
+
+// Flag to prevent watch triggering on internal URL updates
+const isInternalUpdate = ref(false)
 
 // Maps to store ID lookups
 const subjectMap = ref<Map<string, number>>(new Map())
 const typeMap = ref<Map<string, number>>(new Map())
+const licenseMap = ref<Map<string, number>>(new Map())
 
 // Check if user is authenticated
 const isAuthenticated = computed(() => {
@@ -259,6 +328,9 @@ const isAuthenticated = computed(() => {
 // Dynamic filters from API
 const subjects = ref<Array<{ label: string; value: string }>>([])
 const documentTypes = ref<Array<{ label: string; value: string }>>([])
+const licenses = ref<Array<{ label: string; value: string }>>([])
+const accessRights = ref<string[]>([])
+const years = ref<number[]>([])
 
 const totalPages = computed(() => lastPage.value || Math.ceil(totalResults.value / 10))
 
@@ -280,7 +352,6 @@ const displayPages = computed(() => {
 })
 
 const debouncedSearch = useDebounceFn(async () => {
-  isSearching.value = false
   searchQuery.value = localSearchQuery.value
   await performSearch()
 }, 500)
@@ -291,6 +362,7 @@ const handleSearch = () => {
 }
 
 const performSearch = async () => {
+  // Don't set isSearching here, it's already set by handleSearch or will be set by watch
   try {
     searchQuery.value = localSearchQuery.value
 
@@ -304,29 +376,69 @@ const performSearch = async () => {
       .map(name => typeMap.value.get(name))
       .filter((id): id is number => id !== undefined)
 
+    // Get selected license ID (if enabled) - Not ready yet
+    // const licenseId = selectedLicense.value
+    //   ? licenseMap.value.get(selectedLicense.value)
+    //   : undefined
+
+    // Parse year as number if it's not empty
+    const yearFilter = selectedYear.value && selectedYear.value !== ''
+      ? (typeof selectedYear.value === 'number' ? selectedYear.value : parseInt(selectedYear.value))
+      : undefined
+
     await searchDocuments(
       searchQuery.value,
       currentPage.value,
       undefined,
       subjectIds.length > 0 ? subjectIds : undefined,
-      typeIds.length > 0 ? typeIds : undefined
+      typeIds.length > 0 ? typeIds : undefined,
+      yearFilter
+      // licenseId,         // Not ready yet
+      // selectedAccessRight.value || undefined  // Not ready yet
     )
 
-    // Update URL query parameter
+    // Update URL query parameters with filters
+    const queryParams: Record<string, string | number> = {}
+
     if (searchQuery.value.trim()) {
-      router.push({
-        query: {
-          q: searchQuery.value,
-          page: currentPage.value
-        }
-      })
-    } else {
-      router.push({
-        query: {
-          page: currentPage.value > 1 ? currentPage.value : undefined
-        }
-      })
+      queryParams.q = searchQuery.value
     }
+
+    if (currentPage.value > 1) {
+      queryParams.page = currentPage.value
+    }
+
+    if (subjectIds.length > 0) {
+      queryParams.subject_id = subjectIds.join(',')
+    }
+
+    if (typeIds.length > 0) {
+      queryParams.type_id = typeIds.join(',')
+    }
+
+    if (yearFilter) {
+      queryParams.year = yearFilter
+    }
+
+    // Commented out - not ready yet
+    // if (licenseId) {
+    //   queryParams.license_id = licenseId
+    // }
+
+    // if (selectedAccessRight.value) {
+    //   queryParams.access_right = selectedAccessRight.value
+    // }
+
+    // Set flag to prevent watch from triggering
+    isInternalUpdate.value = true
+
+    await router.push({
+      query: queryParams
+    })
+
+    // Reset flag after navigation
+    await nextTick()
+    isInternalUpdate.value = false
   } finally {
     isSearching.value = false
   }
@@ -340,18 +452,47 @@ const applyFilters = async () => {
 
   // Reset to page 1 when applying filters
   currentPage.value = 1
+  isSearching.value = true
   await performSearch()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const formatDate = (date?: string) => {
-  if (!date) return 'N/A'
-  return new Date(date).getFullYear()
+const formatDate = (year?: number | string) => {
+  if (!year) return 'N/A'
+  if (typeof year === 'number') return year.toString()
+  return new Date(year).getFullYear().toString()
+}
+
+interface Author {
+  first_name: string
+  last_name: string
+}
+
+interface DocumentWithAuthors {
+  author?: string
+  authors?: Author[]
+}
+
+const getAuthorsDisplay = (document: DocumentWithAuthors) => {
+  if (document.authors && Array.isArray(document.authors) && document.authors.length > 0) {
+    const authorNames = document.authors.map((author: Author) => {
+      const firstName = author.first_name || ''
+      const lastName = author.last_name || ''
+      return `${firstName} ${lastName}`.trim()
+    }).filter((name: string) => name.length > 0)
+
+    if (authorNames.length === 0) return 'Unknown Author'
+    if (authorNames.length === 1) return authorNames[0]
+    if (authorNames.length === 2) return `${authorNames[0]} and ${authorNames[1]}`
+    return `${authorNames[0]} et al.`
+  }
+  return document.author || 'Unknown Author'
 }
 
 const prevPage = async () => {
   if (currentPage.value > 1) {
     currentPage.value--
+    isSearching.value = true
     await performSearch()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -360,6 +501,7 @@ const prevPage = async () => {
 const nextPage = async () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
+    isSearching.value = true
     await performSearch()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -367,6 +509,7 @@ const nextPage = async () => {
 
 const goToPage = async (page: number) => {
   currentPage.value = page
+  isSearching.value = true
   await performSearch()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -382,57 +525,236 @@ onMounted(async () => {
   }
 
   currentPage.value = page
-  searchDocuments(query || '', page)
 
-  // Fetch filters from API
+  // Fetch filters from API first
   try {
     const response = await api.filters.getAll() as {
       subjects: Array<{ id: number; subject_name: string }>
       types: Array<{ id: number; type_name: string }>
+      licenses: Array<{ id: number; license_name: string }>
+      access_rights: string[]
+      years: number[]
     }
 
     console.log('API Response:', response)
 
-    // Map subjects to label-value format and create ID map
+    // Create reverse maps (ID -> name) for advanced search params
+    const idToSubjectName = new Map<number, string>()
+    const idToTypeName = new Map<number, string>()
+    const idToLicenseName = new Map<number, string>()
+
+    // Map subjects to label-value format and create ID maps
     subjects.value = response.subjects?.map(s => {
       subjectMap.value.set(s.subject_name, s.id)
+      idToSubjectName.set(s.id, s.subject_name)
       return {
         label: s.subject_name,
         value: s.subject_name
       }
     }) || []
 
-    // Map document types to label-value format and create ID map
+    // Map document types to label-value format and create ID maps
     documentTypes.value = response.types?.map(t => {
       typeMap.value.set(t.type_name, t.id)
+      idToTypeName.set(t.id, t.type_name)
       return {
         label: t.type_name,
         value: t.type_name
       }
     }) || []
 
+    // Map licenses to label-value format and create ID maps
+    licenses.value = response.licenses?.map(l => {
+      licenseMap.value.set(l.license_name, l.id)
+      idToLicenseName.set(l.id, l.license_name)
+      return {
+        label: l.license_name,
+        value: l.license_name
+      }
+    }) || []
+
+    // Set access rights and years from API
+    accessRights.value = response.access_rights || []
+    years.value = response.years || []
+
     console.log('Loaded subjects:', subjects.value)
     console.log('Loaded document types:', documentTypes.value)
-    console.log('Subject ID map:', Object.fromEntries(subjectMap.value))
-    console.log('Type ID map:', Object.fromEntries(typeMap.value))
+    console.log('Loaded licenses:', licenses.value)
+    console.log('Loaded years:', years.value)
+
+    // Parse advanced search params (subject_id, type_id, year, etc from advanced search)
+    const subjectIdParam = route.query.subject_id as string
+    const typeIdParam = route.query.type_id as string
+    // const licenseIdParam = route.query.license_id as string     // Not ready yet
+    // const accessRightParam = route.query.access_right as string // Not ready yet
+    const yearParam = route.query.year as string
+
+    if (subjectIdParam) {
+      const subjectIds = subjectIdParam.split(',').map(id => parseInt(id))
+      selectedSubjects.value = subjectIds
+        .map(id => idToSubjectName.get(id))
+        .filter((name): name is string => name !== undefined)
+      console.log('Pre-selected subjects from URL:', selectedSubjects.value)
+    }
+
+    if (typeIdParam) {
+      const typeIds = typeIdParam.split(',').map(id => parseInt(id))
+      selectedTypes.value = typeIds
+        .map(id => idToTypeName.get(id))
+        .filter((name): name is string => name !== undefined)
+      console.log('Pre-selected types from URL:', selectedTypes.value)
+    }
+
+    // Parse license_id from URL (commented out - not ready yet)
+    // if (licenseIdParam) {
+    //   const licenseId = parseInt(licenseIdParam)
+    //   selectedLicense.value = idToLicenseName.get(licenseId) || ''
+    //   console.log('Pre-selected license from URL:', selectedLicense.value)
+    // }
+
+    // Parse access_right from URL (commented out - not ready yet)
+    // if (accessRightParam) {
+    //   selectedAccessRight.value = accessRightParam
+    //   console.log('Pre-selected access right from URL:', selectedAccessRight.value)
+    // }
+
+    // Parse year from URL
+    if (yearParam) {
+      selectedYear.value = parseInt(yearParam)
+      console.log('Pre-selected year from URL:', selectedYear.value)
+    }
+
+    // Perform initial search with current URL params
+    const subjectIds = selectedSubjects.value
+      .map(name => subjectMap.value.get(name))
+      .filter((id): id is number => id !== undefined)
+
+    const typeIds = selectedTypes.value
+      .map(name => typeMap.value.get(name))
+      .filter((id): id is number => id !== undefined)
+
+    const yearFilter = selectedYear.value && selectedYear.value !== ''
+      ? (typeof selectedYear.value === 'number' ? selectedYear.value : parseInt(selectedYear.value))
+      : undefined
+
+    // Directly call searchDocuments without updating URL (URL is already set)
+    await searchDocuments(
+      query || '',
+      page,
+      undefined,
+      subjectIds.length > 0 ? subjectIds : undefined,
+      typeIds.length > 0 ? typeIds : undefined,
+      yearFilter
+    )
   } catch (error) {
     console.error('Failed to load filters:', error)
+    // Fallback: load documents without filters
+    searchDocuments(query || '', page)
   }
 })
 
 // Watch route changes
-watch(() => route.query, (newQuery) => {
+watch(() => route.query, async (newQuery, oldQuery) => {
+  // Skip if this is an internal update (from our own router.push)
+  if (isInternalUpdate.value) {
+    return
+  }
+
   const query = newQuery.q as string
   const page = parseInt(newQuery.page as string) || 1
 
+  // Update local search state
   if (query !== localSearchQuery.value) {
     localSearchQuery.value = query || ''
     searchQuery.value = query || ''
   }
 
+  // Update page
   if (page !== currentPage.value) {
     currentPage.value = page
-    searchDocuments(query || '', page)
+  }
+
+  // Check if URL params changed (from advanced search or manual navigation)
+  const paramsChanged =
+    newQuery.q !== oldQuery?.q ||
+    newQuery.page !== oldQuery?.page ||
+    newQuery.subject_id !== oldQuery?.subject_id ||
+    newQuery.type_id !== oldQuery?.type_id ||
+    newQuery.year !== oldQuery?.year
+
+  // If params changed, perform search
+  if (paramsChanged) {
+    isSearching.value = true
+
+    try {
+      // Re-parse filters from URL
+      const subjectIdParam = newQuery.subject_id as string
+      const typeIdParam = newQuery.type_id as string
+      const yearParam = newQuery.year as string
+
+      // Create reverse maps
+      const idToSubjectName = new Map<number, string>()
+      const idToTypeName = new Map<number, string>()
+
+      subjects.value.forEach(s => {
+        const id = subjectMap.value.get(s.value)
+        if (id) idToSubjectName.set(id, s.value)
+      })
+
+      documentTypes.value.forEach(t => {
+        const id = typeMap.value.get(t.value)
+        if (id) idToTypeName.set(id, t.value)
+      })
+
+      // Update selected filters
+      if (subjectIdParam) {
+        const subjectIds = subjectIdParam.split(',').map(id => parseInt(id))
+        selectedSubjects.value = subjectIds
+          .map(id => idToSubjectName.get(id))
+          .filter((name): name is string => name !== undefined)
+      } else {
+        selectedSubjects.value = []
+      }
+
+      if (typeIdParam) {
+        const typeIds = typeIdParam.split(',').map(id => parseInt(id))
+        selectedTypes.value = typeIds
+          .map(id => idToTypeName.get(id))
+          .filter((name): name is string => name !== undefined)
+      } else {
+        selectedTypes.value = []
+      }
+
+      if (yearParam) {
+        selectedYear.value = parseInt(yearParam)
+      } else {
+        selectedYear.value = ''
+      }
+
+      // Perform search with updated params (but don't update URL again)
+      const subjectIds = selectedSubjects.value
+        .map(name => subjectMap.value.get(name))
+        .filter((id): id is number => id !== undefined)
+
+      const typeIds = selectedTypes.value
+        .map(name => typeMap.value.get(name))
+        .filter((id): id is number => id !== undefined)
+
+      const yearFilter = selectedYear.value && selectedYear.value !== ''
+        ? (typeof selectedYear.value === 'number' ? selectedYear.value : parseInt(selectedYear.value))
+        : undefined
+
+      await searchDocuments(
+        searchQuery.value,
+        currentPage.value,
+        undefined,
+        subjectIds.length > 0 ? subjectIds : undefined,
+        typeIds.length > 0 ? typeIds : undefined,
+        yearFilter
+      )
+    } finally {
+      isSearching.value = false
+    }
   }
 })
 </script>

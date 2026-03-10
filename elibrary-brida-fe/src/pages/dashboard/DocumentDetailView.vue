@@ -244,19 +244,15 @@
                 <p class="text-gray-900">{{ document.type.type_name }}</p>
               </div>
 
-              <!-- Subjects -->
-              <div v-if="document.subjects && document.subjects.length > 0" class="pt-4 border-t border-gray-200">
-                <label class="text-sm font-semibold text-gray-600 block mb-2">Subjek</label>
-                <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="subject in document.subjects"
-                    :key="subject.id"
-                    class="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full font-medium"
-                  >
-                    {{ subject.subject_name }}
-                  </span>
-                </div>
+              <!-- Subject -->
+              <div v-if="document.subject" class="pt-4 border-t border-gray-200">
+                <label class="text-sm font-semibold text-gray-600 block mb-1">Subjek</label>
+                <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full font-medium">
+                  {{ document.subject?.subject_name }}
+                </span>
               </div>
+
+
 
               <!-- Keywords -->
               <!-- <div v-if="document.keywords" class="pt-4 border-t border-gray-200">
@@ -323,17 +319,7 @@
                 </span>
               </div>
 
-              <!-- Funding -->
-              <div v-if="document.funding_program" class="pt-4 border-t border-gray-200">
-                <label class="text-sm font-semibold text-gray-600 block mb-1">Program Pendanaan</label>
-                <p class="text-gray-900">{{ document.funding_program }}</p>
-              </div>
 
-              <!-- Research Location -->
-              <div v-if="document.research_location" class="pt-4 border-t border-gray-200">
-                <label class="text-sm font-semibold text-gray-600 block mb-1">Lokasi Penelitian</label>
-                <p class="text-gray-900">{{ document.research_location }}</p>
-              </div>
             </div>
           </div>
 
@@ -463,8 +449,6 @@ interface Document {
   keywords?: string
   status: string
   access_right?: string
-  funding_program?: string
-  research_location?: string
   admin_notes?: string
   created_at: string
   updated_at?: string
@@ -473,7 +457,7 @@ interface Document {
   user?: User
   authors?: Author[]
   supervisors?: Supervisor[]
-  subjects?: Subject[]
+  subject?: Subject
   attachments?: Attachment[]
 }
 

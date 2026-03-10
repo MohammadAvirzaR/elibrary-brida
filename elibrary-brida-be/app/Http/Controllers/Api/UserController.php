@@ -205,7 +205,7 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         } catch (\Exception $e) {
-            \Log::error('User update failed for ID ' . $id, [
+            Log::error('User update failed for ID ' . $id, [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

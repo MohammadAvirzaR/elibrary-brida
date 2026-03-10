@@ -1,5 +1,21 @@
 import { ref } from 'vue'
 
+export interface Author {
+  id: number
+  first_name: string
+  last_name: string
+}
+
+export interface Subject {
+  id: number
+  subject_name: string
+}
+
+export interface DocumentType {
+  id: number
+  type_name: string
+}
+
 export interface Document {
   id: number
   title: string
@@ -10,6 +26,12 @@ export interface Document {
   file_path?: string
   category?: string
   published_date?: string
+  year_published?: number | string
+  abstract_id?: string
+  abstract_en?: string
+  subject?: Subject
+  type?: DocumentType
+  authors?: Author[]
 }
 
 export interface SearchResponse {
@@ -33,7 +55,16 @@ export function useDocumentSearch() {
   const lastPage = ref(1)
   const perPage = ref(10)
 
-  const searchDocuments = async (query: string, page: number = 1, filter?: string, subjectIds?: number[], typeIds?: number[]) => {
+  const searchDocuments = async (
+    query: string,
+    page: number = 1,
+    filter?: string,
+    subjectIds?: number[],
+    typeIds?: number[],
+    year?: number
+    // licenseId?: number,
+    // accessRight?: string
+  ) => {
     isLoading.value = true
     error.value = null
 
@@ -65,6 +96,21 @@ export function useDocumentSearch() {
           params.append('type_id[]', id.toString())
         })
       }
+
+      // Add year filter (last X years)
+      if (year) {
+        params.append('year', year.toString())
+      }
+
+      // Add license filter (commented out - not ready yet)
+      // if (licenseId) {
+      //   params.append('license_id', licenseId.toString())
+      // }
+
+      // Add access right filter (commented out - not ready yet)
+      // if (accessRight) {
+      //   params.append('access_right', accessRight)
+      // }
 
       const url = `${API_BASE_URL}/documents/search?${params.toString()}`
 

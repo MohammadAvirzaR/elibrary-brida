@@ -188,40 +188,37 @@
                       class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-neutral-600 mb-2">Sumber Pendanaan</label>
-                    <input
-                      v-model="form.funding"
-                      type="text"
-                      placeholder="Nama program/lembaga"
-                      class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-neutral-600 mb-2">Lokasi Penelitian</label>
-                  <input
-                    v-model="form.researchLocation"
-                    type="text"
-                    placeholder="Tempat penelitian dilakukan"
-                    class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
                 </div> -->
 
                 <div>
                   <label class="block text-sm font-medium text-neutral-600 mb-2">
-                    Abstrak/Deskripsi (Maks. 300 kata)
+                    Abstrak Bahasa Indonesia (Maks. 300 kata)
                   </label>
                   <textarea
                     v-model="form.description"
                     rows="4"
-                    placeholder="Jelaskan isi dokumen secara singkat"
+                    placeholder="Jelaskan isi dokumen secara singkat dalam bahasa Indonesia"
                     class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     maxlength="2000"
                   ></textarea>
                   <p class="text-xs text-neutral-500 mt-1">{{ form.description.split(' ').length }} / 300 kata</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-neutral-600 mb-2">
+                    Abstrak Bahasa Inggris (Maks. 300 kata)
+                  </label>
+                  <textarea
+                    v-model="form.translatedAbstract"
+                    rows="4"
+                    placeholder="Describe the document briefly in English"
+                    class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    maxlength="2000"
+                  ></textarea>
+                  <p class="text-xs text-neutral-500 mt-1">{{ form.translatedAbstract.split(' ').length }} / 300 words</p>
                 </div>
               </div>
             </div>
@@ -263,43 +260,26 @@
                 </div> -->
               </div>
 
-              <div v-if="form.advisor || form.funding || form.researchLocation" class="border-t border-neutral-200 pt-4 mt-4">
+              <div v-if="form.advisor" class="border-t border-neutral-200 pt-4 mt-4">
                 <p class="text-sm font-medium text-neutral-700 mb-3">Informasi Tambahan</p>
                 <div class="grid grid-cols-2 gap-4">
                   <div v-if="form.advisor">
                     <p class="text-sm font-medium text-neutral-600">Pembimbing</p>
                     <p class="text-sm text-neutral-900">{{ form.advisor }}</p>
                   </div>
-                  <div v-if="form.funding">
-                    <p class="text-sm font-medium text-neutral-600">Sumber Pendanaan</p>
-                    <p class="text-sm text-neutral-900">{{ form.funding }}</p>
-                  </div>
-                  <div v-if="form.researchLocation" class="col-span-2">
-                    <p class="text-sm font-medium text-neutral-600">Lokasi Penelitian</p>
-                    <p class="text-sm text-neutral-900">{{ form.researchLocation }}</p>
-                  </div>
                 </div>
               </div>
 
-              <div v-if="form.description" class="border-t border-neutral-200 pt-4 mt-4">
-                <div class="flex items-center justify-between mb-2">
-                  <p class="text-sm font-medium text-neutral-600">Abstrak</p>
-                  <button
-                    v-if="!form.translatedAbstract"
-                    type="button"
-                    @click="translateAbstract"
-                    :disabled="isTranslating"
-                    class="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
-                  >
-                    <i-lucide-loader-2 v-if="isTranslating" class="w-3 h-3 animate-spin" />
-                    <i-lucide-languages v-else class="w-3 h-3" />
-                    {{ isTranslating ? 'Menerjemahkan...' : 'Terjemahkan ke English' }}
-                  </button>
-                </div>
-                <p class="text-sm text-neutral-900 whitespace-pre-wrap">{{ form.description }}</p>
+              <div v-if="form.description || form.translatedAbstract" class="border-t border-neutral-200 pt-4 mt-4">
+                <p class="text-sm font-medium text-neutral-700 mb-3">Abstrak</p>
 
-                <div v-if="form.translatedAbstract" class="mt-3 pt-3 border-t border-neutral-200">
-                  <p class="text-sm font-medium text-neutral-600 mb-1">English Translation</p>
+                <div v-if="form.description" class="mb-3">
+                  <p class="text-sm font-medium text-neutral-600 mb-1">Bahasa Indonesia</p>
+                  <p class="text-sm text-neutral-900 whitespace-pre-wrap">{{ form.description }}</p>
+                </div>
+
+                <div v-if="form.translatedAbstract" class="pt-3 border-t border-neutral-200">
+                  <p class="text-sm font-medium text-neutral-600 mb-1">English</p>
                   <p class="text-sm text-neutral-900 whitespace-pre-wrap">{{ form.translatedAbstract }}</p>
                 </div>
               </div>
@@ -577,7 +557,6 @@ const attachmentInput = ref<HTMLInputElement>()
 const isDragging = ref(false)
 const isSubmitting = ref(false)
 const currentStep = ref(1)
-const isTranslating = ref(false)
 const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
 const currentUserName = ref('') // Nama user yang sedang login
 const subjects = ref<Array<{ id: number; subject_name: string }>>([])
@@ -593,8 +572,6 @@ const form = reactive({
   subject: null as number | null,
   documentType: null as number | null,
   advisor: '',
-  funding: '',
-  researchLocation: '',
   description: '',
   translatedAbstract: '',
 
@@ -618,7 +595,6 @@ const errors = reactive({
   language: '',
   author: '',
   publicationYear: '',
-  keywords: '',
   subject: '',
   documentType: '',
   description: '',
@@ -781,7 +757,6 @@ const validateStep1 = () => {
   errors.language = ''
   errors.author = ''
   errors.publicationYear = ''
-  errors.keywords = ''
   errors.subject = ''
   errors.documentType = ''
 
@@ -985,25 +960,14 @@ const previousStep = () => {
   }
 }
 
-const translateAbstract = async () => {
-  if (!form.description.trim()) {
-    toast.error('Error', 'Tidak ada teks untuk diterjemahkan')
-    return
-  }
-
-  isTranslating.value = true
-  try {
-    // Simulate API call for translation
-    // In real implementation, use translation API
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    form.translatedAbstract = `[Translated to English]\n\n${form.description}`
-    toast.success('Success', 'Abstrak berhasil diterjemahkan')
-  } catch {
-    toast.error('Error', 'Gagal menerjemahkan abstrak')
-  } finally {
-    isTranslating.value = false
-  }
-}
+// REMOVED: Auto-translate function - users now manually input both abstracts
+// const translateAbstract = async () => {
+//   if (!form.description.trim()) {
+//     toast.error('Error', 'Tidak ada teks untuk diterjemahkan')
+//     return
+//   }
+//   // ... translation logic
+// }
 
 const handleAttachmentSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -1050,35 +1014,34 @@ const submitForm = async () => {
 
     const formData = new FormData()
 
-    // Append main file FIRST (critical for Laravel file validation)
+    // Append main file FIRST
     formData.append('file', form.file, form.file.name)
-
     formData.append('title', form.title.trim())
     formData.append('year_published', form.publicationYear.toString())
-    formData.append('keywords', form.keywords.trim() || '')
     formData.append('language', form.language || 'id')
+
+    // Publisher (nama user yang upload)
+    if (form.publisher) {
+      formData.append('publisher', form.publisher)
+    }
 
     // Document Type ID
     if (form.documentType) {
       formData.append('type_id', form.documentType.toString())
     }
 
-    // Subject ID(s) - backend expects subjects[] array
+    // Subject ID (single)
     if (form.subject) {
-      formData.append('subjects[]', form.subject.toString())
+      formData.append('subject_id', form.subject.toString())
     }
+
 
     // Abstract
     if (form.description.trim()) {
       formData.append('abstract_id', form.description.trim())
     }
-
-    // Research info (optional)
-    if (form.funding.trim()) {
-      formData.append('funding_program', form.funding.trim())
-    }
-    if (form.researchLocation.trim()) {
-      formData.append('research_location', form.researchLocation.trim())
+    if (form.translatedAbstract.trim()) {
+      formData.append('abstract_en', form.translatedAbstract.trim())
     }
 
     const authorNames = form.author.trim().split(' ')
@@ -1096,7 +1059,7 @@ const submitForm = async () => {
       formData.append('supervisors[0][institution]', '')
     }
 
-    formData.append('access_right', 'open')
+    // formData.append('access_right', 'open')
     formData.append('statement_agreed', '1')
     form.attachments.forEach((file, index) => {
       if (file instanceof File) {
@@ -1128,9 +1091,7 @@ const submitForm = async () => {
         status: response.data.status,
         uploadDate: response.data.created_at,
         description: form.description,
-        year: form.publicationYear,
-        publisher: form.funding,
-        keywords: form.keywords
+        year: form.publicationYear
       }
 
       currentStep.value = 5
@@ -1197,6 +1158,7 @@ onMounted(async () => {
     if (userJson) {
       const user = JSON.parse(userJson)
       currentUserName.value = user.name || ''
+      form.publisher = user.name || '' // Set publisher sama dengan nama user yang login
     }
   } catch (error) {
     console.error('Failed to load user data:', error)

@@ -3,7 +3,9 @@
     <div class="container mx-auto flex justify-between items-center py-3 md:py-3.5 px-4 md:px-6">
       <!-- Logo -->
       <div class="flex items-center gap-3 md:gap-10 flex-shrink-0">
-        <img src="@/assets/brin-logo-trans.png" alt="Logo BRIN" class="h-12 md:h-16" />
+        <router-link to="/">
+          <img src="@/assets/brin-logo-trans.png" alt="Logo BRIN" class="h-12 md:h-16" />
+        </router-link>
 
         <!-- Search bar - Desktop Only -->
         <div class="relative hidden lg:block">

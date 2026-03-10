@@ -20,6 +20,9 @@ class DocumentController extends Controller
     {
         $query = Document::query();
 
+        // Eager load relationships
+        $query->with(['type', 'subject', 'authors', 'license']);
+
         // Only show approved documents on public search/landing page
         $query->where('status', 'approved');
 
@@ -27,7 +30,6 @@ class DocumentController extends Controller
             $search = $request->input('q') ?: $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                ->orWhere('keywords', 'like', "%$search%")
                 ->orWhere('abstract_id', 'like', "%$search%")
                 ->orWhere('abstract_en', 'like', "%$search%");
             });
@@ -47,10 +49,14 @@ class DocumentController extends Controller
         }
 
         if ($request->filled('subject_id')) {
-            $query->whereHas('subjects', function ($q) use ($request) {
-                $q->whereIn('subjects.id', (array) $request->subject_id);
-            });
+            $query->whereIn('subject_id', (array) $request->subject_id);
         }
+
+        // Filter by license (commented out - not ready yet)
+        // if ($request->filled('license_id')) {
+        //     $query->where('license_id', $request->license_id);
+        // }
+
         return response()->json($query->paginate(10));
 
 
@@ -100,7 +106,7 @@ class DocumentController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
 
-            'subjects' => 'array',
+            'subject_id' => 'nullable|exists:subjects,id',
             'access_right' => ['required', Rule::in(['public','internal','embargo'])],
 
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
@@ -149,11 +155,7 @@ class DocumentController extends Controller
 
             'abstract_id' => 'nullable|string',
             'abstract_en' => 'nullable|string',
-
-            'funding_program' => 'nullable|string',
-            'research_location' => 'nullable|string',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+            'publisher' => 'nullable|string|max:255',
 
             'license_id' => 'nullable|exists:licenses,id',
 
@@ -173,8 +175,7 @@ class DocumentController extends Controller
             'supervisors' => 'nullable|array',
             'supervisors.*.name' => 'nullable|string',
 
-            'subjects' => 'nullable|array',
-            'subjects.*' => 'exists:subjects,id',
+            'subject_id' => 'nullable|exists:subjects,id',
 
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:20000',
@@ -188,12 +189,14 @@ class DocumentController extends Controller
             'year_published' => $request->year_published,
             'type_id' => $request->type_id,
             'unit_id' => $request->unit_id,
+            'subject_id' => $request->subject_id,
             'language' => $request->language,
             'email' => $request->email,
             'keywords' => $request->keywords,
 
             'abstract_id' => $request->abstract_id,
             'abstract_en' => $request->abstract_en,
+            'publisher' => $request->publisher,
 
             'file_path' => $mainPath,
             'upload_date' => now(),
@@ -201,11 +204,6 @@ class DocumentController extends Controller
             'license_id' => $request->license_id,
             'access_right' => $request->access_right,
             'embargo_until' => $request->embargo_until,
-
-            'funding_program' => $request->funding_program,
-            'research_location' => $request->research_location,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
 
             'statement_agreed' => $request->has('statement_agreed') ? true : false,
 
@@ -227,10 +225,6 @@ class DocumentController extends Controller
             foreach ($request->supervisors as $s) {
                 $document->supervisors()->create($s);
             }
-        }
-
-        if ($request->subjects) {
-            $document->subjects()->sync($request->subjects);
         }
 
         if ($request->attachments) {
@@ -262,7 +256,7 @@ class DocumentController extends Controller
     {
         return response()->json([
             'success' => true,
-            'documents' => Document::with(['authors', 'supervisors', 'subjects'])
+            'documents' => Document::with(['authors', 'supervisors', 'subject'])
                 ->where('user_id', auth('sanctum')->id())
                 ->orderBy('upload_date', 'desc')
                 ->get()
@@ -428,7 +422,7 @@ class DocumentController extends Controller
                 'license',
                 'authors',
                 'supervisors',
-                'subjects',
+                'subject',
                 'attachments'
             ])->findOrFail($id);
 
@@ -592,15 +586,37 @@ class DocumentController extends Controller
                 }
             }
 
-            if (!$document->file_path || !Storage::exists($document->file_path)) {
+            if (!$document->file_path) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File tidak ditemukan'
                 ], 404);
             }
 
-            $filePath = Storage::path($document->file_path);
-            $mimeType = Storage::mimeType($document->file_path);
+            // Try to find file in different disks (for backward compatibility)
+            $disk = 'local'; // default: storage/app/private
+            $filePath = null;
+            $mimeType = null;
+
+            // First try the default 'local' disk (private storage)
+            if (Storage::disk('local')->exists($document->file_path)) {
+                $disk = 'local';
+                $filePath = Storage::disk('local')->path($document->file_path);
+                $mimeType = mime_content_type($filePath);
+            }
+            // Fallback to 'public' disk for old documents
+            elseif (Storage::disk('public')->exists($document->file_path)) {
+                $disk = 'public';
+                $filePath = Storage::disk('public')->path($document->file_path);
+                $mimeType = mime_content_type($filePath);
+            }
+
+            if (!$filePath) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan di storage'
+                ], 404);
+            }
 
             return response()->file($filePath, [
                 'Content-Type' => $mimeType,
@@ -660,15 +676,37 @@ class DocumentController extends Controller
                 }
             }
 
-            if (!$attachment->file_path || !Storage::exists($attachment->file_path)) {
+            if (!$attachment->file_path) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File tidak ditemukan'
                 ], 404);
             }
 
-            $filePath = Storage::path($attachment->file_path);
-            $mimeType = Storage::mimeType($attachment->file_path);
+            // Try to find file in different disks (for backward compatibility)
+            $disk = 'local'; // default: storage/app/private
+            $filePath = null;
+            $mimeType = null;
+
+            // First try the default 'local' disk (private storage)
+            if (Storage::disk('local')->exists($attachment->file_path)) {
+                $disk = 'local';
+                $filePath = Storage::disk('local')->path($attachment->file_path);
+                $mimeType = mime_content_type($filePath);
+            }
+            // Fallback to 'public' disk for old attachments
+            elseif (Storage::disk('public')->exists($attachment->file_path)) {
+                $disk = 'public';
+                $filePath = Storage::disk('public')->path($attachment->file_path);
+                $mimeType = mime_content_type($filePath);
+            }
+
+            if (!$filePath) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan di storage'
+                ], 404);
+            }
 
             return response()->file($filePath, [
                 'Content-Type' => $mimeType,

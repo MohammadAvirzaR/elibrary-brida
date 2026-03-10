@@ -1,6 +1,6 @@
 <template>
   <section
-    class="flex flex-col items-center justify-center gap-8 w-full max-w-2xl mx-auto text-center px-6 min-h-[90vh]"
+    class="flex flex-col items-center justify-center gap-8 w-full max-w-2xl mx-auto text-center px-6 min-h-[100vh]"
   >
     <div class="space-y-3">
       <h2 class="text-4xl md:text-5xl font-heading font-bold text-neutral-900 tracking-tight">
@@ -75,7 +75,7 @@ interface SearchFilters {
   accessRight: string
   subjects: string[]
   types: string[]
-  years: string[]
+  year: number | null
 }
 
 const router = useRouter()
