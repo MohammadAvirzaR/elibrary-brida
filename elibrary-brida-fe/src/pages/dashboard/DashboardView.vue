@@ -1274,20 +1274,85 @@ const toggleSelectAllHistory = (e: Event) => {
   selectedHistory.value = checked ? histories.value.map(item => item.id) : []
 }
 
-const deleteItem = (id: number) => {
+const deleteItem = async (id: number) => {
   const item = histories.value.find(h => h.id === id)
-  histories.value = histories.value.filter(h => h.id !== id)
-  if (item) {
-    toast.info('Data Berhasil Dihapus', `"${item.title}" telah dihapus dari history`)
+
+  if (!item) {
+    return
+  }
+
+  if (!confirm(`Apakah Anda yakin ingin menghapus dokumen "${item.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+    return
+  }
+
+  try {
+    const response = await api.documents.delete(id) as { success: boolean; message?: string }
+
+    if (response.success) {
+      histories.value = histories.value.filter(h => h.id !== id)
+      toast.success('Dokumen Berhasil Dihapus', `"${item.title}" telah dihapus secara permanen`)
+    } else {
+      throw new Error(response.message || 'Gagal menghapus dokumen')
+    }
+  } catch (error) {
+    console.error('Error deleting document:', error)
+
+    let errorMessage = 'Gagal menghapus dokumen. Silakan coba lagi.'
+    if (error instanceof Error) {
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        errorMessage = 'Anda tidak memiliki izin untuk menghapus dokumen ini.'
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Dokumen tidak ditemukan.'
+      } else if (error.message.includes('401') || error.message.includes('Unauthenticated')) {
+        errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.'
+      } else {
+        errorMessage = `Gagal menghapus dokumen: ${error.message}`
+      }
+    }
+
+    toast.error('Gagal Menghapus', errorMessage)
   }
 }
 
-const deleteSelected = () => {
+const deleteSelected = async () => {
   const count = selectedHistory.value.length
-  selectedHistory.value.forEach(id => deleteItem(id))
+
+  if (count === 0) {
+    return
+  }
+
+  if (!confirm(`Apakah Anda yakin ingin menghapus ${count} dokumen?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+    return
+  }
+
+  let successCount = 0
+  let failCount = 0
+
+  for (const id of selectedHistory.value) {
+    try {
+      const response = await api.documents.delete(id) as { success: boolean; message?: string }
+      if (response.success) {
+        successCount++
+      } else {
+        failCount++
+      }
+    } catch (error) {
+      console.error(`Error deleting document ${id}:`, error)
+      failCount++
+    }
+  }
+
+  // Reload histories to ensure sync with server
+  await loadHistory()
+
   selectedHistory.value = []
-  if (count > 0) {
-    toast.info('Data Berhasil Dihapus', `${count} dokumen telah dihapus dari history`)
+
+  if (successCount > 0 && failCount === 0) {
+    toast.success('Berhasil Dihapus', `${successCount} dokumen berhasil dihapus`)
+  } else if (successCount > 0 && failCount > 0) {
+    toast.warning('Sebagian Berhasil', `${successCount} dokumen berhasil dihapus, ${failCount} gagal`)
+  } else {
+    toast.error('Gagal Menghapus', `Semua dokumen gagal dihapus`)
   }
 }
 </script>
