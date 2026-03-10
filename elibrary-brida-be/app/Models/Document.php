@@ -21,7 +21,7 @@ class Document extends Model
         'unit_id',
         'language',
         'email',
-        'subject',
+        'subject_id',
         'file_path',
         'thumbnail_path',
         'license_id',
@@ -31,8 +31,6 @@ class Document extends Model
         'abstract_en',
         'translated_abstract',
         'advisor',
-        'latitude',
-        'longitude',
         'embargo_until',
         'statement_agreed',
         'upload_date',
@@ -85,8 +83,13 @@ class Document extends Model
         return $this->hasMany(DocumentAttachment::class);
     }
 
-    public function subjects()
+    public function reviews()
     {
-        return $this->belongsToMany(Subject::class, 'document_subject');
+        return $this->hasMany(Review::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
     }
 }
