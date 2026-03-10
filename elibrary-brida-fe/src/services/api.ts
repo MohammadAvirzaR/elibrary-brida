@@ -140,6 +140,17 @@ export const api = {
 
     review: () => apiCall('/documents/review', { method: 'GET' }, true),
 
+    getReviewHistory: () => apiCall('/documents/review-history', { method: 'GET' }, true),
+
+    approve: (id: number) =>
+      apiCall(`/admin/documents/${id}/approve`, { method: 'POST' }, true),
+
+    reject: (id: number, note?: string) =>
+      apiCall(`/admin/documents/${id}/reject`, { 
+        method: 'POST', 
+        body: JSON.stringify({ note: note || null })
+      }, true),
+
     upload: async (data: FormData) => {
       const token = getAuthToken()
 

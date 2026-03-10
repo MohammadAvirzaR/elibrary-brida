@@ -548,7 +548,7 @@ const approveDocument = async () => {
     isProcessing.value = true
     const documentId = document.value.id
 
-    await api.documents.update(documentId, { status: 'approved' })
+    await api.documents.approve(documentId)
 
     toast.success('Dokumen Disetujui', 'Dokumen berhasil disetujui dan dipublikasikan')
 
@@ -575,16 +575,12 @@ const rejectDocument = async () => {
     isProcessing.value = true
     const documentId = document.value.id
 
-    await api.documents.update(documentId, {
-      status: 'rejected',
-      admin_notes: rejectReason.value
-    })
+    await api.documents.reject(documentId, rejectReason.value)
 
     toast.warning('Dokumen Ditolak', 'Dokumen telah ditolak dengan alasan yang diberikan')
 
     showRejectModal.value = false
     rejectReason.value = ''
-
 
     await loadDocument()
   } catch (err) {

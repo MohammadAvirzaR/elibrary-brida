@@ -1000,25 +1000,20 @@ const histories = ref<HistoryItem[]>([])
 
 const loadHistory = async () => {
   try {
-    const response = await api.documents.getAll() as { success: boolean; data: DocumentResponse[] }
-    if (response.success && response.data) {
+    const response = await api.documents.getReviewHistory() as { success: boolean; data: HistoryItem[] }
+    console.log('loadHistory response:', response)
+    if (response.success && response.data !== undefined && response.data !== null) {
+      // Only update if we got valid data back (even if empty array)
       histories.value = response.data
-        .filter(doc => doc.status === 'approved' || doc.status === 'rejected')
-        .map((doc) => ({
-          id: doc.id,
-          name: doc.user?.name || 'Unknown',
-          email: doc.user?.email || '',
-          title: doc.title,
-          status: doc.status === 'approved' ? 'Accepted' as const : 'Rejected' as const,
-          lastUpdate: {
-            date: new Date(doc.updated_at || doc.created_at).toLocaleDateString('id-ID'),
-            time: new Date(doc.updated_at || doc.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
-          }
-        }))
+      console.log('History loaded:', histories.value.length, 'items')
+    } else {
+      console.error('loadHistory error: response not successful', response)
+      // Don't clear histories if response failed - keep existing data
     }
   } catch (error) {
     console.error('Gagal memuat riwayat:', error)
-    histories.value = []
+    toast.error('Gagal Memuat History', 'Error loading review history')
+    // Don't clear histories if error - keep existing data
   }
 }
 
@@ -1210,7 +1205,7 @@ const toggleSelectAllQueue = (e: Event) => {
 
 const approveItem = async (id: number) => {
   try {
-    await api.documents.update(id, { status: 'approved' })
+    await api.documents.approve(id)
     const item = queueReviews.value.find(q => q.id === id)
     if (item) {
       histories.value.unshift({
@@ -1220,6 +1215,8 @@ const approveItem = async (id: number) => {
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
       toast.success('Dokumen Disetujui', `"${item.title}" telah disetujui`)
+      // Reload history to sync with backend
+      await loadHistory()
     }
   } catch (error) {
     console.error('Gagal menyetujui dokumen:', error)
@@ -1229,8 +1226,9 @@ const approveItem = async (id: number) => {
 
 const rejectItem = async (id: number) => {
   try {
-    await api.documents.update(id, { status: 'rejected' })
     const item = queueReviews.value.find(q => q.id === id)
+    const note = item ? `Dokumen ${item.title} ditolak` : ''
+    await api.documents.reject(id, note)
     if (item) {
       histories.value.unshift({
         ...item,
@@ -1239,6 +1237,8 @@ const rejectItem = async (id: number) => {
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
       toast.warning('Dokumen Ditolak', `"${item.title}" telah ditolak`)
+      // Reload history to sync with backend
+      await loadHistory()
     }
   } catch (error) {
     console.error('Gagal menolak dokumen:', error)
@@ -1274,18 +1274,35 @@ const toggleSelectAllHistory = (e: Event) => {
   selectedHistory.value = checked ? histories.value.map(item => item.id) : []
 }
 
-const deleteItem = (id: number) => {
+const deleteItem = async (id: number) => {
   const item = histories.value.find(h => h.id === id)
-  histories.value = histories.value.filter(h => h.id !== id)
-  if (item) {
+  if (!item) {
+    console.error('Item not found:', id)
+    return
+  }
+
+  try {
+    console.log('Deleting review with id:', id, 'Document:', item.title)
+    await api.documents.delete(id)
+    
+    // Only remove from UI after successful delete
+    histories.value = histories.value.filter(h => h.id !== id)
     toast.info('Data Berhasil Dihapus', `"${item.title}" telah dihapus dari history`)
+    console.log('Successfully deleted. Remaining items:', histories.value.length)
+  } catch (error) {
+    console.error('Gagal menghapus dokumen:', error)
+    toast.error('Gagal Menghapus Data', 'Terjadi kesalahan saat menghapus dokumen')
   }
 }
 
-const deleteSelected = () => {
+const deleteSelected = async () => {
   const count = selectedHistory.value.length
-  selectedHistory.value.forEach(id => deleteItem(id))
+  const idsTodelete = [...selectedHistory.value]
   selectedHistory.value = []
+  
+  // Execute all deletes in parallel
+  await Promise.all(idsTodelete.map(id => deleteItem(id)))
+  
   if (count > 0) {
     toast.info('Data Berhasil Dihapus', `${count} dokumen telah dihapus dari history`)
   }

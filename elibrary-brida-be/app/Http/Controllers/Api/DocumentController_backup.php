@@ -543,7 +543,6 @@ class DocumentController extends Controller
         $document->authors()->delete();
         $document->supervisors()->delete();
         $document->attachments()->delete();
-        $document->subjects()->detach();
 
         $document->delete();
 
