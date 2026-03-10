@@ -387,7 +387,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
-                  <tr v-for="(item, index) in filteredQueueReviews" :key="item.id" class="hover:bg-blue-50 transition-colors">
+                  <tr v-for="(item, index) in paginatedQueueReviews" :key="item.id" class="hover:bg-blue-50 transition-colors">
                     <td class="px-6 py-4">
                       <input
                         type="checkbox"
@@ -396,7 +396,7 @@
                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ index + 1 }}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ (queueCurrentPage - 1) * queueRowsPerPage + index + 1 }}</td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
@@ -457,13 +457,15 @@
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50">
               <div class="text-xs sm:text-sm text-gray-600">
-                1-{{ Math.min(queueRowsPerPage, queueReviews.length) }} of {{ queueReviews.length }}
+                <span v-if="filteredQueueReviews.length > 0">{{ queueStartIndex }}-{{ queueEndIndex }} of {{ filteredQueueReviews.length }}</span>
+                <span v-else>No items</span>
               </div>
               <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2">
                   <span class="text-xs sm:text-sm text-gray-600">Rows:</span>
                   <select
                     v-model="queueRowsPerPage"
+                    @change="queueCurrentPage = 1"
                     class="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option :value="5">5</option>
@@ -472,11 +474,19 @@
                   </select>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
+                  <button
+                    @click="queuePrevPage"
+                    :disabled="queueCurrentPage === 1"
+                    class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
                     <i-lucide-chevron-left class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <span class="text-xs sm:text-sm text-gray-600">1/{{ Math.ceil(queueReviews.length / queueRowsPerPage) }}</span>
-                  <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
+                  <span class="text-xs sm:text-sm text-gray-600">{{ queueCurrentPage }}/{{ queueTotalPages || 1 }}</span>
+                  <button
+                    @click="queueNextPage"
+                    :disabled="queueCurrentPage >= queueTotalPages"
+                    class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
                     <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
@@ -552,7 +562,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
-                  <tr v-for="(item, index) in filteredHistories" :key="item.id" class="hover:bg-gray-50 transition-colors">
+                  <tr v-for="(item, index) in paginatedHistories" :key="item.id" class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4">
                       <input
                         type="checkbox"
@@ -561,7 +571,7 @@
                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ index + 1 }}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ (historyCurrentPage - 1) * historyRowsPerPage + index + 1 }}</td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white font-semibold text-sm">
@@ -621,13 +631,15 @@
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50">
               <div class="text-xs sm:text-sm text-gray-600">
-                1-{{ Math.min(historyRowsPerPage, histories.length) }} of {{ histories.length }}
+                <span v-if="filteredHistories.length > 0">{{ historyStartIndex }}-{{ historyEndIndex }} of {{ filteredHistories.length }}</span>
+                <span v-else>No items</span>
               </div>
               <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2">
                   <span class="text-xs sm:text-sm text-gray-600">Rows:</span>
                   <select
                     v-model="historyRowsPerPage"
+                    @change="historyCurrentPage = 1"
                     class="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option :value="5">5</option>
@@ -636,11 +648,19 @@
                   </select>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
+                  <button
+                    @click="historyPrevPage"
+                    :disabled="historyCurrentPage === 1"
+                    class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
                     <i-lucide-chevron-left class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <span class="text-xs sm:text-sm text-gray-600">1/{{ Math.ceil(histories.length / historyRowsPerPage) }}</span>
-                  <button class="p-1 hover:bg-gray-200 rounded disabled:opacity-50">
+                  <span class="text-xs sm:text-sm text-gray-600">{{ historyCurrentPage }}/{{ historyTotalPages || 1 }}</span>
+                  <button
+                    @click="historyNextPage"
+                    :disabled="historyCurrentPage >= historyTotalPages"
+                    class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
                     <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
@@ -654,7 +674,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
@@ -840,6 +860,7 @@ const institutionChartSeries = ref([{
 const selectedQueue = ref<number[]>([])
 const queueSearchQuery = ref('')
 const queueRowsPerPage = ref(5)
+const queueCurrentPage = ref(1)
 
 interface QueueItem {
   id: number
@@ -914,9 +935,41 @@ const filteredQueueReviews = computed(() => {
   )
 })
 
+const paginatedQueueReviews = computed(() => {
+  const start = (queueCurrentPage.value - 1) * queueRowsPerPage.value
+  const end = start + queueRowsPerPage.value
+  return filteredQueueReviews.value.slice(start, end)
+})
+
+const queueTotalPages = computed(() => {
+  return Math.ceil(filteredQueueReviews.value.length / queueRowsPerPage.value)
+})
+
+const queueStartIndex = computed(() => {
+  return (queueCurrentPage.value - 1) * queueRowsPerPage.value + 1
+})
+
+const queueEndIndex = computed(() => {
+  return Math.min(queueCurrentPage.value * queueRowsPerPage.value, filteredQueueReviews.value.length)
+})
+
+const queuePrevPage = () => {
+  if (queueCurrentPage.value > 1) {
+    queueCurrentPage.value--
+  }
+}
+
+const queueNextPage = () => {
+  if (queueCurrentPage.value < queueTotalPages.value) {
+    queueCurrentPage.value++
+  }
+}
+
 const selectedHistory = ref<number[]>([])
 const historySearchQuery = ref('')
 const historyRowsPerPage = ref(5)
+const historyCurrentPage = ref(1)
+
 
 interface HistoryItem {
   id: number
@@ -1043,8 +1096,47 @@ const filteredHistories = computed(() => {
   )
 })
 
+const paginatedHistories = computed(() => {
+  const start = (historyCurrentPage.value - 1) * historyRowsPerPage.value
+  const end = start + historyRowsPerPage.value
+  return filteredHistories.value.slice(start, end)
+})
+
+const historyTotalPages = computed(() => {
+  return Math.ceil(filteredHistories.value.length / historyRowsPerPage.value)
+})
+
+const historyStartIndex = computed(() => {
+  return (historyCurrentPage.value - 1) * historyRowsPerPage.value + 1
+})
+
+const historyEndIndex = computed(() => {
+  return Math.min(historyCurrentPage.value * historyRowsPerPage.value, filteredHistories.value.length)
+})
+
+const historyPrevPage = () => {
+  if (historyCurrentPage.value > 1) {
+    historyCurrentPage.value--
+  }
+}
+
+const historyNextPage = () => {
+  if (historyCurrentPage.value < historyTotalPages.value) {
+    historyCurrentPage.value++
+  }
+}
+
 // Auto refresh data
 let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+// Reset page when search query changes
+watch(queueSearchQuery, () => {
+  queueCurrentPage.value = 1
+})
+
+watch(historySearchQuery, () => {
+  historyCurrentPage.value = 1
+})
 
 // Functions
 onMounted(() => {

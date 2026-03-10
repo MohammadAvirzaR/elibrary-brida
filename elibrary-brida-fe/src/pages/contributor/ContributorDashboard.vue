@@ -686,6 +686,8 @@ const deleteDocument = async (doc: UploadedDocument) => {
   }
 
   try {
+    console.log(`Attempting to delete document ${doc.id}: ${doc.title}`)
+
     const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
     if (docElement) {
       docElement.classList.add('opacity-50', 'pointer-events-none')
@@ -693,11 +695,14 @@ const deleteDocument = async (doc: UploadedDocument) => {
 
     const response = await api.documents.delete(doc.id) as { success: boolean; message?: string }
 
+    console.log('Delete response:', response)
+
     if (response.success) {
+      // Remove from local array first for immediate UI feedback
       documents.value = documents.value.filter(d => d.id !== doc.id)
 
-      loadStats()
-      loadRecentActivities()
+      // Reload documents from server to ensure sync
+      await loadDocuments()
 
       alert('Dokumen berhasil dihapus')
     } else {
@@ -708,26 +713,35 @@ const deleteDocument = async (doc: UploadedDocument) => {
 
     let errorMessage = 'Gagal menghapus dokumen. Silakan coba lagi.'
     if (error instanceof Error) {
+      console.error('Error details:', error.message)
+
       if (error.message.includes('403') || error.message.includes('Forbidden')) {
         errorMessage = 'Anda tidak memiliki izin untuk menghapus dokumen ini.'
       } else if (error.message.includes('404')) {
         errorMessage = 'Dokumen tidak ditemukan.'
-      } else if (error.message.includes('401')) {
+      } else if (error.message.includes('401') || error.message.includes('Unauthenticated')) {
         errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.'
         setTimeout(() => {
           localStorage.removeItem('auth_token')
           localStorage.removeItem('user')
           router.push('/login')
         }, 2000)
+      } else {
+        // Include actual error message for debugging
+        errorMessage = `Gagal menghapus dokumen: ${error.message}`
       }
     }
 
     alert(errorMessage)
 
+    // Restore UI state on error
     const docElement = document.querySelector(`[data-doc-id="${doc.id}"]`)
     if (docElement) {
       docElement.classList.remove('opacity-50', 'pointer-events-none')
     }
+
+    // Reload documents to ensure UI is in sync with server
+    await loadDocuments()
   }
 }
 

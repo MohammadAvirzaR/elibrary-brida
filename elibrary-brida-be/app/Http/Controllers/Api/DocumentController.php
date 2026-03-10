@@ -519,32 +519,96 @@ class DocumentController extends Controller
 
     public function destroy($id)
     {
-        $document = Document::findOrFail($id);
+        try {
+            $document = Document::with(['attachments'])->findOrFail($id);
 
-        $user = auth('sanctum')->user();
-        if ($user->role->name === 'contributor' && $document->user_id !== $user->id) {
+            $user = auth('sanctum')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            // Load user with role relationship
+            $user = User::with('role')->find($user->id);
+
+            if (!$user || !$user->role) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User role not found'
+                ], 403);
+            }
+
+            // Check permission for contributors
+            if ($user->role->name === 'contributor' && $document->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
+                ], 403);
+            }
+
+            Log::info("Starting delete process for document {$id} by user {$user->id} (role: {$user->role->name})");
+
+            // Delete main document file with multi-disk fallback
+            if ($document->file_path) {
+                // Try 'local' disk first (new documents)
+                if (Storage::disk('local')->exists($document->file_path)) {
+                    Storage::disk('local')->delete($document->file_path);
+                    Log::info("Deleted main file from local disk: {$document->file_path}");
+                }
+                // Fallback to 'public' disk (old documents)
+                elseif (Storage::disk('public')->exists($document->file_path)) {
+                    Storage::disk('public')->delete($document->file_path);
+                    Log::info("Deleted main file from public disk: {$document->file_path}");
+                } else {
+                    Log::warning("Main file not found in any disk: {$document->file_path}");
+                }
+            }
+
+            // Delete attachment files before deleting records
+            foreach ($document->attachments as $attachment) {
+                if ($attachment->file_path) {
+                    // Try 'local' disk first
+                    if (Storage::disk('local')->exists($attachment->file_path)) {
+                        Storage::disk('local')->delete($attachment->file_path);
+                        Log::info("Deleted attachment from local disk: {$attachment->file_path}");
+                    }
+                    // Fallback to 'public' disk
+                    elseif (Storage::disk('public')->exists($attachment->file_path)) {
+                        Storage::disk('public')->delete($attachment->file_path);
+                        Log::info("Deleted attachment from public disk: {$attachment->file_path}");
+                    } else {
+                        Log::warning("Attachment file not found in any disk: {$attachment->file_path}");
+                    }
+                }
+            }
+
+            // Delete related database records
+            $document->authors()->delete();
+            $document->supervisors()->delete();
+            $document->attachments()->delete();
+            $document->subjects()->detach();
+
+            // Delete the document itself
+            $document->delete();
+
+            Log::info("Document {$id} successfully deleted by user {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error deleting document {$id}: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
-            ], 403);
+                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
+            ], 500);
         }
-
-        if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
-        }
-
-        // Delete related data
-        $document->authors()->delete();
-        $document->supervisors()->delete();
-        $document->attachments()->delete();
-        $document->subjects()->detach();
-
-        $document->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Dokumen berhasil dihapus'
-        ]);
     }
 
 
