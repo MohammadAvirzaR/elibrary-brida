@@ -34,7 +34,7 @@
                   type="text"
 
                   @keyup.enter="scrollToCatalog"
-                  placeholder="Hinted search text"
+                  placeholder="Cari dokumen"
                   class="w-full px-4 py-3 bg-white rounded-lg focus:outline-none   focus:border-transparent text-neutral-950 placeholder-neutral-400 shadow-sm border border-neutral-200  focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 />
                 <i-lucide-search class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-950" />
@@ -245,6 +245,23 @@ const closeModal = () => {
 }
 
 const performSearch = () => {
+  // Check if any filter is filled
+  const hasFilters = !!(
+    searchQuery.value.trim() ||
+    selectedSubjects.value.length > 0 ||
+    selectedTypes.value.length > 0 ||
+    selectedYear.value !== null
+  )
+
+  // If no filters, just go to catalog page without any params
+  if (!hasFilters) {
+    router.push({
+      name: 'catalog'
+    })
+    closeModal()
+    return
+  }
+
   // Get selected subject IDs
   const subjectIds = selectedSubjects.value
     .map(name => subjectMap.value.get(name))
