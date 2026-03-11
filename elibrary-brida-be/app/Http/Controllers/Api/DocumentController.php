@@ -318,15 +318,15 @@ class DocumentController extends Controller
     {
         try {
             Log::info("getReviewHistory called");
-            
+
             // First check total review count
             $totalReviews = Review::count();
             Log::info("Total reviews in database: {$totalReviews}");
-            
+
             // Get all reviews (before filtering)
             $allReviews = Review::with(['document', 'document.user', 'user'])->get();
             Log::info("Reviews with joined data: " . count($allReviews));
-            
+
             // Now apply whereHas filter
             $reviews = Review::with(['document', 'document.user', 'user'])
                 ->whereHas('document') // Only include reviews for documents that still exist
@@ -334,7 +334,7 @@ class DocumentController extends Controller
                 ->get();
 
             Log::info("getReviewHistory: Found " . count($reviews) . " reviews after filtering");
-            
+
             // Log each review
             foreach ($reviews as $review) {
                 Log::info("Review ID: {$review->id}, Doc ID: {$review->document_id}, Status: {$review->status_review}, Date: {$review->review_date}");
@@ -360,7 +360,7 @@ class DocumentController extends Controller
 
             $result = $mappedReviews->values()->all();
             Log::info("Final result count: " . count($result));
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $result
@@ -571,7 +571,22 @@ class DocumentController extends Controller
             unset($validated['year']);
         }
 
+        $oldStatus = $document->status;
         $document->update($validated);
+
+        // Otomatis buat/update review record jika status berubah ke approved/rejected
+        if (isset($validated['status']) && in_array($validated['status'], ['approved', 'rejected']) && $oldStatus !== $validated['status']) {
+            $user = auth('sanctum')->user();
+            Review::updateOrCreate(
+                ['document_id' => $document->id],
+                [
+                    'user_id' => $user?->id,
+                    'status_review' => $validated['status'],
+                    'comment' => $request->admin_notes ?? null,
+                    'review_date' => now(),
+                ]
+            );
+        }
 
         return response()->json([
             'success' => true,
@@ -594,7 +609,7 @@ class DocumentController extends Controller
 
             // Check if ID refers to a review (history delete) or document (document delete)
             $review = Review::find($id);
-            
+
             if ($review) {
                 // Case 1: Delete review record (history delete)
                 $documentTitle = $review->document?->title ?? 'Unknown Document';
@@ -609,7 +624,7 @@ class DocumentController extends Controller
             } else {
                 // Case 2: Delete document (contributor deleting their own document)
                 $document = Document::findOrFail($id);
-                
+
                 // Authorization: only contributor who uploaded or admin can delete
                 if ($user->id !== $document->user_id && !in_array($user->role, ['admin', 'super_admin'])) {
                     return response()->json([

@@ -562,6 +562,19 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
+                  <tr v-if="isHistoryLoading">
+                    <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500">
+                      <div class="flex items-center justify-center gap-2">
+                        <i-lucide-loader-2 class="w-5 h-5 animate-spin" />
+                        Memuat data...
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-else-if="paginatedHistories.length === 0">
+                    <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500">
+                      Tidak ada riwayat review
+                    </td>
+                  </tr>
                   <tr v-for="(item, index) in paginatedHistories" :key="item.id" class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4">
                       <input
@@ -1017,6 +1030,7 @@ const historyCurrentPage = ref(1)
 
 interface HistoryItem {
   id: number
+  document_id: number
   name: string
   email: string
   title: string
@@ -1041,23 +1055,24 @@ interface DocumentResponse {
 }
 
 const histories = ref<HistoryItem[]>([])
+const isHistoryLoading = ref(false)
 
 const loadHistory = async () => {
+  isHistoryLoading.value = true
   try {
     const response = await api.documents.getReviewHistory() as { success: boolean; data: HistoryItem[] }
     console.log('loadHistory response:', response)
     if (response.success && response.data !== undefined && response.data !== null) {
-      // Only update if we got valid data back (even if empty array)
       histories.value = response.data
       console.log('History loaded:', histories.value.length, 'items')
     } else {
       console.error('loadHistory error: response not successful', response)
-      // Don't clear histories if response failed - keep existing data
     }
   } catch (error) {
     console.error('Gagal memuat riwayat:', error)
     toast.error('Gagal Memuat History', 'Error loading review history')
-    // Don't clear histories if error - keep existing data
+  } finally {
+    isHistoryLoading.value = false
   }
 }
 
@@ -1252,14 +1267,9 @@ const approveItem = async (id: number) => {
     await api.documents.approve(id)
     const item = queueReviews.value.find(q => q.id === id)
     if (item) {
-      histories.value.unshift({
-        ...item,
-        status: 'Accepted'
-      })
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
       toast.success('Dokumen Disetujui', `"${item.title}" telah disetujui`)
-      // Reload history to sync with backend
       await loadHistory()
     }
   } catch (error) {
@@ -1274,14 +1284,9 @@ const rejectItem = async (id: number) => {
     const note = item ? `Dokumen ${item.title} ditolak` : ''
     await api.documents.reject(id, note)
     if (item) {
-      histories.value.unshift({
-        ...item,
-        status: 'Rejected'
-      })
       queueReviews.value = queueReviews.value.filter(q => q.id !== id)
       queueCount.value--
       toast.warning('Dokumen Ditolak', `"${item.title}" telah ditolak`)
-      // Reload history to sync with backend
       await loadHistory()
     }
   } catch (error) {
@@ -1326,7 +1331,7 @@ const deleteItem = async (id: number) => {
   }
 
   try {
-    const response = await api.documents.delete(id) as { success: boolean; message?: string }
+    const response = await api.documents.delete(item.document_id) as { success: boolean; message?: string }
 
     if (response.success) {
       histories.value = histories.value.filter(h => h.id !== id)
@@ -1366,7 +1371,9 @@ const deleteSelected = async () => {
 
   for (const id of selectedHistory.value) {
     try {
-      const response = await api.documents.delete(id) as { success: boolean; message?: string }
+      const item = histories.value.find(h => h.id === id)
+      const docId = item ? item.document_id : id
+      const response = await api.documents.delete(docId) as { success: boolean; message?: string }
       if (response.success) {
         successCount++
       } else {
