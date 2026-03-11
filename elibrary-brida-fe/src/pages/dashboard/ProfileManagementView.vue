@@ -137,7 +137,7 @@
               v-model="topSearchQuery"
               type="text"
               placeholder="Search users..."
-              class="w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:outline-none  focus:ring-blue-500"
             />
           </div>
 
@@ -172,14 +172,14 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search by name, email, or institution..."
-                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <!-- Role Filter -->
             <select
               v-model="roleFilter"
-              class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Roles</option>
               <option value="super_admin">Super Admin</option>
@@ -246,7 +246,7 @@
                 <td class="px-6 py-4">
                   <span
                     :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-max',
                       getRoleBadgeClass(user.role)
                     ]"
                   >
@@ -316,7 +316,7 @@
               v-model="editForm.name"
               type="text"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter full name"
             />
           </div>
@@ -330,7 +330,7 @@
               v-model="editForm.email"
               type="email"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               placeholder="user@example.com"
             />
           </div>
@@ -343,7 +343,7 @@
             <input
               v-model="editForm.institution"
               type="text"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter institution name"
             />
           </div>
@@ -356,7 +356,7 @@
             <input
               v-model="editForm.phone"
               type="tel"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               placeholder="+62 xxx xxxx xxxx"
             />
           </div> -->
@@ -369,7 +369,7 @@
             <textarea
               v-model="editForm.address"
               rows="3"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter address"
             ></textarea>
           </div> -->
@@ -422,28 +422,48 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               New Password <span class="text-red-500">*</span>
             </label>
-            <input
-              v-model="resetPasswordForm.password"
-              type="password"
-              required
-              minlength="8"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter new password (min 8 characters)"
-            />
+            <div class="relative">
+              <input
+                v-model="resetPasswordForm.password"
+                :type="showNewPassword ? 'text' : 'password'"
+                required
+                class="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg  focus:ring-blue-500 "
+                placeholder="Masukkan password baru (minimal 8 karakter)"
+              />
+              <button
+                type="button"
+                @click="showNewPassword = !showNewPassword"
+                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                :title="showNewPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+              >
+                <i-lucide-eye v-if="!showNewPassword" class="w-5 h-5" />
+                <i-lucide-eye-off v-else class="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password <span class="text-red-500">*</span>
             </label>
-            <input
-              v-model="resetPasswordForm.password_confirmation"
-              type="password"
-              required
-              minlength="8"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Confirm new password"
-            />
+            <div class="relative">
+              <input
+                v-model="resetPasswordForm.password_confirmation"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                required
+                class="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Konfirmasi password baru"
+              />
+              <button
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                :title="showConfirmPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+              >
+                <i-lucide-eye v-if="!showConfirmPassword" class="w-5 h-5" />
+                <i-lucide-eye-off v-else class="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <!-- Modal Actions -->
@@ -510,15 +530,16 @@ const editForm = ref({
   id: 0,
   name: '',
   email: '',
-  institution: '',
-  phone: '',
-  address: ''
+  institution: ''
 })
 
 const resetPasswordForm = ref({
   password: '',
   password_confirmation: ''
 })
+
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 // Computed
 const filteredUsers = computed(() => {
@@ -616,9 +637,7 @@ const openEditModal = (user: User) => {
     id: user.id,
     name: user.name,
     email: user.email,
-    institution: user.institution || '',
-    phone: user.phone || '',
-    address: user.address || ''
+    institution: user.institution || ''
   }
   showEditModal.value = true
 }
@@ -629,9 +648,8 @@ const closeEditModal = () => {
     id: 0,
     name: '',
     email: '',
-    institution: '',
-    phone: '',
-    address: ''
+    institution: ''
+
   }
 }
 
@@ -642,8 +660,7 @@ const handleUpdateProfile = async () => {
       name: editForm.value.name,
       email: editForm.value.email,
       institution: editForm.value.institution || undefined,
-      phone: editForm.value.phone || undefined,
-      address: editForm.value.address || undefined
+
     })
 
     if (response.success) {
@@ -663,6 +680,8 @@ const openResetPasswordModal = (user: User) => {
     password: '',
     password_confirmation: ''
   }
+  showNewPassword.value = false
+  showConfirmPassword.value = false
   showResetPasswordModal.value = true
 }
 
@@ -673,10 +692,18 @@ const closeResetPasswordModal = () => {
     password: '',
     password_confirmation: ''
   }
+  showNewPassword.value = false
+  showConfirmPassword.value = false
 }
 
 const handleResetPassword = async () => {
   if (!resetPasswordUser.value) return
+
+  // Validasi panjang password minimal 8 karakter
+  if (resetPasswordForm.value.password.length < 8) {
+    toast.error('Gagal', 'Password minimal 8 karakter!')
+    return
+  }
 
   if (resetPasswordForm.value.password !== resetPasswordForm.value.password_confirmation) {
     toast.error('Gagal', 'Password tidak cocok!')

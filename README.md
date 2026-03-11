@@ -2,7 +2,7 @@
 
 > Sistem Manajemen E-Library untuk BRIDA Sulawesi Tenggara
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg)](CHANGELOG.md)
 [![Laravel](https://img.shields.io/badge/Laravel-10-red.svg)](https://laravel.com)
 [![Vue](https://img.shields.io/badge/Vue-3-green.svg)](https://vuejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org)
@@ -31,8 +31,10 @@ E-Library BRIDA adalah sistem manajemen perpustakaan digital yang dibangun untuk
 🎨 **Discord-Style Role Management** - Drag & drop hierarchy dengan color coding  
 📤 **Document Upload & Management** - Upload, search, dan manage dokumen  
 🔐 **Granular Permissions** - Kontrol akses detail per role  
-📊 **Admin Dashboard** - Analytics dan user management  
+📊 **Admin Dashboard** - Analytics, statistics charts, dan user management  
 📄 **Reliable PDF Preview** - Preview dokumen langsung di browser tanpa download otomatis  
+👤 **Profile Management** - Edit user profiles dan reset password dengan validasi keamanan  
+🔒 **Smart Password Validation** - Validasi password dengan pesan error Bahasa Indonesia  
 
 ---
 
@@ -145,6 +147,13 @@ php artisan serve            # Dev server: http://localhost:8000
 - Protect super_admin dari edit/delete
 - Real-time role change detection
 
+### 👤 Profile Management (Admin & Super Admin)
+- Edit user profiles (name, email, institution)
+- Reset password untuk users dengan validasi minimal 8 karakter
+- Password visibility toggle dengan icon yang responsive
+- Custom validation dengan pesan error Bahasa Indonesia
+- Modal interface yang user-friendly
+
 ### 📑 Role Management
 - **Discord-style interface** dengan drag & drop
 - Color-coded roles
@@ -162,6 +171,9 @@ php artisan serve            # Dev server: http://localhost:8000
 
 ### 📊 Dashboard
 - **Admin Dashboard**: User stats, document stats, activity logs
+  - Statistics Charts: Category distribution (pie), trend analysis (line), institution breakdown (bar)
+  - Queue Review table dengan status tracking
+  - Recent Activity history
 - **User Dashboard**: Upload, my documents, profile
 
 ---
@@ -338,8 +350,8 @@ This project is proprietary and confidential.
 
 **Developer**: MohammadAvirzaR  
 **Project**: E-Library BRIDA  
-**Version**: 1.6.0  
-**Last Updated**: 2024-12-07
+**Version**: 1.7.0  
+**Last Updated**: 2026-03-11
 
 ---
 

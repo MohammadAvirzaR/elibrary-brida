@@ -4,6 +4,69 @@ Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
 ---
 
+## [1.7.0] - 2026-03-11
+
+### ✨ Added - Profile Management & Password Validation Improvements
+
+**Profile Management Enhancements**:
+- Password reset functionality dengan validasi keamanan
+- Custom password validation dengan pesan error Bahasa Indonesia
+- Password visibility toggle dengan icon yang responsive
+
+**Dashboard Statistics**:
+- Statistics charts dengan format yang konsisten dengan website yang sudah dipublish
+- Category distribution chart (pie chart)
+- Trend analysis chart (line chart)
+- Institution breakdown chart (horizontal bar chart)
+
+### 🐛 Fixed
+
+1. **Password Validation UI/UX**
+   - Menghapus validasi HTML5 `minlength` yang menampilkan pesan error browser default
+   - Implementasi custom validation JavaScript dengan pesan Bahasa Indonesia
+   - Validasi minimal 8 karakter dengan toast notification: "Password minimal 8 karakter!"
+   
+2. **Password Icon Display Bug**
+   - Fixed double icon display pada password toggle button
+   - Icon sekarang hanya menampilkan satu elemen (eye atau eye-off)
+   - Improved alignment dengan `flex items-center`
+
+3. **Password Form Consistency**
+   - Login form: Tidak ada `minlength` (backward compatibility)
+   - Reset password form: Validasi minimal 8 karakter (security enforcement)
+   - Best practice: Existing users dengan password pendek masih bisa login, password baru harus memenuhi standar
+
+### 🔧 Modified Files
+- `elibrary-brida-fe/src/pages/dashboard/ProfileManagementView.vue`
+  - Custom password validation logic
+  - Fixed password visibility toggle
+  - Updated placeholder text ke Bahasa Indonesia
+- `elibrary-brida-fe/src/pages/dashboard/DashboardView.vue`
+  - Statistics charts alignment dengan published version
+- `README.md`
+  - Updated version badge to 1.7.0
+  - Added Profile Management feature documentation
+  - Added Dashboard Statistics details
+
+### 📊 Impact
+- ✅ User experience lebih baik dengan pesan error dalam Bahasa Indonesia
+- ✅ Password validation yang konsisten dan secure
+- ✅ UI yang lebih clean tanpa icon dobel
+- ✅ Dashboard statistics yang match dengan website yang sudah dipublish
+
+### 🎯 Validation Strategy
+**Login Form** (Lenient):
+- No `minlength` validation
+- Allows existing users with shorter passwords to login
+- Maintains backward compatibility
+
+**Reset Password Form** (Strict):
+- Minimum 8 characters validation
+- Enforces new password security policy
+- Custom error messages in Bahasa Indonesia
+
+---
+
 ## [1.6.0] - 2024-12-07
 
 ### 🐛 Fixed - Document Preview & Storage System

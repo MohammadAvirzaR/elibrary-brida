@@ -1134,6 +1134,7 @@ const loadStatistics = async () => {
     nonBridaResearch.value = 1635
 
     // Mock data for charts (already set in initial ref values)
+
     console.log('Statistics loaded (mock data)')
   } catch (error) {
     console.error('Gagal memuat statistik:', error)

@@ -537,49 +537,44 @@ const logout = () => {
   router.push('/login')
 }
 
-// Available Permissions
-const availablePermissions: Permission[] = [
-  {
-    key: 'manage_users',
+// Available Permissions - akan di-fetch dari backend
+const availablePermissions = ref<Permission[]>([])
+
+// Permission label mapping (Backend English -> Frontend Bahasa Indonesia)
+const permissionLabels: Record<string, { label: string; description: string }> = {
+  manage_users: {
     label: 'Kelola User',
     description: 'Dapat membuat, mengedit, dan menghapus user'
   },
-  {
-    key: 'manage_roles',
+  manage_roles: {
     label: 'Kelola Roles',
     description: 'Dapat mengelola role dan permissions'
   },
-  {
-    key: 'upload_documents',
+  upload_documents: {
     label: 'Upload Dokumen',
     description: 'Dapat mengunggah dokumen baru ke sistem'
   },
-  {
-    key: 'review_documents',
+  review_documents: {
     label: 'Review Dokumen',
     description: 'Dapat mereview dan menyetujui dokumen'
   },
-  {
-    key: 'approve_documents',
+  approve_documents: {
     label: 'Approve Dokumen',
     description: 'Dapat menyetujui atau menolak dokumen'
   },
-  {
-    key: 'delete_documents',
+  delete_documents: {
     label: 'Hapus Dokumen',
     description: 'Dapat menghapus dokumen dari sistem'
   },
-  {
-    key: 'view_analytics',
+  view_analytics: {
     label: 'Lihat Analytics',
     description: 'Dapat melihat analytics dan statistik sistem'
   },
-  {
-    key: 'manage_categories',
+  manage_categories: {
     label: 'Kelola Kategori',
     description: 'Dapat mengelola kategori dokumen'
   }
-]
+}
 
 // State - Data will be loaded from API
 const roles = ref<Role[]>([])
@@ -664,6 +659,26 @@ const toggleRole = (id: number) => {
 }
 
 // API Functions
+const loadPermissions = async () => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: any = await api.roles.getPermissions()
+    if (response.success && response.data) {
+      // Transform backend permissions (object) to frontend format (array)
+      const permissionsData = response.data
+      availablePermissions.value = Object.keys(permissionsData).map(key => ({
+        key,
+        label: permissionLabels[key]?.label || permissionsData[key],
+        description: permissionLabels[key]?.description || permissionsData[key]
+      }))
+      console.log('Loaded permissions:', availablePermissions.value)
+    }
+  } catch (error) {
+    console.error('Failed to load permissions:', error)
+    toast.error('Gagal', 'Gagal memuat daftar permissions')
+  }
+}
+
 const loadRoles = async () => {
   isLoading.value = true
   loadError.value = ''
@@ -676,8 +691,9 @@ const loadRoles = async () => {
         id: role.id,
         name: role.name,
         description: role.description || '',
-        permissions: role.permissions || []
+        permissions: Array.isArray(role.permissions) ? role.permissions : []
       }))
+      console.log('Loaded roles:', roles.value)
     }
   } catch (error) {
     console.error('Failed to load roles:', error)
@@ -700,12 +716,15 @@ const openAddModal = () => {
 
 const openEditModal = (role: Role) => {
   isEditMode.value = true
+  // Make sure permissions is always an array
+  const rolePermissions = Array.isArray(role.permissions) ? role.permissions : []
   formData.value = {
     id: role.id,
     name: role.name,
     description: role.description,
-    permissions: [...role.permissions]
+    permissions: [...rolePermissions]
   }
+  console.log('Editing role:', role.name, 'with permissions:', formData.value.permissions)
   showModal.value = true
 }
 
@@ -828,8 +847,10 @@ const togglePermission = (permissionKey: string) => {
 let refreshInterval: number | null = null
 
 // Load roles on component mount
-onMounted(() => {
-  loadRoles()
+onMounted(async () => {
+  // Load permissions first, then roles
+  await loadPermissions()
+  await loadRoles()
 
   // Setup auto-refresh every 30 seconds
   refreshInterval = window.setInterval(() => {
