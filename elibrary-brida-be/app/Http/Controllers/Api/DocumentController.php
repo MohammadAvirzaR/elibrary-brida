@@ -276,20 +276,20 @@ class DocumentController extends Controller
             ], 401);
         }
 
-        $user = User::with('role')->find($user->id);
+        $user = User::with('roles')->find($user->id);
 
         Log::info('Document index access attempt', [
             'user_id' => $user->id,
-            'role' => $user->role ? $user->role->name : 'no role'
+            'role' => $user->role?->name ?? 'no role'
         ]);
 
         $query = Document::with(['user', 'type']);
 
-        if ($user->role && $user->role->name === 'contributor') {
+        if ($user->hasRole('contributor')) {
             $query->where('user_id', $user->id);
         }
 
-        elseif ($user->role && $user->role->name === 'guest') {
+        elseif ($user->hasRole('guest')) {
             $query->where('status', 'approved');
         }
 
@@ -479,7 +479,7 @@ class DocumentController extends Controller
             }
 
             $document = Document::with([
-                'user.role',
+                'user.roles',
                 'type',
                 'unit',
                 'license',
@@ -626,7 +626,7 @@ class DocumentController extends Controller
                 $document = Document::findOrFail($id);
 
                 // Authorization: only contributor who uploaded or admin can delete
-                if ($user->id !== $document->user_id && !in_array($user->role, ['admin', 'super_admin'])) {
+                if ($user->id !== $document->user_id && !$user->hasAnyRole(['admin', 'super_admin'])) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
@@ -712,7 +712,7 @@ class DocumentController extends Controller
                 ], 401);
             }
 
-            $document = Document::with('user.role')->findOrFail($id);
+            $document = Document::with('user.roles')->findOrFail($id);
 
             $userRole = $user->role?->name;
 
@@ -802,7 +802,7 @@ class DocumentController extends Controller
                 ->where('id', $attachmentId)
                 ->firstOrFail();
 
-            $document = Document::with('user.role')->findOrFail($documentId);
+            $document = Document::with('user.roles')->findOrFail($documentId);
 
             $userRole = $user->role?->name;
 

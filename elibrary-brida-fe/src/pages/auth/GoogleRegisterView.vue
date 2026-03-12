@@ -70,7 +70,7 @@
 
             <!-- Password -->
             <div class="relative">
-              <input
+               <input
                 v-model="formData.password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Password (min. 6 karakter)"
@@ -95,7 +95,7 @@
                 placeholder="Konfirmasi Password"
                 :class="[
                   'w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 text-sm sm:text-base rounded border text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition',
-                  passwordMismatch ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                  passwordMismatch ? 'border-red-500 focus:ring-red-500 w-full px-3 sm:px-4 py-2 sm:py-3 pr-12' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                 ]"
                 required
                 :disabled="isLoading"

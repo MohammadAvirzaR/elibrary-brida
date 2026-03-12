@@ -9,34 +9,29 @@ class RoleMiddleware
 {
     /**
      * Handle the incoming request.
+     * Menggunakan Spatie HasRoles untuk pengecekan role.
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
         $user = $request->user();
 
-        // Jika user tidak terautentikasi
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        // Load role relationship if not already loaded
-        if (!$user->relationLoaded('role')) {
-            $user->load('role');
+        // Normalize role names
+        $allowedRoles = array_map(fn($r) => strtolower(trim($r)), $roles);
+
+        // Cek apakah user memiliki salah satu dari role yang diizinkan (Spatie)
+        $userHasRole = false;
+        foreach ($allowedRoles as $role) {
+            if ($user->hasRole($role)) {
+                $userHasRole = true;
+                break;
+            }
         }
 
-        // Jika user tidak punya role
-        if (!$user->role) {
-            return response()->json(['message' => 'User role not found.'], 403);
-        }
-
-        // Normalize role names (remove extra spaces, convert to lowercase for comparison)
-        $userRole = strtolower(trim($user->role->name));
-        $allowedRoles = array_map(function ($role) {
-            return strtolower(trim($role));
-        }, $roles);
-
-        // Cek apakah user role ada di dalam allowed roles
-        if (!in_array($userRole, $allowedRoles)) {
+        if (!$userHasRole) {
             return response()->json(
                 ['message' => 'Forbidden: Access denied. Required roles: ' . implode(', ', $roles)],
                 403

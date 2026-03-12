@@ -13,16 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Jalankan seeder role terlebih dahulu
+        // Jalankan Spatie Permission seeder (roles + permissions) terlebih dahulu
         $this->call([
-            RoleSeeder::class,
+            SpatiePermissionSeeder::class,
             UserSeeder::class,
             SubjectsSeeder::class,
             TypesSeeder::class,
             LicensesSeeder::class,
             UnitsSeeder::class,
-            // DocumentsSeeder::class, // Removed - no dummy data, use real upload
-            // DocumentSubjectSeeder::class, // Removed - will be created on upload
         ]);
     }
 }

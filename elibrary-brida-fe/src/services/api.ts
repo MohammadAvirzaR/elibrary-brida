@@ -146,8 +146,8 @@ export const api = {
       apiCall(`/admin/documents/${id}/approve`, { method: 'POST' }, true),
 
     reject: (id: number, note?: string) =>
-      apiCall(`/admin/documents/${id}/reject`, { 
-        method: 'POST', 
+      apiCall(`/admin/documents/${id}/reject`, {
+        method: 'POST',
         body: JSON.stringify({ note: note || null })
       }, true),
 
@@ -207,6 +207,9 @@ export const api = {
       apiCall(`/roles/${id}`, { method: 'DELETE' }, true),
 
     getPermissions: () => apiCall('/permissions', { method: 'GET' }, true),
+
+    syncPermissions: (id: number, permissions: string[]) =>
+      apiCall(`/roles/${id}/permissions`, { method: 'PUT', body: JSON.stringify({ permissions }) }, true),
   },
 
   users: {

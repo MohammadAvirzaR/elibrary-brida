@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 // use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -84,33 +83,30 @@ class AuthController extends Controller
             ], 400);
         }
 
-        $guestRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
-        $roleId = $guestRole ? $guestRole->id : DB::table('roles')->min('id') ?? 5;
-
         $user = User::create([
-            'full_name' => $registrationData['name'],
-            'email' => $registrationData['email'],
-            'unit_name' => $registrationData['institution'],
-            'password' => $registrationData['password'],
-            'role_id' => $roleId,
+            'full_name'         => $registrationData['name'],
+            'email'             => $registrationData['email'],
+            'unit_name'         => $registrationData['institution'],
+            'password'          => $registrationData['password'],
             'email_verified_at' => now(),
         ]);
+
+        // Assign default guest role via Spatie
+        $user->assignRole('guest');
 
         Cache::forget('registration_' . $request->email);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $user->load('role');
-
         return response()->json([
             'status' => 'success',
             'message' => 'Registrasi berhasil! Anda sekarang adalah guest.',
             'user' => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'email' => $user->email,
+                'id'          => $user->id,
+                'name'        => $user->full_name,
+                'email'       => $user->email,
                 'institution' => $user->unit_name,
-                'role' => $user->role->name ?? 'guest',
+                'role'        => $user->roles->first()?->name ?? 'guest',
             ],
             'token' => $token,
         ], 201);
@@ -175,18 +171,18 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $user->load('role');
+        $user->load('roles');
 
         return response()->json([
             'status' => 'success',
             'message' => 'Login successful',
             'user' => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'email' => $user->email,
-                'username' => $user->username ?? $user->full_name,
+                'id'          => $user->id,
+                'name'        => $user->full_name,
+                'email'       => $user->email,
+                'username'    => $user->username ?? $user->full_name,
                 'institution' => $user->unit_name,
-                'role' => $user->role->name ?? 'guest',
+                'role'        => $user->roles->first()?->name ?? 'guest',
             ],
             'token' => $token,
         ]);
@@ -239,7 +235,7 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $user->load('role');
+        $user->load('roles');
 
         $userData = base64_encode(json_encode([
             'id'          => $user->id,
@@ -247,7 +243,7 @@ class AuthController extends Controller
             'username'    => $user->username ?? $user->full_name,
             'email'       => $user->email,
             'institution' => $user->unit_name,
-            'role'        => $user->role->name ?? 'guest',
+            'role'        => $user->roles->first()?->name ?? 'guest',
         ]));
 
         return redirect("{$frontendUrl}/auth/google/callback?token={$token}&user={$userData}");
@@ -281,23 +277,21 @@ class AuthController extends Controller
             ], 409);
         }
 
-        $guestRole = DB::table('roles')->where('name', 'guest')->orWhere('name', 'user')->first();
-        $roleId = $guestRole ? $guestRole->id : (DB::table('roles')->min('id') ?? 5);
-
         $user = User::create([
             'full_name'         => $request->name,
             'email'             => $googleData['email'],
             'sso_id'            => $googleData['sso_id'],
             'unit_name'         => $request->institution,
             'password'          => $request->password,
-            'role_id'           => $roleId,
             'email_verified_at' => now(),
         ]);
+
+        // Assign default guest role via Spatie
+        $user->assignRole('guest');
 
         Cache::forget('google_register_' . $request->ref);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $user->load('role');
 
         return response()->json([
             'status'  => 'success',
@@ -308,7 +302,7 @@ class AuthController extends Controller
                 'username'    => $user->username ?? $user->full_name,
                 'email'       => $user->email,
                 'institution' => $user->unit_name,
-                'role'        => $user->role->name ?? 'guest',
+                'role'        => $user->roles->first()?->name ?? 'guest',
             ],
             'token'   => $token,
         ], 201);
@@ -330,22 +324,22 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // Load role relationship
-        $user->load('role');
+        $user->load('roles');
+        $firstRole = $user->roles->first();
 
         return response()->json([
             'status' => 'success',
             'user' => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'username' => $user->username ?? $user->full_name,
+                'id'          => $user->id,
+                'name'        => $user->full_name,
+                'full_name'   => $user->full_name,
+                'email'       => $user->email,
+                'username'    => $user->username ?? $user->full_name,
                 'institution' => $user->unit_name,
-                'unit_name' => $user->unit_name,
+                'unit_name'   => $user->unit_name,
                 'role' => [
-                    'id' => $user->role->id ?? null,
-                    'name' => $user->role->name ?? 'guest',
+                    'id'   => $firstRole?->id,
+                    'name' => $firstRole?->name ?? 'guest',
                 ],
             ],
         ]);

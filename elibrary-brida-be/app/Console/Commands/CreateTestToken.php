@@ -27,9 +27,9 @@ class CreateTestToken extends Command
     public function handle()
     {
         $email = $this->argument('email');
-        
-        $user = User::where('email', $email)->with('role')->first();
-        
+
+        $user = User::where('email', $email)->with('roles')->first();
+
         if (!$user) {
             $this->error("User with email {$email} not found");
             return 1;
@@ -46,7 +46,8 @@ class CreateTestToken extends Command
         $this->line('');
         $this->line("Email: {$user->email}");
         $this->line("Name: {$user->full_name}");
-        $this->line("Role: {$user->role->name}");
+        $roleName = $user->role?->name ?? 'guest';
+        $this->line("Role: {$roleName}");
         $this->line('');
         $this->line('📋 Token:');
         $this->line($token);

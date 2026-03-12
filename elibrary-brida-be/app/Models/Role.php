@@ -2,37 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+/**
+ * Model Role yang extends Spatie Role.
+ * Menambahkan field description dan guard_name default 'api'.
+ */
+class Role extends SpatieRole
 {
-    use HasFactory;
-
     protected $fillable = [
-        'name',        // nama peran: Admin, Petugas, Mahasiswa, dst
-        'description', // deskripsi singkat peran
-        'permissions', // JSON array of permissions
-    ];
-
-    protected $casts = [
-        'permissions' => 'array',
+        'name',
+        'guard_name',
+        'description',
     ];
 
     /**
-     * Relasi: Role -> Users
-     * Satu role bisa dimiliki banyak user.
+     * Guard name default untuk API.
      */
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
-
-    /**
-     * Relasi many-to-many ke privileges (jika fitur hak akses per role digunakan)
-     */
-    public function privileges()
-    {
-        return $this->belongsToMany(Privilege::class, 'role_privilege');
-    }
+    protected $guard_name = 'api';
 }

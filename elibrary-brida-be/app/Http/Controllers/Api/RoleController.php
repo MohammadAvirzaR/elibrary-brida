@@ -7,16 +7,26 @@ use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
     /**
-     * Display a listing of roles.
+     * Display a listing of roles with their Spatie permissions.
      */
     public function index()
     {
         try {
-            $roles = Role::all();
+            $roles = Role::with('permissions')->get()->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'description' => $role->description,
+                    'guard_name' => $role->guard_name,
+                    'permissions' => $role->permissions->pluck('name')->toArray(),
+                    'created_at' => $role->created_at,
+                ];
+            });
 
             return response()->json([
                 'success' => true,
@@ -43,7 +53,7 @@ class RoleController extends Controller
             'name' => 'required|string|max:255|unique:roles,name',
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
-            'permissions.*' => 'string'
+            'permissions.*' => 'string|exists:permissions,name'
         ]);
 
         if ($validator->fails()) {
@@ -57,14 +67,23 @@ class RoleController extends Controller
         try {
             $role = Role::create([
                 'name' => $request->name,
+                'guard_name' => 'api',
                 'description' => $request->description,
-                'permissions' => $request->permissions ?? [],
             ]);
+
+            if ($request->filled('permissions')) {
+                $role->syncPermissions($request->permissions);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Role created successfully',
-                'data' => $role
+                'data' => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'description' => $role->description,
+                    'permissions' => $role->permissions->pluck('name')->toArray(),
+                ]
             ], 201);
         } catch (\Exception $e) {
             Log::error('Failed to create role: ' . $e->getMessage(), [
@@ -80,7 +99,7 @@ class RoleController extends Controller
     }
 
     /**
-     * Update the specified role.
+     * Update the specified role (name, description, and sync permissions).
      */
     public function update(Request $request, $id)
     {
@@ -88,7 +107,7 @@ class RoleController extends Controller
             'name' => 'required|string|max:255|unique:roles,name,' . $id,
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
-            'permissions.*' => 'string'
+            'permissions.*' => 'string|exists:permissions,name'
         ]);
 
         if ($validator->fails()) {
@@ -105,13 +124,25 @@ class RoleController extends Controller
             $role->update([
                 'name' => $request->name,
                 'description' => $request->description,
-                'permissions' => $request->permissions ?? [],
             ]);
+
+            // Sync permissions using Spatie (replaces all permissions)
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->permissions ?? []);
+            }
+
+            // Refresh role with updated permissions
+            $role->load('permissions');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Role updated successfully',
-                'data' => $role
+                'data' => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'description' => $role->description,
+                    'permissions' => $role->permissions->pluck('name')->toArray(),
+                ]
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -139,11 +170,20 @@ class RoleController extends Controller
         try {
             $role = Role::findOrFail($id);
 
-            // Check if role is in use
+            // Prevent deleting core system roles
+            $protectedRoles = ['super_admin', 'admin', 'guest'];
+            if (in_array($role->name, $protectedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete protected system role: ' . $role->name
+                ], 400);
+            }
+
+            // Check if role is still assigned to any users
             if ($role->users()->count() > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete role that is assigned to users'
+                    'message' => 'Cannot delete role that is still assigned to users'
                 ], 400);
             }
 
@@ -172,22 +212,18 @@ class RoleController extends Controller
     }
 
     /**
-     * Get all available permissions.
+     * Get all available permissions from the database (Spatie).
      */
     public function permissions()
     {
         try {
-            // Return static permissions list
-            $permissions = [
-                'manage_users' => 'Manage Users',
-                'manage_roles' => 'Manage Roles',
-                'upload_documents' => 'Upload Documents',
-                'review_documents' => 'Review Documents',
-                'approve_documents' => 'Approve Documents',
-                'delete_documents' => 'Delete Documents',
-                'view_analytics' => 'View Analytics',
-                'manage_categories' => 'Manage Categories'
-            ];
+            $permissions = Permission::where('guard_name', 'api')
+                ->orderBy('name')
+                ->get()
+                ->map(fn($p) => [
+                    'id'   => $p->id,
+                    'name' => $p->name,
+                ]);
 
             return response()->json([
                 'success' => true,
@@ -204,4 +240,55 @@ class RoleController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Sync permissions for a specific role (PUT /roles/{id}/permissions).
+     */
+    public function syncPermissions(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'permissions' => 'required|array',
+            'permissions.*' => 'string|exists:permissions,name'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $role = Role::findOrFail($id);
+            $role->syncPermissions($request->permissions);
+            $role->load('permissions');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permissions updated successfully',
+                'data' => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'permissions' => $role->permissions->pluck('name')->toArray(),
+                ]
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Role not found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to sync permissions: ' . $e->getMessage(), [
+                'role_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update permissions'
+            ], 500);
+        }
+    }
 }
+
