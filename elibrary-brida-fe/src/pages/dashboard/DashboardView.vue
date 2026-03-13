@@ -383,7 +383,6 @@
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Update</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">More</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
@@ -443,11 +442,6 @@
                           Reject
                         </button>
                       </div>
-                    </td>
-                    <td class="px-6 py-4">
-                      <button class="p-2 hover:bg-blue-100 rounded-lg transition group">
-                        <i-lucide-mail class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition" />
-                      </button>
                     </td>
                   </tr>
                 </tbody>

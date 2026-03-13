@@ -198,6 +198,7 @@ php artisan serve            # Dev server: http://localhost:8000
 - **`CHANGELOG.md`** ⭐ - **WAJIB BACA** untuk update terbaru
 - **`CREDENTIALS.md`** - Akses credentials sistem
 - **`README.md`** - Dokumentasi utama (file ini)
+- **`elibrary-brida-be/README.md`** - Tutorial backend dan panduan migrasi RBAC Spatie
 
 ### Role Change Notification
 Sistem notifikasi cerdas yang mendeteksi perubahan role:
