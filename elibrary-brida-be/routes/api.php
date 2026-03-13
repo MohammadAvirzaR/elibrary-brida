@@ -48,9 +48,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==================== SUPER ADMIN ONLY ====================
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin')->group(function () {
         // Role management (CRUD)
+        Route::get('/roles', [RoleController::class, 'index']);
         Route::post('/roles', [RoleController::class, 'store']);
         Route::put('/roles/{id}', [RoleController::class, 'update']);
         Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+        Route::put('/roles/{id}/permissions', [RoleController::class, 'syncPermissions']);
         Route::get('/permissions', [RoleController::class, 'permissions']);
 
         // Contributor request approval
@@ -80,8 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ========== ADMIN & SUPER ADMIN ==========
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin')->group(function () {
-        Route::get('/roles', [RoleController::class, 'index']);
-
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::post('/users', [UserController::class, 'store']);

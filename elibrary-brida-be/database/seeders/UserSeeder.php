@@ -3,35 +3,31 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Role;
 
 class UserSeeder extends Seeder
 {
     public function run()
     {
-        // Ambil role_id untuk admin dan guest
-        $adminRoleId = Role::where('name', 'super_admin')->value('id');
-        $guestRoleId = Role::where('name', 'guest')->value('id');
-
-        DB::table('users')->insert([
+        // Admin super_admin
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@brida.com'],
             [
-                'role_id' => $adminRoleId,
                 'full_name' => 'Admin BRIDA',
-                'email' => 'admin@brida.com',
-                'password' => Hash::make('admin123'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'role_id' => $guestRoleId,
-                'full_name' => 'User Demo',
-                'email' => 'user@brida.com',
-                'password' => Hash::make('user123'),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'password'  => Hash::make('admin123'),
             ]
-        ]);
+        );
+        $admin->syncRoles(['super_admin']);
+
+        // Demo guest user
+        $guest = User::firstOrCreate(
+            ['email' => 'user@brida.com'],
+            [
+                'full_name' => 'User Demo',
+                'password'  => Hash::make('user123'),
+            ]
+        );
+        $guest->syncRoles(['guest']);
     }
 }

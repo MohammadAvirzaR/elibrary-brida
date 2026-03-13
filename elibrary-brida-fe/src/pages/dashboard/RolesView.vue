@@ -664,14 +664,12 @@ const loadPermissions = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await api.roles.getPermissions()
     if (response.success && response.data) {
-      // Transform backend permissions (object) to frontend format (array)
-      const permissionsData = response.data
-      availablePermissions.value = Object.keys(permissionsData).map(key => ({
-        key,
-        label: permissionLabels[key]?.label || permissionsData[key],
-        description: permissionLabels[key]?.description || permissionsData[key]
+      // Backend now returns array of {id, name}
+      availablePermissions.value = response.data.map((p: { id: number; name: string }) => ({
+        key: p.name,
+        label: permissionLabels[p.name]?.label || p.name,
+        description: permissionLabels[p.name]?.description || p.name
       }))
-      console.log('Loaded permissions:', availablePermissions.value)
     }
   } catch (error) {
     console.error('Failed to load permissions:', error)

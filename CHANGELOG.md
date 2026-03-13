@@ -4,6 +4,55 @@ Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
 ---
 
+## [1.8.0] - 2026-03-12
+
+### ✨ Added - Spatie Laravel Permission RBAC Migration
+
+**Full migration ke Spatie Laravel Permission v7.2.3**:
+- Role-Based Access Control (RBAC) yang fleksibel dan scalable
+- 5 roles: `super_admin`, `admin`, `reviewer`, `contributor`, `guest`
+- 8 permissions: `manage_users`, `manage_roles`, `upload_documents`, `review_documents`, `approve_documents`, `delete_documents`, `view_analytics`, `manage_categories`
+- Permission inheritance melalui tabel `role_has_permissions` (Spatie pivot)
+- Per-user role assignment melalui `model_has_roles`
+- Guard name `api` digunakan di seluruh sistem
+
+### 🔧 Backend Changes
+
+**Models**:
+- `User.php`: Ditambahkan `HasRoles` trait (Spatie), dihapus `role_id` dari fillable dan relasi BelongsTo lama
+- `Role.php`: Sekarang extends `Spatie\Permission\Models\Role` (bukan Eloquent Model biasa)
+
+**Controllers**:
+- `AuthController.php`: Ganti `role_id` assignment dengan `$user->assignRole('guest')`, update `load('role')` → `load('roles')`
+- `UserController.php`: Ganti `role_id` dengan `assignRole()` / `syncRoles()`, update response format
+- `RoleController.php`: Total rewrite - menggunakan `syncPermissions()`, tambah endpoint `syncPermissions` (dedicated)
+
+**Middleware**:
+- `RoleMiddleware.php`: Ganti manual role check dengan `$user->hasRole()` dari Spatie
+
+**Migrations** (3 baru):
+- `2026_03_11_170000_prepare_for_spatie_permissions.php`: Drop JSON permissions dari roles, drop privilages table, tambah `guard_name`
+- `2026_03_11_171228_create_permission_tables.php`: Spatie tables (permissions, model_has_roles, model_has_permissions, role_has_permissions), skip create roles (sudah ada)
+- `2026_03_11_172000_migrate_user_roles_to_spatie.php`: Migrasi `role_id` data ke `model_has_roles`, hapus kolom `role_id`
+
+**Seeders**:
+- `SpatiePermissionSeeder.php` (NEW): Seed 5 roles + 8 permissions + assign permissions ke roles
+- `UserSeeder.php`: Rewrite - gunakan `assignRole()` Spatie, hapus `role_id` insert langsung
+- `DatabaseSeeder.php`: Ganti `RoleSeeder` dengan `SpatiePermissionSeeder`
+
+**Routes**:
+- `api.php`: Tambah `GET /roles` di super_admin group, tambah `PUT /roles/{id}/permissions` endpoint
+
+### 🎨 Frontend Changes
+
+**API Service**:
+- `api.ts`: Tambah `syncPermissions(id, permissions[])` endpoint baru
+
+**Views**:
+- `RolesView.vue`: Update `loadPermissions()` untuk handle response baru (array `{id, name}` vs object lama)
+
+---
+
 ## [1.7.0] - 2026-03-11
 
 ### ✨ Added - Profile Management & Password Validation Improvements
