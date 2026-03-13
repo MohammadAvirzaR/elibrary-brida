@@ -1,61 +1,399 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# E-Library BRIDA Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend API untuk E-Library BRIDA menggunakan Laravel, Sanctum, dan Spatie Laravel Permission.
 
-## About Laravel
+## Tujuan Dokumen
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Dokumen ini adalah tutorial singkat untuk tim backend setelah migrasi RBAC ke Spatie Laravel Permission. Fokusnya bukan teori umum Laravel, tetapi aturan kerja yang sekarang berlaku di proyek ini.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Ringkasan Perubahan Besar
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Sebelum migrasi:
+- User menyimpan role lewat kolom `users.role_id`
+- Role menyimpan permission dalam JSON di tabel `roles`
+- Banyak pengecekan akses dilakukan manual lewat relasi `role`
 
-## Learning Laravel
+Sesudah migrasi:
+- User memakai trait `HasRoles` dari Spatie
+- Role memakai model `Spatie\Permission\Models\Role`
+- Permission disimpan normalisasi di tabel `permissions` dan pivot Spatie
+- Assignment role user disimpan di `model_has_roles`
+- Assignment permission role disimpan di `role_has_permissions`
+- Guard default backend adalah `api`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Package dan Konfigurasi
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Package yang dipakai:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer require spatie/laravel-permission
+```
 
-## Laravel Sponsors
+Konfigurasi utama ada di:
+- `config/permission.php`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Guard yang dipakai proyek ini:
 
-### Premium Partners
+```php
+'guard_name' => 'api'
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Aturan penting:
+- Semua role dan permission yang dibuat backend harus memakai `guard_name = 'api'`
+- Jangan campur guard `web` dan `api` untuk role/permission di proyek ini
 
-## Contributing
+## Struktur Database Baru
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Tabel utama yang sekarang dipakai:
+- `roles`
+- `permissions`
+- `model_has_roles`
+- `model_has_permissions`
+- `role_has_permissions`
 
-## Code of Conduct
+Migrasi proyek yang terkait:
+- `2026_03_11_170000_prepare_for_spatie_permissions.php`
+- `2026_03_11_171228_create_permission_tables.php`
+- `2026_03_11_172000_migrate_user_roles_to_spatie.php`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Yang dihapus dari sistem lama:
+- JSON `permissions` pada tabel `roles`
+- tabel `privilages`
+- tabel `role_privilege`
+- kolom `users.role_id`
 
-## Security Vulnerabilities
+## Model yang Berubah
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### User
 
-## License
+File:
+- `app/Models/User.php`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Aturan sekarang:
+- User memakai `Spatie\Permission\Traits\HasRoles`
+- Role user tidak lagi dibaca dari relasi `belongsTo(Role::class)`
+- Untuk kompatibilitas lama, tersedia accessor `role` yang mengembalikan role pertama dari koleksi Spatie
+
+Contoh:
+
+```php
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+		use HasRoles;
+
+		protected $guard_name = 'api';
+}
+```
+
+### Role
+
+File:
+- `app/Models/Role.php`
+
+Aturan sekarang:
+- Model role harus extend `Spatie\Permission\Models\Role`
+- Field tambahan proyek: `description`
+
+Contoh:
+
+```php
+use Spatie\Permission\Models\Role as SpatieRole;
+
+class Role extends SpatieRole
+{
+		protected $fillable = ['name', 'guard_name', 'description'];
+		protected $guard_name = 'api';
+}
+```
+
+## Seeder Standar Proyek
+
+Seeder utama:
+- `database/seeders/SpatiePermissionSeeder.php`
+
+Role default saat ini:
+- `super_admin`
+- `admin`
+- `reviewer`
+- `contributor`
+- `guest`
+
+Permission default saat ini:
+- `manage_users`
+- `manage_roles`
+- `upload_documents`
+- `review_documents`
+- `approve_documents`
+- `delete_documents`
+- `view_analytics`
+- `manage_categories`
+
+Menjalankan seeder:
+
+```bash
+php artisan db:seed --class=SpatiePermissionSeeder
+php artisan db:seed --class=UserSeeder
+```
+
+## Cara Menjalankan Setup dari Nol
+
+Jika backend di-setup dari database kosong:
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan config:clear
+php artisan cache:clear
+php artisan migrate --force
+php artisan db:seed --class=SpatiePermissionSeeder
+php artisan db:seed --class=UserSeeder
+php artisan serve
+```
+
+Jika ingin jalankan semua seed dari DatabaseSeeder:
+
+```bash
+php artisan db:seed
+```
+
+## Pola Coding Baru yang Wajib Dipakai
+
+### 1. Assign role ke user
+
+Jangan lagi set `role_id`.
+
+Benar:
+
+```php
+$user->assignRole('guest');
+$user->syncRoles(['admin']);
+```
+
+Salah:
+
+```php
+$user->role_id = 2;
+```
+
+### 2. Cek role user
+
+Benar:
+
+```php
+$user->hasRole('super_admin');
+$user->hasAnyRole(['admin', 'super_admin']);
+```
+
+Salah:
+
+```php
+$user->role->name === 'admin';
+in_array($user->role, ['admin', 'super_admin']);
+```
+
+Catatan:
+- `$user->role?->name` masih bisa dipakai untuk kompatibilitas response
+- Untuk authorization, prioritaskan method Spatie seperti `hasRole()` dan `hasAnyRole()`
+
+### 3. Cek permission user
+
+```php
+$user->hasPermissionTo('manage_users');
+$user->can('manage_roles');
+```
+
+### 4. Assign permission ke role
+
+```php
+$role->givePermissionTo('manage_users');
+$role->syncPermissions(['manage_users', 'manage_roles']);
+```
+
+### 5. Eager loading role user
+
+Karena sekarang `role` bukan relasi Eloquent lama, jangan gunakan `with('role')`.
+
+Benar:
+
+```php
+User::with('roles')->find($id);
+Document::with('user.roles')->findOrFail($id);
+```
+
+Salah:
+
+```php
+User::with('role')->find($id);
+Document::with('user.role')->findOrFail($id);
+```
+
+Alasan teknis:
+- `with('role')` bisa bentrok dengan scope `role()` bawaan Spatie dan menyebabkan error argumen
+
+## Middleware dan Routing
+
+Middleware custom proyek:
+- `app/Http/Middleware/RoleMiddleware.php`
+
+Middleware ini sekarang memakai Spatie di dalamnya:
+
+```php
+if (!$user->hasRole($role)) {
+		return response()->json(['message' => 'Forbidden'], 403);
+}
+```
+
+Contoh pemakaian route:
+
+```php
+Route::middleware(RoleMiddleware::class . ':super_admin')->group(function () {
+		Route::post('/roles', [RoleController::class, 'store']);
+});
+```
+
+Contoh route yang sekarang tersedia untuk manajemen role:
+
+```text
+GET    /api/roles
+POST   /api/roles
+PUT    /api/roles/{id}
+DELETE /api/roles/{id}
+PUT    /api/roles/{id}/permissions
+GET    /api/permissions
+```
+
+## Perubahan Endpoint Backend
+
+### RoleController
+
+File:
+- `app/Http/Controllers/Api/RoleController.php`
+
+Perilaku sekarang:
+- `index()` mengembalikan role dengan daftar permission hasil `pluck('name')`
+- `store()` membuat role baru dan optional sync permission
+- `update()` update metadata role dan sync permission
+- `syncPermissions()` dipakai frontend untuk update switch permission per role
+- `permissions()` membaca permission dari tabel `permissions`, bukan hardcoded static list
+
+Contoh response role:
+
+```json
+{
+	"success": true,
+	"data": [
+		{
+			"id": 1,
+			"name": "admin",
+			"description": "Administrator",
+			"guard_name": "api",
+			"permissions": ["manage_users", "view_analytics"]
+		}
+	]
+}
+```
+
+### AuthController
+
+File:
+- `app/Http/Controllers/Api/AuthController.php`
+
+Perubahan utama:
+- registrasi user baru langsung `assignRole('guest')`
+- login dan endpoint `me` sekarang membaca role dari `roles`
+
+### UserController
+
+File:
+- `app/Http/Controllers/Api/UserController.php`
+
+Perubahan utama:
+- create user: buat user dulu, lalu assign role dengan Spatie
+- update user: gunakan `syncRoles()` saat role berubah
+- response tetap mempertahankan `role` dan `role_id` untuk kompatibilitas frontend
+
+## Daftar Error yang Perlu Dihindari
+
+### Error: Too few arguments to function App\Models\User::scopeRole()
+
+Penyebab:
+- masih ada query `with('role')` atau `with('user.role')`
+
+Solusi:
+
+```php
+User::with('roles')
+Document::with('user.roles')
+```
+
+### Error: role tidak terbaca setelah login
+
+Penyebab:
+- user dibuat tapi tidak diberi role default
+
+Solusi:
+
+```php
+$user->assignRole('guest');
+```
+
+### Error: permission tidak muncul di frontend
+
+Penyebab:
+- tabel `permissions` belum di-seed
+- frontend masih mengharapkan object statis lama
+
+Solusi:
+- jalankan `SpatiePermissionSeeder`
+- pastikan endpoint `GET /api/permissions` mengembalikan array dari database
+
+## Checklist Review untuk Tim Backend
+
+Sebelum merge perubahan backend yang menyentuh authorization, cek ini:
+
+- Tidak ada lagi assignment `role_id`
+- Tidak ada lagi eager load `with('role')`
+- Tidak ada lagi relasi lama `belongsTo(Role::class)` di User
+- Semua role dan permission baru memakai `guard_name = 'api'`
+- Controller memakai `hasRole()`, `hasAnyRole()`, atau `hasPermissionTo()`
+- Seeder role/permission diperbarui jika ada capability baru
+- Response API tetap kompatibel dengan frontend yang masih membaca `role` dan `role_id`
+
+## Command Verifikasi Cepat
+
+```bash
+php artisan migrate:status
+php artisan route:list --path=roles
+php artisan route:list --path=permissions
+php artisan db:seed --class=SpatiePermissionSeeder
+php artisan tinker
+```
+
+Contoh cek di Tinker:
+
+```php
+$user = App\Models\User::first();
+$user->getRoleNames();
+$user->hasRole('guest');
+$role = App\Models\Role::where('name', 'admin')->first();
+$role->permissions->pluck('name');
+```
+
+## File yang Perlu Dipahami Tim Backend
+
+- `app/Models/User.php`
+- `app/Models/Role.php`
+- `app/Http/Middleware/RoleMiddleware.php`
+- `app/Http/Controllers/Api/AuthController.php`
+- `app/Http/Controllers/Api/UserController.php`
+- `app/Http/Controllers/Api/RoleController.php`
+- `app/Http/Controllers/Api/DocumentController.php`
+- `routes/api.php`
+- `database/seeders/SpatiePermissionSeeder.php`
+
+## Catatan Praktis
+
+Sistem saat ini masih mempertahankan beberapa accessor kompatibilitas agar frontend lama tidak langsung rusak. Itu membantu transisi, tetapi untuk kode backend baru, anggap sumber kebenaran role dan permission sepenuhnya berasal dari Spatie.

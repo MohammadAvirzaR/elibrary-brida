@@ -75,6 +75,7 @@ class ContributorRequestController extends Controller
         }
 
         try {
+            /** @var \App\Models\User $user */
             $user = Auth::user();
 
             // Check if user already has pending request
@@ -90,8 +91,7 @@ class ContributorRequestController extends Controller
             }
 
             // Check if user is already contributor
-            $contributorRole = \App\Models\Role::where('name', 'contributor')->first();
-            if ($user->role_id === $contributorRole->id) {
+            if ($user->hasRole('contributor')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Anda sudah menjadi kontributor'
@@ -192,12 +192,9 @@ class ContributorRequestController extends Controller
                 ], 400);
             }
 
-            // Get contributor role
-            $contributorRole = \App\Models\Role::where('name', 'contributor')->firstOrFail();
-
-            // Update user role to contributor
+            // Update user role to contributor using Spatie
             $user = $contributorRequest->user;
-            $user->update(['role_id' => $contributorRole->id]);
+            $user->syncRoles(['contributor']);
 
             // Update request status
             $contributorRequest->update([
