@@ -52,7 +52,6 @@
       Advanced Search
     </button>
 
-    <!-- Advanced Search Modal -->
     <AdvancedSearchModal
       :is-open="isAdvancedSearchOpen"
       @close="closeAdvancedSearch"

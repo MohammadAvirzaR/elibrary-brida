@@ -70,11 +70,11 @@
 
           <!-- Download Button -->
           <button
-            @click="downloadDocument"
+            @click="handleDownloadClick"
             class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
           >
             <i-lucide-download class="w-3 h-3 sm:w-4 sm:h-4" />
-            Download
+            {{ canDirectDownload ? 'Download' : 'Minta Dokumen' }}
           </button>
         </div>
       </div>
@@ -100,13 +100,28 @@
                   <p class="text-gray-500 text-sm mt-2">Mohon tunggu sebentar</p>
                 </div>
               </div>
-              <!-- PDF Preview -->
-              <div v-else-if="pdfUrl" class="w-full h-96 sm:h-[600px] md:h-[800px] bg-gray-100 rounded-lg overflow-hidden">
+              <!-- PDF Preview - limited to ~2 pages for non-admin -->
+              <div v-else-if="pdfUrl" class="relative w-full bg-gray-100 rounded-lg overflow-hidden" style="height: 800px;">
                 <iframe
                   :src="pdfUrl"
-                  class="w-full h-full border-0"
+                  class="w-full border-0"
+                  style="height: 1700px;"
                   title="Document Preview"
                 />
+                <!-- Gradient overlay for guest/contributor: block full view -->
+                <div
+                  v-if="!canDirectDownload"
+                  class="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-gray-100 via-gray-100/90 to-transparent flex flex-col items-center justify-end pb-6 gap-3"
+                >
+                  <p class="text-sm text-gray-600 font-medium">Preview terbatas — 2 halaman pertama</p>
+                  <button
+                    @click="showDownloadRequestModal = true"
+                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 text-sm shadow"
+                  >
+                    <i-lucide-send class="w-4 h-4" />
+                    Minta Akses Full Text
+                  </button>
+                </div>
               </div>
               <!-- No Preview Available -->
               <div v-else class="flex items-center justify-center h-64 sm:h-80 md:h-96 bg-gray-100 rounded-lg">
@@ -114,10 +129,10 @@
                   <i-lucide-file class="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <p class="text-gray-600">Preview tidak tersedia</p>
                   <button
-                    @click="downloadDocument"
+                    @click="handleDownloadClick"
                     class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                   >
-                    Download untuk melihat
+                    {{ canDirectDownload ? 'Download untuk melihat' : 'Minta Dokumen' }}
                   </button>
                 </div>
               </div>
@@ -149,10 +164,19 @@
                     </div>
                   </div>
                   <button
+                    v-if="canDirectDownload"
                     @click="downloadAttachment(attachment)"
                     class="p-1.5 sm:p-2 hover:bg-blue-100 rounded-lg transition flex-shrink-0"
                   >
                     <i-lucide-download class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  </button>
+                  <button
+                    v-else
+                    @click="showDownloadRequestModal = true"
+                    class="p-1.5 sm:p-2 hover:bg-blue-100 rounded-lg transition flex-shrink-0"
+                    title="Minta akses dokumen"
+                  >
+                    <i-lucide-send class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </button>
                 </div>
               </div>
@@ -396,6 +420,13 @@
       @confirm="approveDocument"
       @cancel="showApproveConfirm = false"
     />
+
+    <RequestDownloadModal
+      v-if="showDownloadRequestModal && document"
+      :document-id="document.id"
+      :document-title="document.title"
+      @close="showDownloadRequestModal = false"
+    />
   </div>
 </template>
 
@@ -405,6 +436,7 @@ import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import ConfirmModal from '@/components/ConfirmModal.vue'
+import RequestDownloadModal from '@/components/RequestDownloadModal.vue'
 
 interface Author {
   id?: number
@@ -515,6 +547,25 @@ const userRole = ref('')
 const canReview = computed(() => {
   return ['admin', 'super_admin', 'reviewer'].includes(userRole.value)
 })
+
+const showDownloadRequestModal = ref(false)
+
+const currentUserId = computed(() => {
+  try { return JSON.parse(localStorage.getItem('user') || '{}').id } catch { return null }
+})
+
+const canDirectDownload = computed(() => {
+  if (['admin', 'super_admin', 'reviewer'].includes(userRole.value)) return true
+  return document.value?.user?.id === currentUserId.value
+})
+
+const handleDownloadClick = () => {
+  if (canDirectDownload.value) {
+    downloadDocument()
+  } else {
+    showDownloadRequestModal.value = true
+  }
+}
 
 onMounted(async () => {
   const storedUser = localStorage.getItem('user')

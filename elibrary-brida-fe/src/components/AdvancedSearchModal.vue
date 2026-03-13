@@ -18,7 +18,7 @@
               <i-lucide-chevron-left class="w-6 h-6 text-gray-700" />
             </button>
             <h2 class="text-xl font-bold text-gray-900">Advanced Search</h2>
-            <div class="w-10"></div> <!-- Spacer -->
+            <div class="w-10"></div>
           </div>
 
           <!-- Content -->
@@ -41,8 +41,8 @@
               </div>
             </div>
 
-            <!-- License & Access Rights (Commented out - not ready yet) -->
-            <!-- <div class="grid grid-cols-2 gap-6">
+            <!-- untuk lisensi dan hak akses -->
+            <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-bold text-gray-900 mb-3">
                   Filter Lisensi
@@ -82,7 +82,7 @@
                   </option>
                 </select>
               </div>
-            </div> -->
+            </div>
 
 
             <!-- Filters Grid -->
@@ -206,21 +206,21 @@ const selectedSubjects = ref<string[]>([])
 const selectedTypes = ref<string[]>([])
 const selectedYear = ref<number | null>(null)
 
-// Dynamic filters from API
+// filter buat api
 const subjects = ref<Array<{ label: string; value: string; id: number }>>([])
 const documentTypes = ref<Array<{ label: string; value: string; id: number }>>([])
 const licenses = ref<Array<{ label: string; value: string; id: number }>>([])
 const accessRights = ref<string[]>([])
 const years = ref<number[]>([])
 
-// Maps to store ID lookups
+// map untuk nyimpen nama ke ID dari API (biar mudah pas convert ke query params)
 const subjectMap = ref<Map<string, number>>(new Map())
 const typeMap = ref<Map<string, number>>(new Map())
 const licenseMap = ref<Map<string, number>>(new Map())
 
 const localSearch = ref(searchQuery.value)
 
-// enter to search
+// enter searching
 const scrollToCatalog = async () => {
   if (localSearch.value.trim()) {
     setSearchQuery(localSearch.value)
@@ -244,16 +244,16 @@ const closeModal = () => {
   emit('close')
 }
 
+// handle searching dengan filter
 const performSearch = () => {
-  // Check if any filter is filled
   const hasFilters = !!(
     searchQuery.value.trim() ||
     selectedSubjects.value.length > 0 ||
     selectedTypes.value.length > 0 ||
-    selectedYear.value !== null
+    selectedYear.value !== null ||
+    selectedLicense.value ||
+    selectedAccessRight.value
   )
-
-  // If no filters, just go to catalog page without any params
   if (!hasFilters) {
     router.push({
       name: 'catalog'
@@ -261,21 +261,18 @@ const performSearch = () => {
     closeModal()
     return
   }
-
-  // Get selected subject IDs
   const subjectIds = selectedSubjects.value
     .map(name => subjectMap.value.get(name))
     .filter((id): id is number => id !== undefined)
 
-  // Get selected type IDs
   const typeIds = selectedTypes.value
     .map(name => typeMap.value.get(name))
     .filter((id): id is number => id !== undefined)
 
-  // Get selected license ID (if license filter is enabled) - Not ready yet
-  // const licenseId = selectedLicense.value
-  //   ? licenseMap.value.get(selectedLicense.value)
-  //   : undefined
+  // buat lisensi dan hak akses
+  const licenseId = selectedLicense.value
+    ? licenseMap.value.get(selectedLicense.value)
+    : undefined
 
   const filters = {
     query: searchQuery.value,
@@ -288,7 +285,6 @@ const performSearch = () => {
 
   emit('search', filters)
 
-  // Navigate to catalog page with filter IDs
   const queryParams: Record<string, string> = {}
 
   if (searchQuery.value.trim()) {
@@ -303,14 +299,13 @@ const performSearch = () => {
     queryParams.type_id = typeIds.join(',')
   }
 
-  // Commented out - not ready yet
-  // if (licenseId) {
-  //   queryParams.license_id = licenseId.toString()
-  // }
+  if (licenseId) {
+    queryParams.license_id = licenseId.toString()
+  }
 
-  // if (selectedAccessRight.value) {
-  //   queryParams.access_right = selectedAccessRight.value
-  // }
+  if (selectedAccessRight.value) {
+    queryParams.access_right = selectedAccessRight.value
+  }
 
   if (selectedYear.value) {
     queryParams.year = selectedYear.value.toString()
@@ -324,7 +319,7 @@ const performSearch = () => {
   closeModal()
 }
 
-// Load filters on mount
+// buat loading filter dari API pas modal dibuka
 onMounted(async () => {
   try {
     const response = await api.filters.getAll() as {
@@ -335,7 +330,6 @@ onMounted(async () => {
       years: number[]
     }
 
-    // Map subjects to label-value format and create ID map
     subjects.value = response.subjects?.map(s => {
       subjectMap.value.set(s.subject_name, s.id)
       return {
@@ -345,7 +339,6 @@ onMounted(async () => {
       }
     }) || []
 
-    // Map document types to label-value format and create ID map
     documentTypes.value = response.types?.map(t => {
       typeMap.value.set(t.type_name, t.id)
       return {
@@ -355,7 +348,6 @@ onMounted(async () => {
       }
     }) || []
 
-    // Map licenses to label-value format and create ID map
     licenses.value = response.licenses?.map(l => {
       licenseMap.value.set(l.license_name, l.id)
       return {
@@ -365,10 +357,7 @@ onMounted(async () => {
       }
     }) || []
 
-    // Set access rights from API
     accessRights.value = response.access_rights || []
-
-    // Set years from API
     years.value = response.years || []
   } catch (error) {
     console.error('Failed to load filters:', error)
@@ -377,7 +366,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Modal transition */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.3s ease;

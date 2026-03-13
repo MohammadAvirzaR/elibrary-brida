@@ -72,10 +72,9 @@
                   class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   :class="{ 'border-red-500': errors.language }"
                 >
-                  <option value="">Pilih Bahasa</option>
+                  <option :value="null" disabled>pilih bahasa</option>
                   <option value="id">Bahasa Indonesia</option>
                   <option value="en">English</option>
-                  <option value="other">Lainnya</option>
                 </select>
                 <p v-if="errors.language" class="text-red-500 text-xs sm:text-sm mt-1">{{ errors.language }}</p>
               </div>
@@ -89,7 +88,7 @@
                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   :class="{ 'border-red-500': errors.documentType }"
                 >
-                  <option value="">Pilih Jenis</option>
+                  <option :value="null" disabled>pilih jenis</option>
                   <option v-for="type in documentTypes" :key="type.id" :value="type.id">
                     {{ type.type_name }}
                   </option>
@@ -164,7 +163,7 @@
                   Subjek <span class="text-red-500">*</span>
                 </label>
                 <select name="subject" id="subject" v-model.number="form.subject" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option value="">Pilih Subjek</option>
+                  <option :value="null" disabled>Pilih Subjek</option>
                   <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
                     {{ subject.subject_name }}
                   </option>
@@ -387,88 +386,99 @@
             </div>
           </div>
 
-          <!-- STEP 4: License & Declaration (DUMMY - Auto-pass for now) -->
+          <!-- STEP 4: License & Declaration -->
           <div v-if="currentStep === 4" class="space-y-5">
-            <div class="bg-blue-50 rounded-lg p-6 space-y-4">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="text-lg font-bold text-neutral-900">Lisensi & Pernyataan</h3>
-                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                  DUMMY MODE
-                </span>
+            <div class="bg-blue-50 rounded-lg p-6 space-y-5">
+              <h3 class="text-lg font-bold text-neutral-900">Lisensi & Pernyataan</h3>
+
+              <!-- Pilih Lisensi -->
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                  Pilih Lisensi <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.selectedLicense"
+                  class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  :class="errors.selectedLicense ? 'border-red-400' : 'border-neutral-300'"
+                >
+                  <option :value="null" disabled>-- Pilih lisensi --</option>
+                  <option v-for="l in licenses" :key="l.id" :value="l.id">{{ l.license_name }}</option>
+                </select>
+                <p v-if="errors.selectedLicense" class="mt-1 text-xs text-red-500">{{ errors.selectedLicense }}</p>
               </div>
-              <p class="text-sm text-neutral-600 italic">
-                ⚠️ Bagian ini saat ini dalam mode dummy. Validasi lisensi akan diaktifkan saat sistem sudah siap produksi.
-              </p>
 
-              <!-- COMMENTED OUT: Will be activated when license system is ready -->
-              <div class="opacity-50 pointer-events-none space-y-3 border-2 border-dashed border-neutral-300 rounded-lg p-4">
-                <p class="text-xs text-neutral-500 font-medium mb-3">Preview: Pernyataan yang akan diaktifkan nanti</p>
+              <!-- Pilih Hak Akses -->
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                  Hak Akses Dokumen <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.accessRight"
+                  class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="open">Open — Siapa saja bisa mengakses</option>
+                  <option value="public">Public — Pengguna terdaftar bisa mengakses</option>
+                  <option value="internal">Internal — Hanya pengguna non-tamu</option>
+                  <option value="private">Private — Hanya pemilik & admin</option>
+                  <option value="embargo">Embargo — Dikunci hingga tanggal tertentu</option>
+                </select>
+              </div>
 
-                <label class="flex items-start gap-3">
+              <!-- Tanggal Embargo -->
+              <div v-if="form.accessRight === 'embargo'">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                  Dokumen dapat diakses mulai <span class="text-red-500">*</span>
+                </label>
+                <input
+                  v-model="form.embargoUntil"
+                  type="date"
+                  :min="new Date().toISOString().split('T')[0]"
+                  class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  :class="errors.embargoUntil ? 'border-red-400' : 'border-neutral-300'"
+                />
+                <p v-if="errors.embargoUntil" class="mt-1 text-xs text-red-500">{{ errors.embargoUntil }}</p>
+              </div>
+
+              <!-- Pernyataan -->
+              <div class="space-y-3 border-t border-neutral-200 pt-4">
+                <p class="text-sm font-medium text-neutral-700">Pernyataan Persetujuan <span class="text-red-500">*</span></p>
+
+                <label class="flex items-start gap-3 cursor-pointer">
                   <input
+                    v-model="form.licenseAgreement"
                     type="checkbox"
-                    disabled
-                    checked
                     class="mt-1 w-4 h-4 text-blue-600 border-neutral-300 rounded"
                   />
                   <span class="text-sm text-neutral-600">
                     Saya memberikan izin kepada E-Library BRIDA untuk menyimpan, mengindeks, dan membagikan dokumen ini secara digital kepada pengguna yang berwenang sesuai dengan kebijakan repositori.
                   </span>
                 </label>
+                <p v-if="errors.licenseAgreement" class="ml-7 text-xs text-red-500">{{ errors.licenseAgreement }}</p>
 
-                <label class="flex items-start gap-3">
+                <label class="flex items-start gap-3 cursor-pointer">
                   <input
+                    v-model="form.originalWork"
                     type="checkbox"
-                    disabled
-                    checked
                     class="mt-1 w-4 h-4 text-blue-600 border-neutral-300 rounded"
                   />
                   <span class="text-sm text-neutral-600">
                     Saya menyatakan bahwa dokumen ini adalah karya asli saya/kami atau saya/kami memiliki hak untuk mengunggahnya, dan tidak melanggar hak cipta pihak lain.
                   </span>
                 </label>
+                <p v-if="errors.originalWork" class="ml-7 text-xs text-red-500">{{ errors.originalWork }}</p>
 
-                <label class="flex items-start gap-3">
+                <label class="flex items-start gap-3 cursor-pointer">
                   <input
+                    v-model="form.permissionGranted"
                     type="checkbox"
-                    disabled
-                    checked
                     class="mt-1 w-4 h-4 text-blue-600 border-neutral-300 rounded"
                   />
                   <span class="text-sm text-neutral-600">
                     Saya memahami bahwa dokumen yang diunggah akan melalui proses review oleh admin sebelum dipublikasikan, dan saya bersedia melakukan revisi jika diperlukan.
                   </span>
                 </label>
+                <p v-if="errors.permissionGranted" class="ml-7 text-xs text-red-500">{{ errors.permissionGranted }}</p>
               </div>
-
-              <!-- DUMMY: Auto-accept notice -->
-              <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                <div class="flex items-start gap-3">
-                  <i-lucide-check-circle class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p class="text-sm font-medium text-green-800">Otomatis Disetujui (Mode Development)</p>
-                    <p class="text-xs text-green-700 mt-1">
-                      Semua pernyataan lisensi dianggap sudah disetujui. Anda dapat langsung melanjutkan ke tahap upload.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Instructions for activation -->
-              <details class="bg-neutral-50 rounded-lg p-4">
-                <summary class="text-xs font-medium text-neutral-700 cursor-pointer hover:text-neutral-900">
-                  📝 Instruksi Aktivasi (Untuk Developer)
-                </summary>
-                <div class="mt-3 text-xs text-neutral-600 space-y-2">
-                  <p><strong>Untuk mengaktifkan validasi lisensi:</strong></p>
-                  <ol class="list-decimal list-inside space-y-1 ml-2">
-                    <li>Uncomment bagian form checkbox di atas (hapus opacity-50 & pointer-events-none)</li>
-                    <li>Uncomment validasi di fungsi <code class="bg-neutral-200 px-1 rounded">validateStep4()</code></li>
-                    <li>Hapus atau comment <code class="bg-neutral-200 px-1 rounded">return true</code> di awal validateStep4()</li>
-                    <li>Hapus badge "DUMMY MODE" dan notice "Otomatis Disetujui"</li>
-                  </ol>
-                </div>
-              </details>
             </div>
           </div>
 
@@ -561,6 +571,7 @@ const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
 const currentUserName = ref('') // Nama user yang sedang login
 const subjects = ref<Array<{ id: number; subject_name: string }>>([])
 const documentTypes = ref<Array<{ id: number; type_name: string }>>([])
+const licenses = ref<Array<{ id: number; license_name: string }>>([])
 
 const form = reactive({
   // Step 1 - Metadata
@@ -583,6 +594,9 @@ const form = reactive({
   licenseAgreement: false,
   originalWork: false,
   permissionGranted: false,
+  selectedLicense: null as number | null,
+  accessRight: 'public',
+  embargoUntil: '',
 
   // Legacy fields (keep for backward compatibility)
   category: '',
@@ -601,7 +615,10 @@ const errors = reactive({
   file: '',
   licenseAgreement: '',
   originalWork: '',
-  permissionGranted: ''
+  permissionGranted: '',
+  selectedLicense: '',
+  accessRight: '',
+  embargoUntil: ''
 })
 
 const handleFileSelect = (event: Event) => {
@@ -877,49 +894,42 @@ const validateStep3 = () => {
 }
 
 const validateStep4 = () => {
-  // DUMMY MODE: Auto-pass license validation for now
-  return true
-
-  /* COMMENTED OUT: Uncomment this block when ready to activate license validation
-
   let isValid = true
-  let firstErrorMessage = ''
 
   errors.licenseAgreement = ''
   errors.originalWork = ''
   errors.permissionGranted = ''
+  errors.selectedLicense = ''
+  errors.embargoUntil = ''
+
+  if (!form.selectedLicense) {
+    errors.selectedLicense = 'Pilih lisensi untuk dokumen ini'
+    isValid = false
+  }
 
   if (!form.licenseAgreement) {
     errors.licenseAgreement = 'Anda harus menyetujui pernyataan ini'
     isValid = false
-    if (!firstErrorMessage) firstErrorMessage = 'Anda harus menyetujui pernyataan lisensi repositori'
   }
   if (!form.originalWork) {
     errors.originalWork = 'Anda harus menyetujui pernyataan ini'
     isValid = false
-    if (!firstErrorMessage) firstErrorMessage = 'Anda harus menyatakan bahwa dokumen adalah karya asli'
   }
   if (!form.permissionGranted) {
     errors.permissionGranted = 'Anda harus menyetujui pernyataan ini'
     isValid = false
-    if (!firstErrorMessage) firstErrorMessage = 'Anda harus menyetujui proses review dokumen'
   }
 
-  if (!isValid && firstErrorMessage) {
-    toast.error('Validasi Gagal', firstErrorMessage)
+  if (form.accessRight === 'embargo' && !form.embargoUntil) {
+    errors.embargoUntil = 'Tanggal embargo harus diisi'
+    isValid = false
+  }
 
-    // Scroll to first unchecked checkbox
-    setTimeout(() => {
-      const firstCheckbox = document.querySelector('.bg-blue-50 input[type="checkbox"]:not(:checked)') as HTMLElement
-      if (firstCheckbox) {
-        firstCheckbox.focus()
-        firstCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-    }, 100)
+  if (!isValid) {
+    toast.error('Validasi Gagal', 'Lengkapi semua pernyataan lisensi dan pilih hak akses')
   }
 
   return isValid
-  */
 }
 
 const getFieldPlaceholder = (fieldName: string): string => {
@@ -1059,7 +1069,13 @@ const submitForm = async () => {
       formData.append('supervisors[0][institution]', '')
     }
 
-    // formData.append('access_right', 'open')
+    if (form.selectedLicense) {
+      formData.append('license_id', form.selectedLicense.toString())
+    }
+    formData.append('access_right', form.accessRight)
+    if (form.accessRight === 'embargo' && form.embargoUntil) {
+      formData.append('embargo_until', form.embargoUntil)
+    }
     formData.append('statement_agreed', '1')
     form.attachments.forEach((file, index) => {
       if (file instanceof File) {
@@ -1169,9 +1185,11 @@ onMounted(async () => {
     const response = await api.filters.getAll() as {
       subjects: Array<{ id: number; subject_name: string }>
       types: Array<{ id: number; type_name: string }>
+      licenses: Array<{ id: number; license_name: string }>
     }
     subjects.value = response.subjects || []
     documentTypes.value = response.types || []
+    licenses.value = response.licenses || []
   } catch (error) {
     console.error('Failed to load filters:', error)
     toast.error('Gagal Memuat Data', 'Tidak dapat memuat daftar subjek dan jenis dokumen')

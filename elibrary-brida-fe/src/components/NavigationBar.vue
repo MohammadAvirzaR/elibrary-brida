@@ -88,13 +88,24 @@
                   <i-lucide-layout-dashboard class="w-4 h-4 inline mr-2" />
                   Dashboard
                 </router-link>
-                <router-link
+
+                <!-- buat profile link -->
+                <!-- <router-link
                   to="/profile"
                   class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
                   @click="showProfileMenu = false"
                 >
                   <i-lucide-user class="w-4 h-4 inline mr-2" />
                   Profile
+                </router-link> -->
+                <router-link
+                  v-if="['Admin', 'Super Admin'].includes(userRole)"
+                  to="/download-requests"
+                  class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
+                  @click="showProfileMenu = false"
+                >
+                  <i-lucide-download class="w-4 h-4 inline mr-2" />
+                  Permintaan Download
                 </router-link>
                 <hr class="my-2 border-neutral-200" />
                 <button
@@ -191,6 +202,15 @@
                 <i-lucide-user class="w-4 h-4" />
                 Profile
               </router-link>
+              <router-link
+                v-if="['Admin', 'Super Admin'].includes(userRole)"
+                to="/download-requests"
+                @click="closeMobileMenu"
+                class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                <i-lucide-download class="w-4 h-4" />
+                Permintaan Download
+              </router-link>
               <button @click="handleLogout" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <i-lucide-log-out class="w-4 h-4" />
                 Logout
@@ -214,7 +234,6 @@ const route = useRoute()
 const { searchQuery, setSearchQuery } = useSearch()
 const localSearch = ref(searchQuery.value)
 
-// Authentication state
 const isAuthenticated = ref(false)
 const userName = ref('')
 const userRole = ref('')

@@ -3,8 +3,8 @@
     id="catalog"
     class="container mx-auto my-12 md:my-20 px-4 sm:px-6 scroll-mt-20"
   >
-    <!-- Search Results Info -->
-    <div v-if="searchQuery && totalResults > 0" class="mb-6 md:mb-8 text-center">
+    <!-- hasil searching -->
+  <div v-if="searchQuery && totalResults > 0" class="mb-6 md:mb-8 text-center">
       <p class="text-sm md:text-base text-neutral-600">
         Ditemukan <span class="font-semibold text-neutral-900">{{ totalResults }}</span> hasil untuk "<span class="font-semibold text-neutral-900">{{ searchQuery }}</span>"
       </p>
@@ -74,7 +74,6 @@
           class="flex-shrink-0 w-36 sm:w-40 md:w-44 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
         >
           <div class="p-2.5 sm:p-3">
-            <!-- Thumbnail -->
             <div class="overflow-hidden rounded-lg mb-2.5 sm:mb-3 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center aspect-[3/4]">
               <img
                 v-if="book.thumbnail"
@@ -129,7 +128,6 @@ onMounted(() => {
 
 // Watch activeTab untuk fetch data saat tab berubah
 watch(activeTab, (newTab) => {
-  // Jangan fetch jika ada search query aktif
   if (searchQuery.value) return
 
   const tab = tabs.find(t => t.value === newTab)
@@ -139,7 +137,6 @@ watch(activeTab, (newTab) => {
 })
 
 const filteredBooks = computed(() => {
-  // Jika ada hasil search dari API, gunakan itu
   if (searchQuery.value && searchResults.value.length > 0) {
     return searchResults.value.map((doc) => ({
       id: doc.id,
@@ -151,7 +148,6 @@ const filteredBooks = computed(() => {
     }));
   }
 
-  // Jika tidak ada search, tampilkan data dari API berdasarkan tab
   if (!searchQuery.value && documents.value.length > 0) {
     return documents.value.map((doc) => ({
       id: doc.id,
@@ -163,7 +159,6 @@ const filteredBooks = computed(() => {
     }));
   }
 
-  // Fallback: return empty array
   return []
 });
 
@@ -178,14 +173,12 @@ const scrollContainer = (direction: "left" | "right") => {
 };
 
 const handleImageError = (event: Event) => {
-  // Hide image on error, will fallback to icon
   const target = event.target as HTMLImageElement
   target.style.display = 'none'
 };
 </script>
 
 <style scoped>
-/* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

@@ -19,7 +19,7 @@ class FilterController extends Controller
             'units' => Unit::select('id', 'unit_name')->get(),
             'licenses' => License::select('id', 'license_name')->get(),
             'years' => [5, 7, 10, 15, 20, 25], // year filters range
-            'access_rights' => ['public', 'private']
+            'access_rights' => ['open', 'public', 'internal', 'private', 'embargo']
         ]);
     }
 }

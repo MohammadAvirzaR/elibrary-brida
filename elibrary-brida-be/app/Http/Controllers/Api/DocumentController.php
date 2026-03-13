@@ -28,6 +28,15 @@ class DocumentController extends Controller
         // Only show approved documents on public search/landing page
         $query->where('status', 'approved');
 
+        // Exclude private documents for non-admin/reviewer users
+        $user = auth('sanctum')->user();
+        if (!$user || !in_array($user->role?->name, ['admin', 'super_admin', 'reviewer'])) {
+            $query->where('access_right', '!=', 'private');
+            $query->whereDoesntHave('license', function ($q) {
+                $q->where('license_name', 'All Rights Reserved');
+            });
+        }
+
         if ($request->filled('q') || $request->filled('search')) {
             $search = $request->input('q') ?: $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -54,10 +63,9 @@ class DocumentController extends Controller
             $query->whereIn('subject_id', (array) $request->subject_id);
         }
 
-        // Filter by license (commented out - not ready yet)
-        // if ($request->filled('license_id')) {
-        //     $query->where('license_id', $request->license_id);
-        // }
+        if ($request->filled('license_id')) {
+            $query->where('license_id', $request->license_id);
+        }
 
         return response()->json($query->paginate(10));
 
@@ -66,17 +74,27 @@ class DocumentController extends Controller
 
     public function featuredContent()
     {
+        $restrictedLicenses = function ($q) {
+            $q->where('license_name', 'All Rights Reserved');
+        };
+
         return response()->json([
             'featured' => Document::where('is_featured', true)
                 ->where('status', 'approved')
+                ->where('access_right', '!=', 'private')
+                ->whereDoesntHave('license', $restrictedLicenses)
                 ->orderBy('upload_date', 'desc')
                 ->limit(10)
                 ->get(),
             'latest' => Document::where('status', 'approved')
+                ->where('access_right', '!=', 'private')
+                ->whereDoesntHave('license', $restrictedLicenses)
                 ->orderBy('upload_date', 'desc')
                 ->limit(10)
                 ->get(),
             'most_downloaded' => Document::where('status', 'approved')
+                ->where('access_right', '!=', 'private')
+                ->whereDoesntHave('license', $restrictedLicenses)
                 ->orderBy('download_count', 'desc')
                 ->limit(10)
                 ->get(),
@@ -109,7 +127,7 @@ class DocumentController extends Controller
             'longitude' => 'nullable|numeric',
 
             'subject_id' => 'nullable|exists:subjects,id',
-            'access_right' => ['required', Rule::in(['public','internal','embargo'])],
+            'access_right' => ['required', Rule::in(['open','public','internal','private','embargo'])],
 
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
 
@@ -161,7 +179,7 @@ class DocumentController extends Controller
 
             'license_id' => 'nullable|exists:licenses,id',
 
-            'access_right' => ['nullable', Rule::in(['public','internal','embargo'])],
+            'access_right' => ['nullable', Rule::in(['open','public','internal','private','embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
 
             'statement_agreed' => 'nullable',  // Make it optional for wizard mode
@@ -286,12 +304,16 @@ class DocumentController extends Controller
 
         $query = Document::with(['user', 'type']);
 
-        if ($user->hasRole('contributor')) {
+        if ($user->role?->name === 'contributor') {
             $query->where('user_id', $user->id);
         }
 
-        elseif ($user->hasRole('guest')) {
-            $query->where('status', 'approved');
+        elseif ($user->role?->name === 'guest') {
+            $query->where('status', 'approved')
+                ->where('access_right', '!=', 'private')
+                ->whereDoesntHave('license', function ($q) {
+                    $q->where('license_name', 'All Rights Reserved');
+                });
         }
 
         $documents = $query->orderBy('created_at', 'desc')->get();
@@ -511,6 +533,18 @@ class DocumentController extends Controller
                             'message' => 'This document is not publicly available yet'
                         ], 403);
                     }
+                    if ($document->access_right === 'private') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Dokumen ini bersifat privat dan tidak dapat diakses'
+                        ], 403);
+                    }
+                    if ($document->license && $document->license->license_name === 'All Rights Reserved') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Akses ke dokumen ini dibatasi berdasarkan lisensi All Rights Reserved'
+                        ], 403);
+                    }
                 } else {
                     return response()->json([
                         'success' => false,
@@ -630,7 +664,7 @@ class DocumentController extends Controller
                 $document = Document::findOrFail($id);
 
                 // Authorization: only contributor who uploaded or admin can delete
-                if ($user->id !== $document->user_id && !$user->hasAnyRole(['admin', 'super_admin'])) {
+                if ($user->id !== $document->user_id && !in_array($user->role?->name, ['admin', 'super_admin'])) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
@@ -717,26 +751,10 @@ class DocumentController extends Controller
                 ], 401);
             }
 
-            $document = Document::with('user.roles')->findOrFail($id);
+            $document = Document::with('user.roles', 'license')->findOrFail($id);
 
-            $userRole = $user->role?->name;
-
-            if (!in_array($userRole, ['admin', 'super_admin', 'reviewer'])) {
-                if ($document->user_id === $user->id) {
-                } else if ($userRole === 'guest') {
-                    if ($document->status !== 'approved') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'This document is not publicly available yet'
-                        ], 403);
-                    }
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized to access this document'
-                    ], 403);
-                }
-            }
+            $accessCheck = $this->checkFileAccess($document, $user);
+            if ($accessCheck) return $accessCheck;
 
             if (!$document->file_path) {
                 return response()->json([
@@ -810,26 +828,10 @@ class DocumentController extends Controller
                 ->where('id', $attachmentId)
                 ->firstOrFail();
 
-            $document = Document::with('user.roles')->findOrFail($documentId);
+            $document = Document::with('user.roles', 'license')->findOrFail($documentId);
 
-            $userRole = $user->role?->name;
-
-            if (!in_array($userRole, ['admin', 'super_admin', 'reviewer'])) {
-                if ($document->user_id === $user->id) {
-                } else if ($userRole === 'guest') {
-                    if ($document->status !== 'approved') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'This document is not publicly available yet'
-                        ], 403);
-                    }
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized to access this document'
-                    ], 403);
-                }
-            }
+            $accessCheck = $this->checkFileAccess($document, $user);
+            if ($accessCheck) return $accessCheck;
 
             if (!$attachment->file_path) {
                 return response()->json([
@@ -878,6 +880,54 @@ class DocumentController extends Controller
                 'success' => false,
                 'message' => 'Error serving attachment: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function checkFileAccess(Document $document, User $user): ?JsonResponse
+    {
+        $role = $user->role?->name;
+
+        if (in_array($role, ['admin', 'super_admin', 'reviewer'])) {
+            return null;
+        }
+
+        if ($document->user_id === $user->id) {
+            return null;
+        }
+
+        if ($document->status !== 'approved') {
+            return response()->json(['success' => false, 'message' => 'Dokumen belum dipublikasikan'], 403);
+        }
+
+        if ($document->license && $document->license->license_name === 'All Rights Reserved') {
+            return response()->json(['success' => false, 'message' => 'File ini tidak dapat diunduh langsung karena dilindungi lisensi All Rights Reserved. Ajukan permohonan download.'], 403);
+        }
+
+        switch ($document->access_right) {
+            case 'open':
+            case 'public':
+                return null;
+
+            case 'internal':
+                if ($role === 'guest') {
+                    return response()->json(['success' => false, 'message' => 'Dokumen ini hanya untuk pengguna internal'], 403);
+                }
+                return null;
+
+            case 'private':
+                return response()->json(['success' => false, 'message' => 'Dokumen ini bersifat privat'], 403);
+
+            case 'embargo':
+                if ($document->embargo_until && Carbon::parse($document->embargo_until)->isFuture()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Dokumen masih dalam masa embargo hingga ' . Carbon::parse($document->embargo_until)->format('d M Y')
+                    ], 403);
+                }
+                return null;
+
+            default:
+                return null;
         }
     }
 }

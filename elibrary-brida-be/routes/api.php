@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminDocumentController;
 use App\Http\Controllers\Api\ContributorRequestController;
+use App\Http\Controllers\Api\DocumentDownloadRequestController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
 Route::post('register', [AuthController::class, 'register'])
@@ -34,6 +35,9 @@ Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentC
 Route::get('/documents/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
 
 Route::get('/filters', [FilterController::class, 'index']);
+
+// Download requests — public (no auth needed so guests can request)
+Route::post('/download-requests', [DocumentDownloadRequestController::class, 'store']);
 
 // Auth Sanctum routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -90,6 +94,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/admin/documents/{id}/approve', [AdminDocumentController::class, 'approve']);
         Route::post('/admin/documents/{id}/reject', [AdminDocumentController::class, 'reject']);
+
+        // Download request management
+        Route::get('/download-requests', [DocumentDownloadRequestController::class, 'index']);
+        Route::post('/download-requests/{id}/send', [DocumentDownloadRequestController::class, 'send']);
+        Route::post('/download-requests/{id}/reject', [DocumentDownloadRequestController::class, 'reject']);
     });
 
     Route::get('/documents', [DocumentController::class, 'index']);

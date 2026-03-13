@@ -227,6 +227,25 @@ export const api = {
       apiCall(`/users/${id}`, { method: 'DELETE' }, true),
   },
 
+  downloadRequests: {
+    submit: (data: {
+      document_id: number
+      name: string
+      email: string
+      institution?: string
+      purpose?: string
+      agreed_to_terms: boolean
+    }) => apiCall('/download-requests', { method: 'POST', body: JSON.stringify(data) }),
+
+    getAll: () => apiCall('/download-requests', { method: 'GET' }, true),
+
+    send: (id: number, admin_notes?: string) =>
+      apiCall(`/download-requests/${id}/send`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
+
+    reject: (id: number, admin_notes?: string) =>
+      apiCall(`/download-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
+  },
+
   contributorRequests: {
     getAll: () => apiCall('/contributor-requests', { method: 'GET' }, true),
 

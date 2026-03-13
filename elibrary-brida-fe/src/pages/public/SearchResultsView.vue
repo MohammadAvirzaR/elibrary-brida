@@ -190,7 +190,9 @@
                       <i-lucide-eye class="w-3 h-3 sm:w-4 sm:h-4" />
                       Preview
                     </router-link>
-                    <button class="flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2">
+                    <button
+                      @click="openDownloadModal(document.id, document.title)"
+                      class="flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2">
                       <i-lucide-download class="w-3 h-3 sm:w-4 sm:h-4" />
                       Download
                     </button>
@@ -250,6 +252,13 @@
       </div>
     </div>
   </PublicLayout>
+
+  <RequestDownloadModal
+    v-if="showDownloadModal && selectedDoc"
+    :document-id="selectedDoc.id"
+    :document-title="selectedDoc.title"
+    @close="showDownloadModal = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -258,6 +267,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDocumentSearch } from '@/composables/useDocumentSearch'
 import { useDebounceFn } from '@vueuse/core'
 import PublicLayout from '@/layout/PublicLayout.vue'
+import RequestDownloadModal from '@/components/RequestDownloadModal.vue'
 import api from '@/services/api'
 
 const route = useRoute()
@@ -274,6 +284,14 @@ const selectedYear = ref<number | string>('')
 
 // Flag to prevent watch triggering on internal URL updates
 const isInternalUpdate = ref(false)
+
+const showDownloadModal = ref(false)
+const selectedDoc = ref<{ id: number; title: string } | null>(null)
+
+const openDownloadModal = (id: number, title: string) => {
+  selectedDoc.value = { id, title }
+  showDownloadModal.value = true
+}
 
 // Maps to store ID lookups
 const subjectMap = ref<Map<string, number>>(new Map())

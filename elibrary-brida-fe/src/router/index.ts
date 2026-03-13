@@ -206,6 +206,17 @@ const router = createRouter({
     },
 
     {
+      path: '/download-requests',
+      name: 'download-requests',
+      component: () => import('@/pages/dashboard/DownloadRequestsView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+        title: 'Download Requests'
+      }
+    },
+
+    {
       path: '/upload-document',
       name: 'upload-document',
       component: () => import('@/pages/contributor/ContributorDashboard.vue'),
