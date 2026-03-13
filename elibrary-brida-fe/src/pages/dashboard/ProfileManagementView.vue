@@ -503,8 +503,6 @@ interface User {
   name: string
   email: string
   institution: string | null
-  phone: string | null
-  address: string | null
   role: string
 }
 
@@ -614,8 +612,6 @@ const loadUsers = async () => {
         name: user.name,
         email: user.email,
         institution: user.institution || null,
-        phone: user.phone || null,
-        address: user.address || null,
         role: user.role
       }))
       console.log('Users loaded successfully:', users.value.length, 'users') // Debug log

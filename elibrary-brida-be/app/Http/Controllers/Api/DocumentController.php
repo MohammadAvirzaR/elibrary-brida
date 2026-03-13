@@ -22,13 +22,10 @@ class DocumentController extends Controller
     {
         $query = Document::query();
 
-        // Eager load relationships
         $query->with(['type', 'subject', 'authors', 'license']);
 
-        // Only show approved documents on public search/landing page
         $query->where('status', 'approved');
 
-        // Exclude private documents for non-admin/reviewer users
         $user = auth('sanctum')->user();
         if (!$user || !in_array($user->role?->name, ['admin', 'super_admin', 'reviewer'])) {
             $query->where('access_right', '!=', 'private');
@@ -525,8 +522,8 @@ class DocumentController extends Controller
 
 
             if (!in_array($userRole, ['admin', 'super_admin', 'reviewer'])) {
-                if ($document->user_id === $user->id) {
-                } else if ($userRole === 'guest') {
+                if ($document->user_id !== $user->id) {
+                    // Any non-privileged user (guest, contributor, etc.) — apply public access rules
                     if ($document->status !== 'approved') {
                         return response()->json([
                             'success' => false,
@@ -545,11 +542,6 @@ class DocumentController extends Controller
                             'message' => 'Akses ke dokumen ini dibatasi berdasarkan lisensi All Rights Reserved'
                         ], 403);
                     }
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized to view this document'
-                    ], 403);
                 }
             }
 

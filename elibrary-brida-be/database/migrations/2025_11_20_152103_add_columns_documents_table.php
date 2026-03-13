@@ -18,21 +18,6 @@ return new class extends Migration {
             if (!Schema::hasColumn('documents', 'statement_agreed')) {
                 $table->boolean('statement_agreed')->default(false)->after('license_id');
             }
-
-            // Multi author
-            if (!Schema::hasColumn('documents', 'authors')) {
-                $table->json('authors')->nullable()->after('email');
-            }
-
-            // Multi supervisor (opsional)
-            if (!Schema::hasColumn('documents', 'supervisors')) {
-                $table->json('supervisors')->nullable()->after('authors');
-            }
-
-            // Attachments opsional
-            if (!Schema::hasColumn('documents', 'attachments')) {
-                $table->json('attachments')->nullable()->after('file_path');
-            }
         });
     }
 
@@ -42,9 +27,6 @@ return new class extends Migration {
             $table->dropColumn([
                 'embargo_until',
                 'statement_agreed',
-                'authors',
-                'supervisors',
-                'attachments'
             ]);
         });
     }
