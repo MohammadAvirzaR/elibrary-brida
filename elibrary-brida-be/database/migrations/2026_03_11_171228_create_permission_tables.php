@@ -23,14 +23,14 @@ return new class extends Migration
         /**
          * See `docs/prerequisites.md` for suggested lengths on 'name' and 'guard_name' if "1071 Specified key was too long" errors are encountered.
          */
-        Schema::create($tableNames['permissions'], static function (Blueprint $table) {
-            $table->id(); // permission id
-            $table->string('name');
-            $table->string('guard_name');
-            $table->timestamps();
+        // Schema::create($tableNames['permissions'], static function (Blueprint $table) {
+        //     $table->id(); // permission id
+        //     $table->string('name');
+        //     $table->string('guard_name');
+        //     $table->timestamps();
 
-            $table->unique(['name', 'guard_name']);
-        });
+        //     $table->unique(['name', 'guard_name']);
+        // });
 
         /**
          * Skip creating roles table - it already exists from previous migration.
@@ -39,15 +39,15 @@ return new class extends Migration
          */
         // Schema::create($tableNames['roles'], ...) - SKIPPED: table already exists
         // Add unique constraint for name+guard_name if not already present
-        if (!Schema::hasTable('roles') || !$this->hasUniqueConstraint('roles', ['name', 'guard_name'])) {
-            try {
-                Schema::table($tableNames['roles'], static function (Blueprint $table) {
-                    $table->unique(['name', 'guard_name'], 'roles_name_guard_name_unique');
-                });
-            } catch (\Exception $e) {
-                // Constraint may already exist, ignore
-            }
-        }
+        // if (!Schema::hasTable('roles') || !$this->hasUniqueConstraint('roles', ['name', 'guard_name'])) {
+        //     try {
+        //         Schema::table($tableNames['roles'], static function (Blueprint $table) {
+        //             $table->unique(['name', 'guard_name'], 'roles_name_guard_name_unique');
+        //         });
+        //     } catch (\Exception $e) {
+        //         // Constraint may already exist, ignore
+        //     }
+        // }
 
         Schema::create($tableNames['model_has_permissions'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {
             $table->unsignedBigInteger($pivotPermission);
