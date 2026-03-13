@@ -70,7 +70,6 @@ declare module 'vue' {
     ILucideInfo: typeof import('~icons/lucide/info')['default']
     ILucideInstagram: typeof import('~icons/lucide/instagram')['default']
     ILucideKey: typeof import('~icons/lucide/key')['default']
-    ILucideLanguages: typeof import('~icons/lucide/languages')['default']
     ILucideLayoutDashboard: typeof import('~icons/lucide/layout-dashboard')['default']
     ILucideLightbulb: typeof import('~icons/lucide/lightbulb')['default']
     ILucideLink: typeof import('~icons/lucide/link')['default']

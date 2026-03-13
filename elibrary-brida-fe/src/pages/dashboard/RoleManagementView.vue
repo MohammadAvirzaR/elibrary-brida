@@ -260,7 +260,7 @@
   <ConfirmModal
     :show="showDeleteRoleConfirm"
     title="Hapus Role"
-    :message="selectedRole ? `Apakah Anda yakin ingin menghapus role \"${selectedRole.name}\"?` : 'Apakah Anda yakin?'"
+    :message="deleteConfirmMessage"
     confirm-text="Ya, Hapus"
     cancel-text="Batal"
     @confirm="confirmDeleteRole"
@@ -281,6 +281,10 @@ const isSidebarOpen = ref(true)
 const showDeleteRoleConfirm = ref(false)
 const selectedRole = ref<Role | null>(null)
 const draggedRole = ref<Role | null>(null)
+
+const deleteConfirmMessage = computed(() =>
+  selectedRole.value ? `Apakah Anda yakin ingin menghapus role "${selectedRole.value.name}"?` : 'Apakah Anda yakin?'
+)
 
 // Role Interface
 interface Role {
