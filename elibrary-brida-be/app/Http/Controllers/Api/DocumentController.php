@@ -267,6 +267,7 @@ class DocumentController extends Controller
 
     public function index(Request $request)
     {
+        /** @var User|null $user */
         $user = auth('sanctum')->user();
 
         if (!$user) {
@@ -469,6 +470,7 @@ class DocumentController extends Controller
     public function show($id)
     {
         try {
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
 
             if (!$user) {
@@ -576,6 +578,7 @@ class DocumentController extends Controller
 
         // Otomatis buat/update review record jika status berubah ke approved/rejected
         if (isset($validated['status']) && in_array($validated['status'], ['approved', 'rejected']) && $oldStatus !== $validated['status']) {
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
             Review::updateOrCreate(
                 ['document_id' => $document->id],
@@ -598,6 +601,7 @@ class DocumentController extends Controller
     public function destroy($id)
     {
         try {
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
 
             if (!$user) {
@@ -703,6 +707,7 @@ class DocumentController extends Controller
                 $request->headers->set('Authorization', 'Bearer ' . $token);
             }
 
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
 
             if (!$user) {
@@ -791,6 +796,7 @@ class DocumentController extends Controller
                 $request->headers->set('Authorization', 'Bearer ' . $token);
             }
 
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
 
             if (!$user) {
@@ -798,7 +804,9 @@ class DocumentController extends Controller
                     'success' => false,
                     'message' => 'Unauthenticated'
                 ], 401);
-            }            $attachment = DocumentAttachment::where('document_id', $documentId)
+            }
+
+            $attachment = DocumentAttachment::where('document_id', $documentId)
                 ->where('id', $attachmentId)
                 ->firstOrFail();
 
