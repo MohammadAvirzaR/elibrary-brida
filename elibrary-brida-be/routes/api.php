@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminDocumentController;
 use App\Http\Controllers\Api\ContributorRequestController;
 use App\Http\Controllers\Api\DocumentDownloadRequestController;
+use App\Http\Controllers\Api\StatisticsController;
+use App\Http\Controllers\Api\DebugController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
 Route::post('register', [AuthController::class, 'register'])
@@ -99,6 +101,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/download-requests', [DocumentDownloadRequestController::class, 'index']);
         Route::post('/download-requests/{id}/send', [DocumentDownloadRequestController::class, 'send']);
         Route::post('/download-requests/{id}/reject', [DocumentDownloadRequestController::class, 'reject']);
+
+        // Statistics endpoint (Dashboard)
+        Route::get('/statistics', [StatisticsController::class, 'index']);
     });
 
     Route::get('/documents', [DocumentController::class, 'index']);
