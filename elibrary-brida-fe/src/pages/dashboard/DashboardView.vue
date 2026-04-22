@@ -1111,27 +1111,51 @@ const loadStats = async () => {
 // }
 const loadStatistics = async () => {
   try {
-    // TODO: Replace with actual API call
-    // const response = await api.statistics.getAll()
-    // if (response.success && response.data) {
-    //   totalResearch.value = response.data.total_research
-    //   bridaResearch.value = response.data.brida_research
-    //   nonBridaResearch.value = response.data.non_brida_research
-    //   categoryChartSeries.value = response.data.category_data.values
-    //   trendChartSeries.value = response.data.trend_data.series
-    //   institutionChartSeries.value = response.data.institution_data.series
-    // }
+    console.log('📊 Loading statistics from API...')
+    const response = await api.statistics.getAll() as { 
+      success: boolean
+      data: {
+        total_research: number
+        brida_research: number
+        non_brida_research: number
+        category_data: { labels: string[]; values: number[] }
+        trend_data: { series: Array<{ name: string; data: number[] }>; months: string[] }
+        institution_data: { institutions: string[]; counts: number[] }
+      }
+    }
 
-    // MOCK DATA - Remove this when backend is ready
-    totalResearch.value = 1640
-    bridaResearch.value = 5
-    nonBridaResearch.value = 1635
+    if (response.success && response.data) {
+      console.log('✅ API Response received:', response.data)
+      
+      // Update statistics cards
+      totalResearch.value = response.data.total_research
+      bridaResearch.value = response.data.brida_research
+      nonBridaResearch.value = response.data.non_brida_research
 
-    // Mock data for charts (already set in initial ref values)
+      // Update pie chart (Category)
+      categoryChartSeries.value = response.data.category_data.values
+      categoryChartOptions.value.labels = response.data.category_data.labels
+      console.log('📊 Pie Chart updated:', { labels: response.data.category_data.labels, values: response.data.category_data.values })
 
-    console.log('Statistics loaded (mock data)')
+      // Update line chart (Trend)
+      trendChartSeries.value = response.data.trend_data.series
+      console.log('📈 Line Chart updated with', response.data.trend_data.series.length, 'years')
+
+      // Update bar chart (Institution)
+      institutionChartOptions.value.xaxis.categories = response.data.institution_data.institutions
+      institutionChartSeries.value = [{
+        name: 'Jumlah Penelitian',
+        data: response.data.institution_data.counts
+      }]
+      console.log('📊 Bar Chart updated with', response.data.institution_data.institutions.length, 'institutions')
+
+      console.log('✨ Statistics loaded successfully!')
+    } else {
+      console.warn('⚠️ API response not successful:', response)
+    }
   } catch (error) {
-    console.error('Gagal memuat statistik:', error)
+    console.error('❌ Gagal memuat statistik:', error)
+    toast.error('Gagal Memuat Statistik', 'Tidak dapat mengambil data statistik dari server')
   }
 }
 
