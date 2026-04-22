@@ -2,50 +2,52 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md border-b border-neutral-200 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="flex items-center justify-between h-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 py-3 sm:h-16 sm:py-0">
           <!-- Logo & Brand -->
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <i-lucide-book-open class="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 class="text-lg font-bold text-neutral-900">E-Library BRIDA</h1>
-              <p class="text-xs text-neutral-500">Dashboard Pengguna</p>
+              <h1 class="text-base sm:text-lg font-bold text-neutral-900">E-Library BRIDA</h1>
+              <p class="text-[11px] sm:text-xs text-neutral-500">Dashboard Pengguna</p>
             </div>
           </div>
 
           <!-- Navigation Items -->
-          <div class="flex items-center space-x-4">
+          <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
             <!-- Tombol Kembali ke Landing Page -->
             <button
               @click="goToLandingPage"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+              class="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
             >
-              <i-lucide-home class="w-4 h-4 mr-2" />
-              Beranda
+              <i-lucide-home class="w-4 h-4 sm:mr-2" />
+              <span class="hidden sm:inline">Beranda</span>
             </button>
 
             <!-- Contributor Request Button / Dashboard Link -->
             <button
               v-if="userRole === 'contributor'"
               @click="goToContributorDashboard"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
+              class="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
             >
-              <i-lucide-upload class="w-4 h-4 mr-2" />
-              Dashboard Kontributor
+              <i-lucide-upload class="w-4 h-4 sm:mr-2" />
+              <span class="hidden sm:inline">Dashboard Kontributor</span>
+              <span class="sm:hidden">Kontributor</span>
             </button>
 
             <button
               v-else-if="userRole === 'guest' && !hasPendingRequest"
               @click="goToContributorRequest"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
+              class="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
             >
-              <i-lucide-file-text class="w-4 h-4 mr-2" />
-              Jadi Kontributor
+              <i-lucide-file-text class="w-4 h-4 sm:mr-2" />
+              <span class="hidden sm:inline">Jadi Kontributor</span>
+              <span class="sm:hidden">Kontributor</span>
             </button>
 
-            <div v-else-if="userRole === 'guest' && hasPendingRequest" class="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div v-else-if="userRole === 'guest' && hasPendingRequest" class="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-yellow-50 border border-yellow-200 rounded-lg">
               <i-lucide-clock class="w-4 h-4 text-yellow-600" />
               <span class="text-yellow-800 font-medium">Menunggu Persetujuan</span>
             </div>
@@ -65,11 +67,11 @@
               <!-- Dropdown Menu -->
               <div
                 v-if="showProfileMenu"
-                class="absolute right-0 mt-2 w-max min-w-56 max-w-sm bg-white rounded-lg shadow-lg border border-neutral-200 py-2"
+                class="absolute right-0 mt-2 w-max min-w-56 max-w-[85vw] bg-white rounded-lg shadow-lg border border-neutral-200 py-2"
               >
                 <div class="px-4 py-3 border-b border-neutral-200">
                   <p class="text-sm font-semibold text-neutral-900">{{ userName }}</p>
-                  <p class="text-xs text-neutral-500 whitespace-nowrap">{{ userEmail }}</p>
+                  <p class="text-xs text-neutral-500 break-all">{{ userEmail }}</p>
                 </div>
                 <button
                   @click="logout"
@@ -87,15 +89,15 @@
 
     <!-- Welcome Header -->
     <div class="bg-white shadow-sm border-b border-neutral-200">
-      <div class="max-w-7xl mx-auto px-6 py-8">
-        <div class="flex items-center justify-between">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 class="text-3xl font-bold text-neutral-900">
+            <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900">
               Selamat Datang, {{ userName }}
             </h1>
             <p class="text-sm text-neutral-600 mt-1">Kelola dokumen yang Anda unduh</p>
           </div>
-          <div class="text-right">
+          <div class="text-left sm:text-right">
             <p class="text-sm text-neutral-500">Status Akun</p>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
               <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
@@ -106,7 +108,7 @@
       </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
@@ -169,10 +171,10 @@
         <!-- Download Section -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Quick Browse Card -->
-          <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
-            <div class="flex items-start justify-between">
+          <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 sm:p-8 text-white">
+            <div class="flex items-start justify-between gap-4">
               <div class="flex-1">
-                <h2 class="text-2xl font-bold mb-2">Telusuri Koleksi Dokumen</h2>
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">Telusuri Koleksi Dokumen</h2>
                 <p class="text-blue-100 mb-6">
                   Temukan dan unduh dokumen yang Anda butuhkan
                 </p>
@@ -193,18 +195,18 @@
           <!-- Downloaded Documents Table -->
           <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
             <div class="p-6 border-b border-neutral-200">
-              <div class="flex items-center justify-between">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <h3 class="text-lg font-bold text-neutral-900">Dokumen yang Diunduh</h3>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <input
                     v-model="searchQuery"
                     type="text"
                     placeholder="Cari dokumen..."
-                    class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full sm:w-auto px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <select
                     v-model="filterCategory"
-                    class="px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full sm:w-auto px-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Semua Kategori</option>
                     <option value="penelitian">Penelitian</option>

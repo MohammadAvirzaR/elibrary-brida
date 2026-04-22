@@ -112,13 +112,11 @@ const handleInput = (index: number, event: Event) => {
   const input = event.target as HTMLInputElement
   const value = input.value
 
-  // Only allow numbers
   if (value && !/^\d$/.test(value)) {
     otpDigits.value[index] = ''
     return
   }
 
-  // Move to next input
   if (value && index < 5) {
     otpInputs.value[index + 1]?.focus()
   }
@@ -127,12 +125,10 @@ const handleInput = (index: number, event: Event) => {
 }
 
 const handleKeydown = (index: number, event: KeyboardEvent) => {
-  // Handle backspace
   if (event.key === 'Backspace' && !otpDigits.value[index] && index > 0) {
     otpInputs.value[index - 1]?.focus()
   }
 
-  // Handle arrow keys
   if (event.key === 'ArrowLeft' && index > 0) {
     otpInputs.value[index - 1]?.focus()
   }
@@ -152,7 +148,6 @@ const handlePaste = (event: ClipboardEvent) => {
     }
   })
 
-  // Focus on the first empty input or the last one
   const firstEmpty = otpDigits.value.findIndex(d => d === '')
   const focusIndex = firstEmpty === -1 ? 5 : firstEmpty
   otpInputs.value[focusIndex]?.focus()

@@ -1,13 +1,13 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full" @click.stop>
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto" @click.stop>
 
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+        <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200">
           <div>
-            <h2 class="text-lg font-bold text-neutral-900">Permohonan Unduh Dokumen</h2>
-            <p class="text-sm text-neutral-500 mt-0.5 truncate max-w-xs">{{ documentTitle }}</p>
+            <h2 class="text-base sm:text-lg font-bold text-neutral-900">Permohonan Unduh Dokumen</h2>
+            <p class="text-xs sm:text-sm text-neutral-500 mt-0.5 truncate max-w-[200px] sm:max-w-xs">{{ documentTitle }}</p>
           </div>
           <button @click="$emit('close')" class="text-neutral-400 hover:text-neutral-600 transition p-1">
             <i-lucide-x class="w-5 h-5" />
@@ -15,7 +15,7 @@
         </div>
 
         <!-- Success State -->
-        <div v-if="submitted" class="p-8 text-center space-y-4">
+        <div v-if="submitted" class="p-6 sm:p-8 text-center space-y-4">
           <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <i-lucide-check-circle class="w-10 h-10 text-green-600" />
           </div>
@@ -33,13 +33,13 @@
         </div>
 
         <!-- Form -->
-        <form v-else @submit.prevent="submitRequest" class="p-6 space-y-4">
+        <form v-else @submit.prevent="submitRequest" class="p-4 sm:p-6 space-y-4">
           <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
             <i-lucide-info class="w-4 h-4 inline mr-1.5 -mt-0.5" />
             Dokumen full text akan dikirimkan ke email Anda setelah admin memverifikasi permohonan ini.
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Nama Lengkap <span class="text-red-500">*</span>
@@ -105,7 +105,7 @@
             <p v-if="errors.agreed_to_terms" class="mt-1.5 text-xs text-red-500 ml-7">{{ errors.agreed_to_terms }}</p>
           </div>
 
-          <div class="flex gap-3 pt-1">
+          <div class="flex flex-col-reverse sm:flex-row gap-3 pt-1">
             <button
               type="button"
               @click="$emit('close')"
