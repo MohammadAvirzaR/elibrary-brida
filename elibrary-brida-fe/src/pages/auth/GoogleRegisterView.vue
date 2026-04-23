@@ -232,7 +232,7 @@ const handleSubmit = async () => {
     toast.success('Pendaftaran Berhasil', `Selamat datang, ${data.user.name}!`)
 
     const role = data.user.role?.toLowerCase()
-    if (role === 'super_admin' || role === 'admin' || role === 'reviewer') {
+    if (role === 'super_admin' || role === 'reviewer') {
       router.push('/dashboard')
     } else {
       router.push('/my-dashboard')

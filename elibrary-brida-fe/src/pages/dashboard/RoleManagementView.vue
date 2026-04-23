@@ -316,22 +316,10 @@ const roles = ref<Role[]>([
   },
   {
     id: 2,
-    name: 'Admin',
-    color: '#FFA500',
-    description: 'Manage documents and users',
-    hierarchy: 2,
-    members_count: 5,
-    permissions: ['manage_users', 'manage_documents', 'view_analytics'],
-    display_separately: true,
-    mentionable: true,
-    is_default: false
-  },
-  {
-    id: 3,
     name: 'Reviewer',
     color: '#9B59B6',
     description: 'Review and approve documents',
-    hierarchy: 3,
+    hierarchy: 2,
     members_count: 8,
     permissions: ['review_documents', 'approve_documents'],
     display_separately: false,

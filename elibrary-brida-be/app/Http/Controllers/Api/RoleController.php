@@ -171,7 +171,7 @@ class RoleController extends Controller
             $role = Role::findOrFail($id);
 
             // Prevent deleting core system roles
-            $protectedRoles = ['super_admin', 'admin', 'guest'];
+            $protectedRoles = ['super_admin', 'guest'];
             if (in_array($role->name, $protectedRoles)) {
                 return response()->json([
                     'success' => false,

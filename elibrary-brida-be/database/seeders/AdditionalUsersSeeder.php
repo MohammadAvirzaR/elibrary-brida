@@ -17,26 +17,12 @@ class AdditionalUsersSeeder extends Seeder
     {
         // Ambil role IDs
         $superAdminRoleId = Role::where('name', 'super_admin')->value('id');
-        $adminRoleId = Role::where('name', 'admin')->value('id');
         $contributorRoleId = Role::where('name', 'contributor')->value('id');
         $reviewerRoleId = Role::where('name', 'reviewer')->value('id');
         $guestRoleId = Role::where('name', 'guest')->value('id');
 
         $users = [
             // Super Admin sudah ada dari UserSeeder
-
-            // Admin tambahan
-            [
-                'role_id' => $adminRoleId,
-                'full_name' => 'Admin Perpustakaan',
-                'email' => 'admin.perpus@brida.com',
-                'password' => Hash::make('admin123'),
-                'institution' => 'BRIDA',
-                'phone' => '081234567890',
-                'address' => 'Jakarta',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
 
             // Reviewer
             [

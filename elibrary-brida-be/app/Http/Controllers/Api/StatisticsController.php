@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Log;
 class StatisticsController extends Controller
 {
     /**
-     * Get comprehensive dashboard statistics for admin/super_admin
-     * 
+     * Get comprehensive dashboard statistics for super_admin
+     *
      * Includes:
      * - Total research count (all, BRIDA, Non-BRIDA)
      * - Category breakdown (Pie chart data)
      * - Trend data (Line chart data - monthly trends)
      * - Institution breakdown (Bar chart data)
-     * 
+     *
      * @return JsonResponse
      */
     public function index(): JsonResponse
@@ -28,12 +28,12 @@ class StatisticsController extends Controller
 
             // 1. TOTAL RESEARCH COUNTS
             $totalResearch = Document::where('status', 'approved')->count();
-            
+
             // Assuming type_id = 1 is BRIDA (adjust if different)
             $bridaResearch = Document::where('status', 'approved')
                 ->where('type_id', 1)
                 ->count();
-            
+
             $nonBridaResearch = $totalResearch - $bridaResearch;
 
             Log::info('Research counts', [

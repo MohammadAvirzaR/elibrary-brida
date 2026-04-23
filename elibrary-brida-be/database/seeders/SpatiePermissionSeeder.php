@@ -41,19 +41,6 @@ class SpatiePermissionSeeder extends Seeder
                 'permissions' => $permissions, // semua permission
             ],
             [
-                'name'        => 'admin',
-                'description' => 'Administrator - kelola pengguna, dokumen, dan konten',
-                'permissions' => [
-                    'manage_users',
-                    'upload_documents',
-                    'review_documents',
-                    'approve_documents',
-                    'delete_documents',
-                    'view_analytics',
-                    'manage_categories',
-                ],
-            ],
-            [
                 'name'        => 'reviewer',
                 'description' => 'Reviewer - review dan menilai dokumen yang dikirim',
                 'permissions' => [
@@ -88,6 +75,16 @@ class SpatiePermissionSeeder extends Seeder
             $role->syncPermissions($roleData['permissions']);
 
             $this->command->info("Role [{$role->name}] seeded with " . count($roleData['permissions']) . " permissions.");
+        }
+
+        // Cleanup legacy admin role: migrate assigned users to super_admin then remove admin role.
+        $legacyAdminRole = Role::where('name', 'admin')->first();
+        if ($legacyAdminRole) {
+            foreach ($legacyAdminRole->users as $user) {
+                $user->syncRoles(['super_admin']);
+            }
+            $legacyAdminRole->delete();
+            $this->command->info('Legacy role [admin] migrated to [super_admin] and removed.');
         }
 
         $this->command->info('✅ SpatiePermissionSeeder completed. ' . count($permissions) . ' permissions and ' . count($roles) . ' roles seeded.');

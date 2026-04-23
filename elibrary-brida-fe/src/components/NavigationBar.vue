@@ -99,7 +99,7 @@
                   Profile
                 </router-link> -->
                 <router-link
-                  v-if="['Admin', 'Super Admin'].includes(userRole)"
+                  v-if="userRole === 'Super Admin'"
                   to="/download-requests"
                   class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
                   @click="showProfileMenu = false"
@@ -203,7 +203,7 @@
                 Profile
               </router-link>
               <router-link
-                v-if="['Admin', 'Super Admin'].includes(userRole)"
+                v-if="userRole === 'Super Admin'"
                 to="/download-requests"
                 @click="closeMobileMenu"
                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
@@ -309,7 +309,6 @@ const checkAuth = () => {
 const formatRole = (role: string) => {
   const roleMap: Record<string, string> = {
     'super_admin': 'Super Admin',
-    'admin': 'Admin',
     'kontributor': 'Kontributor',
     'reviewer': 'Reviewer',
     'guest': 'Guest'
@@ -325,7 +324,7 @@ const dashboardLink = computed(() => {
     const user = JSON.parse(userStr)
     const role = user.role?.toLowerCase()
 
-    if (role === 'super_admin' || role === 'admin') {
+    if (role === 'super_admin') {
       return '/dashboard'
     }
 

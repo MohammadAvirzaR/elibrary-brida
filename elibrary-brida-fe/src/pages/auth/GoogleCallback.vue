@@ -58,7 +58,7 @@ onMounted(() => {
     toast.success('Login Berhasil', `Selamat datang, ${user.name}!`)
 
     const role = user.role?.toLowerCase()
-    if (role === 'super_admin' || role === 'admin' || role === 'reviewer') {
+    if (role === 'super_admin' || role === 'reviewer') {
       router.push('/dashboard')
     } else {
       router.push('/my-dashboard')

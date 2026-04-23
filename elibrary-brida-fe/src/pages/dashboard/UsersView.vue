@@ -69,7 +69,7 @@
 
         <!-- Profile Management - Admin & Super Admin -->
         <router-link
-          v-if="userRole === 'admin' || userRole === 'super_admin'"
+          v-if="userRole === 'super_admin'"
           to="/profile-management"
           class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
         >
@@ -758,7 +758,6 @@ const isEditingSuperAdmin = computed(() => {
 const getRoleLabel = (roleName: string): string => {
   const roleLabels: Record<string, string> = {
     'super_admin': 'Super Admin',
-    'admin': 'Admin',
     'contributor': 'Contributor',
     'reviewer': 'Reviewer',
     'guest': 'Guest'
@@ -768,7 +767,6 @@ const getRoleLabel = (roleName: string): string => {
 const formatRole = (role: string): string => {
   const roleMap: Record<string, string> = {
     super_admin: 'Super Admin',
-    admin: 'Admin',
     contributor: 'Contributor',
     reviewer: 'Reviewer',
     guest: 'Guest'
@@ -779,7 +777,6 @@ const formatRole = (role: string): string => {
 const getRoleBadgeClass = (role: string): string => {
   const classMap: Record<string, string> = {
     super_admin: 'bg-purple-100 text-purple-800',
-    admin: 'bg-blue-100 text-blue-800',
     contributor: 'bg-green-100 text-green-800',
     reviewer: 'bg-yellow-100 text-yellow-800',
     guest: 'bg-gray-100 text-gray-800'
@@ -1110,3 +1107,4 @@ const goToPage = (page: number) => {
   currentPage.value = page
 }
 </script>
+

@@ -125,8 +125,8 @@ const goToDashboard = () => {
   // Redirect based on user role
   const userRole = user.value?.role?.toLowerCase()
 
-  if (userRole === 'super_admin' || userRole === 'admin') {
-    // Admin users go to admin dashboard
+  if (userRole === 'super_admin') {
+    // Super admin user goes to dashboard
     router.push('/dashboard')
   } else {
     // Regular users (guest, contributor, reviewer) go to user dashboard

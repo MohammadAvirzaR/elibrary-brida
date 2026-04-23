@@ -239,8 +239,6 @@ const handleLogin = async () => {
     // Redirect based on role
     if (userRole === 'super_admin' || userRole === 'reviewer') {
       router.push('/dashboard')
-    } else if (userRole === 'admin') {
-      router.push('/profile-management')
     } else {
       router.push('/my-dashboard')
     }

@@ -431,7 +431,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
@@ -523,29 +523,11 @@ const rejectReason = ref('')
 const rejectError = ref('')
 
 const isPdfLoading = ref(false)
-
-const pdfUrl = computed(() => {
-  if (!document.value?.id) return null
-  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
-  const baseUrl = apiBaseUrl.replace('/api', '')
-  const token = localStorage.getItem('auth_token')
-
-  // Gunakan token di URL - satu-satunya cara reliable untuk iframe
-  if (token) {
-    return `${baseUrl}/api/documents/${document.value.id}/file?token=${token}`
-  }
-
-  // Guest: approved documents
-  if (document.value.status === 'approved') {
-    return `${baseUrl}/api/documents/${document.value.id}/file`
-  }
-
-  return null
-})
+const pdfUrl = ref<string | null>(null)
 
 const userRole = ref('')
 const canReview = computed(() => {
-  return ['admin', 'super_admin', 'reviewer'].includes(userRole.value)
+  return ['super_admin', 'reviewer'].includes(userRole.value)
 })
 
 const showDownloadRequestModal = ref(false)
@@ -555,7 +537,7 @@ const currentUserId = computed(() => {
 })
 
 const canDirectDownload = computed(() => {
-  if (['admin', 'super_admin', 'reviewer'].includes(userRole.value)) return true
+  if (['super_admin', 'reviewer'].includes(userRole.value)) return true
   return document.value?.user?.id === currentUserId.value
 })
 
@@ -581,17 +563,31 @@ onMounted(async () => {
   await loadDocument()
 })
 
+onBeforeUnmount(() => {
+  if (pdfUrl.value) {
+    URL.revokeObjectURL(pdfUrl.value)
+  }
+})
+
 // No cleanup needed
 
 const loadDocument = async () => {
   try {
     isLoading.value = true
+    isPdfLoading.value = true
+
+    if (pdfUrl.value) {
+      URL.revokeObjectURL(pdfUrl.value)
+      pdfUrl.value = null
+    }
+
     const documentId = route.params.id as string
 
     const response = await api.documents.getById(parseInt(documentId)) as ApiResponse
 
     if (response.success && response.data) {
       document.value = response.data
+      await loadPreviewDocument(response.data.id)
     } else {
       error.value = 'Dokumen tidak ditemukan'
     }
@@ -599,7 +595,18 @@ const loadDocument = async () => {
     console.error('Error loading document:', err)
     error.value = 'Gagal memuat detail dokumen'
   } finally {
+    isPdfLoading.value = false
     isLoading.value = false
+  }
+}
+
+const loadPreviewDocument = async (documentId: number) => {
+  try {
+    const previewBlobUrl = await api.documents.getPreviewBlobUrl(documentId)
+    pdfUrl.value = previewBlobUrl
+  } catch (err) {
+    console.error('Error loading preview:', err)
+    pdfUrl.value = null
   }
 }
 
@@ -708,12 +715,36 @@ const downloadAttachment = (attachment: Attachment) => {
   const baseUrl = apiBaseUrl.replace('/api', '')
   const token = localStorage.getItem('auth_token')
 
-  let url = `${baseUrl}/api/documents/${document.value.id}/attachments/${attachment.id}/file`
-  if (token) {
-    url += `?token=${token}`
+  if (!token) {
+    toast.error('Download Gagal', 'Sesi login tidak ditemukan')
+    return
   }
 
-  window.open(url, '_blank')
+  fetch(`${baseUrl}/api/documents/${document.value.id}/attachments/${attachment.id}/file`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/octet-stream'
+    }
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error('Gagal mengunduh lampiran')
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = window.document.createElement('a')
+      a.href = url
+      a.download = attachment.file_name || attachment.filename || `attachment-${attachment.id}`
+      window.document.body.appendChild(a)
+      a.click()
+      window.document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    })
+    .catch((err) => {
+      console.error('Error downloading attachment:', err)
+      toast.error('Download Gagal', 'Terjadi kesalahan saat mengunduh lampiran')
+    })
 }
 
 const getStatusClass = (status: string) => {

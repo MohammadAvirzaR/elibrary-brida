@@ -64,7 +64,6 @@ export function useRoleChangeDetector() {
   const showNotification = (oldRole: string, newRole: string) => {
     const roleLabels: Record<string, string> = {
       'super_admin': 'Super Admin',
-      'admin': 'Admin',
       'contributor': 'Contributor',
       'reviewer': 'Reviewer',
       'guest': 'Guest'

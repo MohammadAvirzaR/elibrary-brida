@@ -15,18 +15,18 @@ export function useAuth() {
 
   // Role checks
   const isSuperAdmin = computed(() => hasRole(ROLES.SUPER_ADMIN))
-  const isAdmin = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN]))
+  const isAdmin = computed(() => hasRole(ROLES.SUPER_ADMIN))
   const isContributor = computed(() => hasRole(ROLES.CONTRIBUTOR))
   const isReviewer = computed(() => hasRole(ROLES.REVIEWER))
   const isGuest = computed(() => hasRole(ROLES.GUEST))
 
   // Permission checks
-  const canManageUsers = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN]))
+  const canManageUsers = computed(() => hasRole(ROLES.SUPER_ADMIN))
   const canManageRoles = computed(() => hasRole(ROLES.SUPER_ADMIN))
-  const canManageDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER]))
-  const canUploadDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTRIBUTOR]))
-  const canReviewDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER]))
-  const canViewDashboard = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN]))
+  const canManageDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.REVIEWER]))
+  const canUploadDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.CONTRIBUTOR]))
+  const canReviewDocuments = computed(() => hasAnyRole([ROLES.SUPER_ADMIN, ROLES.REVIEWER]))
+  const canViewDashboard = computed(() => hasRole(ROLES.SUPER_ADMIN))
 
   const logout = () => {
     localStorage.removeItem('auth_token')
