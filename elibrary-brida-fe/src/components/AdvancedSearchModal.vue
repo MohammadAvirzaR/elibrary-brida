@@ -4,25 +4,25 @@
     <Transition name="modal">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black bg-opacity-50"
         @click.self="closeModal"
       >
         <!-- Modal Content -->
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto no-scrollbar">
           <!-- Header -->
-          <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <div class="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between rounded-t-xl sm:rounded-t-2xl">
             <button
               @click="closeModal"
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+              class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
             >
-              <i-lucide-chevron-left class="w-6 h-6 text-gray-700" />
+              <i-lucide-chevron-left class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
             </button>
-            <h2 class="text-xl font-bold text-gray-900">Advanced Search</h2>
+            <h2 class="text-base sm:text-xl font-bold text-gray-900">Advanced Search</h2>
             <div class="w-10"></div>
           </div>
 
           <!-- Content -->
-          <div class="p-6 space-y-6">
+          <div class="p-4 sm:p-6 space-y-6">
             <!-- Search Input -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -42,7 +42,7 @@
             </div>
 
             <!-- untuk lisensi dan hak akses -->
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label class="block text-sm font-bold text-gray-900 mb-3">
                   Filter Lisensi
@@ -86,7 +86,7 @@
 
 
             <!-- Filters Grid -->
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <!-- Filter Subjek -->
               <div>
                 <label class="block text-sm font-bold text-gray-900 mb-3">
@@ -155,10 +155,10 @@
             </div>
 
             <!-- Search Button -->
-            <div class="flex justify-center pt-4">
+            <div class="flex justify-center pt-2 sm:pt-4">
               <button
                 @click="performSearch"
-                class="px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                class="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
               >
                 Search
                 <i-lucide-search class="w-5 h-5" />

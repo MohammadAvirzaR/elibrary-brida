@@ -2,19 +2,19 @@
   <Transition name="notification">
     <div
       v-if="show"
-      class="fixed top-4 right-4 z-[9999] max-w-md"
+      class="fixed top-3 left-3 right-3 sm:top-4 sm:right-4 sm:left-auto z-[9999] sm:max-w-md"
     >
       <div class="bg-white rounded-xl shadow-2xl border-l-4 border-blue-600 overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <i-lucide-shield-check class="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 class="text-white font-bold text-lg">Role Updated!</h3>
-                <p class="text-white/80 text-sm">Your account role has changed</p>
+                <h3 class="text-white font-bold text-base sm:text-lg">Role Updated!</h3>
+                <p class="text-white/80 text-xs sm:text-sm">Your account role has changed</p>
               </div>
             </div>
             <button
@@ -27,8 +27,8 @@
         </div>
 
         <!-- Body -->
-        <div class="px-6 py-5">
-          <div class="flex items-center gap-4 mb-4">
+        <div class="px-4 sm:px-6 py-4 sm:py-5">
+          <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
             <!-- Old Role -->
             <div class="flex-1 text-center">
               <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg mb-2">
@@ -39,7 +39,7 @@
 
             <!-- Arrow -->
             <div class="flex-shrink-0">
-              <i-lucide-arrow-right class="w-6 h-6 text-blue-600" />
+              <i-lucide-arrow-right class="w-6 h-6 text-blue-600 rotate-90 sm:rotate-0" />
             </div>
 
             <!-- New Role -->
@@ -61,7 +61,7 @@
           </div>
 
           <!-- Actions -->
-          <div class="flex gap-3">
+          <div class="flex flex-col sm:flex-row gap-3">
             <button
               @click="reloadPage"
               class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold flex items-center justify-center gap-2"
@@ -71,7 +71,7 @@
             </button>
             <button
               @click="$emit('dismiss')"
-              class="px-4 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+              class="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
             >
               Dismiss
             </button>
