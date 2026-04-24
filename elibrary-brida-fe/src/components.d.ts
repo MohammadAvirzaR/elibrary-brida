@@ -28,6 +28,7 @@ declare module 'vue' {
     DropdownMenuSubContent: typeof import('./components/ui/dropdown-menu/DropdownMenuSubContent.vue')['default']
     DropdownMenuSubTrigger: typeof import('./components/ui/dropdown-menu/DropdownMenuSubTrigger.vue')['default']
     DropdownMenuTrigger: typeof import('./components/ui/dropdown-menu/DropdownMenuTrigger.vue')['default']
+    EditDocumentModal: typeof import('./components/EditDocumentModal.vue')['default']
     ExamplesUi: typeof import('./components/system/ExamplesUi.vue')['default']
     FooterSection: typeof import('./components/FooterSection.vue')['default']
     HeroSearch: typeof import('./components/HeroSearch.vue')['default']

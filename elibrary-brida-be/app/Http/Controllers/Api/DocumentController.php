@@ -572,26 +572,45 @@ class DocumentController extends Controller
     {
         $document = Document::findOrFail($id);
 
+        // Check authorization - only the contributor who uploaded it can edit, or admin/super_admin
+        $user = auth('sanctum')->user();
+        if ($user && $user->id !== $document->user_id && !in_array($user->role?->name, ['admin', 'super_admin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki izin untuk mengedit dokumen ini'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
+            'publisher' => 'sometimes|nullable|string|max:255',
+            'year_published' => 'sometimes|nullable|integer|min:1900|max:' . (date('Y') + 1),
+            'type_id' => 'sometimes|nullable|exists:types,id',
+            'subject_id' => 'sometimes|nullable|exists:subjects,id',
+            'language' => 'sometimes|nullable|string|max:10',
+            'keywords' => 'sometimes|nullable|string',
+            'abstract_id' => 'sometimes|nullable|string',
+            'abstract_en' => 'sometimes|nullable|string',
+            
+            // Legacy field support
             'description' => 'sometimes|string',
+            'year' => 'sometimes|integer',
+            
+            // Admin-only fields
             'status' => 'sometimes|in:pending,approved,rejected',
             'admin_notes' => 'sometimes|nullable|string',
-            'category' => 'sometimes|string',
-            'year' => 'sometimes|integer',
-            'author' => 'sometimes|string|max:255',
-            'publisher' => 'sometimes|string|max:255',
-            'keywords' => 'sometimes|string',
         ]);
 
+        // Handle file upload if provided
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $filename = time() . '_' . $file->getClientOriginalName();
             $validated['file_path'] = $file->storeAs('documents', $filename, 'public');
         }
 
+        // Handle legacy field names
         if (isset($validated['description'])) {
-            $validated['abstract'] = $validated['description'];
+            $validated['abstract_id'] = $validated['description'];
             unset($validated['description']);
         }
 
@@ -617,6 +636,10 @@ class DocumentController extends Controller
                 ]
             );
         }
+
+        Log::info("Document {$id} updated by user {$user?->id}", [
+            'changes' => array_keys($validated)
+        ]);
 
         return response()->json([
             'success' => true,

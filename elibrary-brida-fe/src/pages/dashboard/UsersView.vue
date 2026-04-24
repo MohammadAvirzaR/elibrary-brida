@@ -400,7 +400,7 @@
         <!-- Modal Body -->
         <form @submit.prevent="handleSubmit" class="p-6">
           <!-- Name -->
-          <!-- <div class="mb-6">
+          <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Nama Lengkap <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -414,10 +414,10 @@
             <p v-if="isEditMode && !formData.name" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div> -->
+          </div>
 
           <!-- Email -->
-          <!-- <div class="mb-6">
+          <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Email <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -431,10 +431,10 @@
             <p v-if="isEditMode && !formData.email" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div> -->
+          </div>
 
           <!-- Institution -->
-          <!-- <div class="mb-6">
+          <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Unit/Instansi <span v-if="!isEditMode" class="text-red-500">*</span>
             </label>
@@ -448,7 +448,7 @@
             <p v-if="isEditMode && !formData.institution" class="mt-1 text-xs text-gray-500">
               Kosongkan jika tidak ingin mengubah
             </p>
-          </div> -->
+          </div>
 
           <!-- Role Selection -->
           <div class="mb-6">
@@ -475,7 +475,7 @@
           </div>
 
           <!-- Change Password Toggle (only for edit mode) -->
-          <!-- <div v-if="isEditMode" class="mb-6">
+          <div v-if="isEditMode" class="mb-6">
             <label class="flex items-center cursor-pointer">
               <input
                 v-model="changePassword"
@@ -486,10 +486,10 @@
                 Ubah Password
               </span>
             </label>
-          </div> -->
+          </div>
 
           <!-- Password (for new user or when changing password) -->
-          <!-- <div v-if="!isEditMode || changePassword" class="mb-6">
+          <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Password <span class="text-red-500">*</span>
             </label>
@@ -500,10 +500,10 @@
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Minimal 8 karakter"
             />
-          </div> -->
+          </div>
 
           <!-- Password Confirmation (for new user or when changing password) -->
-          <!-- <div v-if="!isEditMode || changePassword" class="mb-6">
+          <div v-if="!isEditMode || changePassword" class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Konfirmasi Password <span class="text-red-500">*</span>
             </label>
@@ -514,7 +514,7 @@
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Ulangi password"
             />
-          </div> -->
+          </div>
 
           <!-- Modal Actions -->
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
