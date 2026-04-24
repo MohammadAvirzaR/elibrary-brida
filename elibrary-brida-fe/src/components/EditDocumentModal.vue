@@ -241,7 +241,10 @@ onMounted(async () => {
 
 const loadSubjects = async () => {
   try {
-    const filters = await api.filters.getAll() as any
+    const filters = await api.filters.getAll() as {
+      subjects: Array<{ id: number; subject_name: string }>
+      types: Array<{ id: number; type_name: string }>
+    }
     if (filters.subjects && Array.isArray(filters.subjects)) {
       subjects.value = filters.subjects
     }
@@ -252,7 +255,10 @@ const loadSubjects = async () => {
 
 const loadDocumentTypes = async () => {
   try {
-    const filters = await api.filters.getAll() as any
+    const filters = await api.filters.getAll() as {
+      subjects: Array<{ id: number; subject_name: string }>
+      types: Array<{ id: number; type_name: string }>
+    }
     if (filters.types && Array.isArray(filters.types)) {
       documentTypes.value = filters.types
     }

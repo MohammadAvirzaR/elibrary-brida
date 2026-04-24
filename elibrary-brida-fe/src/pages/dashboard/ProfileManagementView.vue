@@ -121,35 +121,21 @@
     </aside>
 
     <!-- Main Content -->
-    <div
-      :class="[
-        'transition-all duration-300 ease-in-out',
-        isSidebarOpen ? 'ml-60' : 'ml-20'
-      ]"
-    >
-      <!-- Top Bar -->
-     <header
-      :class="[
-        'bg-white shadow-sm border-b border-gray-200 transition-all duration-300',
-        isSidebarOpen ? 'ml-60' : 'ml-20'
-      ]"
-    >
-      <div class="flex items-center justify-between px-8 py-4">
-        <h1 class="text-2xl font-bold text-gray-900">Contributor Requests</h1>
-        <div class="flex items-center gap-4">
-          <div class="text-right">
-            <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>
-            <p class="text-sm text-gray-700 capitalize">{{ userRole || 'super_admin' }}</p>
-          </div>
-          <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-            {{ username ? username.charAt(0).toUpperCase() : 'A' }}
-          </div>
-        </div>
-      </div>
-    </header>
+    <DashboardHeader
+      title="Profile Management"
+      :isSidebarOpen="isSidebarOpen"
+      :username="username"
+      :userRole="userRole"
+      headerClass="sticky top-0 z-10"
+    />
 
-      <!-- Profile Management Content -->
-      <main class="p-8">
+    <!-- Profile Management Content -->
+    <main
+      :class="[
+        'transition-all duration-300 ease-in-out p-8',
+        isSidebarOpen ? 'ml-60' : 'ml-20'
+      ]"
+    >
         <!-- Header -->
 
 
@@ -278,7 +264,6 @@
           </div>
         </div>
       </main>
-    </div>
 
     <!-- Edit Profile Modal -->
     <div
@@ -483,6 +468,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import DashboardHeader from '@/components/DashboardHeader.vue'
 
 const router = useRouter()
 const { toast } = useToast()

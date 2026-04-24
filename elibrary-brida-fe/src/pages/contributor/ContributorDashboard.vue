@@ -698,7 +698,7 @@ const viewDocument = async (doc: UploadedDocument) => {
 }
 
 const editDocument = async (doc: UploadedDocument) => {
-  docToEdit.value = doc as any
+  docToEdit.value = doc
   showEditModal.value = true
 }
 

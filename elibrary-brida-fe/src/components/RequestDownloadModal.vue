@@ -139,7 +139,7 @@ const props = defineProps<{
   documentTitle: string
 }>()
 
-const emit = defineEmits(['close'])
+defineEmits(['close'])
 const { toast } = useToast()
 
 const isSubmitting = ref(false)
@@ -192,7 +192,7 @@ const submitRequest = async () => {
       agreed_to_terms: true,
     })
     submitted.value = true
-  } catch (err) {
+  } catch {
     toast.error('Gagal Mengirim', 'Terjadi kesalahan. Coba lagi.')
   } finally {
     isSubmitting.value = false

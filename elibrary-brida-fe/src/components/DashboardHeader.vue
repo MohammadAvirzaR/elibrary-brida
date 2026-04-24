@@ -7,7 +7,10 @@
     ]"
   >
     <div class="flex items-center justify-between px-8 py-4">
-      <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+      <div class="flex items-center gap-3">
+        <slot name="left" />
+        <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+      </div>
       <div class="flex items-center gap-4">
         <div class="text-right">
           <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>

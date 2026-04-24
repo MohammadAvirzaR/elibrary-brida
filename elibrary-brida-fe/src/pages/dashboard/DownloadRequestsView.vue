@@ -218,7 +218,7 @@ const confirmSend = async () => {
     toast.success('Berhasil', `Dokumen dikirim ke ${confirmTarget.value.requester_email}`)
     showSendModal.value = false
     await loadRequests()
-  } catch (err) {
+  } catch {
     toast.error('Gagal', 'Terjadi kesalahan saat mengirim dokumen')
   } finally {
     isSending.value = false
