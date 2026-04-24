@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 
@@ -27,7 +28,7 @@ class DocumentController extends Controller
         $query->where('status', 'approved');
 
         $user = auth('sanctum')->user();
-        if (!$user || !in_array($user->role?->name, ['admin', 'super_admin', 'reviewer'])) {
+        if (!$user || !in_array($user->role?->name, ['super_admin', 'reviewer'])) {
             $query->where('access_right', '!=', 'private');
             $query->whereDoesntHave('license', function ($q) {
                 $q->where('license_name', 'All Rights Reserved');
@@ -258,7 +259,7 @@ class DocumentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Dokumen berhasil dikirim & menunggu persetujuan admin.',
+            'message' => 'Dokumen berhasil dikirim & menunggu persetujuan super admin.',
             'data' => [
                 'id' => $document->id,
                 'title' => $document->title,
@@ -463,7 +464,7 @@ class DocumentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Dokumen berhasil diunggah dan menunggu persetujuan admin',
+            'message' => 'Dokumen berhasil diunggah dan menunggu persetujuan super admin',
             'data' => $document->load('attachments')
         ], 201);
     }
@@ -521,7 +522,7 @@ class DocumentController extends Controller
             ]);
 
 
-            if (!in_array($userRole, ['admin', 'super_admin', 'reviewer'])) {
+            if (!in_array($userRole, ['super_admin', 'reviewer'])) {
                 if ($document->user_id !== $user->id) {
                     // Any non-privileged user (guest, contributor, etc.) — apply public access rules
                     if ($document->status !== 'approved') {
@@ -678,8 +679,8 @@ class DocumentController extends Controller
                 // Case 2: Delete document (contributor deleting their own document)
                 $document = Document::findOrFail($id);
 
-                // Authorization: only contributor who uploaded or admin can delete
-                if ($user->id !== $document->user_id && !in_array($user->role?->name, ['admin', 'super_admin'])) {
+                // Authorization: only contributor who uploaded or super admin can delete
+                if ($user->id !== $document->user_id && !in_array($user->role?->name, ['super_admin'])) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda tidak memiliki izin untuk menghapus dokumen ini'
@@ -751,11 +752,6 @@ class DocumentController extends Controller
     public function serveFile(Request $request, $id)
     {
         try {
-            $token = $request->query('token');
-            if ($token) {
-                $request->headers->set('Authorization', 'Bearer ' . $token);
-            }
-
             /** @var User|null $user */
             $user = auth('sanctum')->user();
 
@@ -768,7 +764,7 @@ class DocumentController extends Controller
 
             $document = Document::with('user.roles', 'license')->findOrFail($id);
 
-            $accessCheck = $this->checkFileAccess($document, $user);
+            $accessCheck = $this->checkDirectFileAccess($document, $user);
             if ($accessCheck) return $accessCheck;
 
             if (!$document->file_path) {
@@ -778,23 +774,7 @@ class DocumentController extends Controller
                 ], 404);
             }
 
-            // Try to find file in different disks (for backward compatibility)
-            $disk = 'local'; // default: storage/app/private
-            $filePath = null;
-            $mimeType = null;
-
-            // First try the default 'local' disk (private storage)
-            if (Storage::disk('local')->exists($document->file_path)) {
-                $disk = 'local';
-                $filePath = Storage::disk('local')->path($document->file_path);
-                $mimeType = mime_content_type($filePath);
-            }
-            // Fallback to 'public' disk for old documents
-            elseif (Storage::disk('public')->exists($document->file_path)) {
-                $disk = 'public';
-                $filePath = Storage::disk('public')->path($document->file_path);
-                $mimeType = mime_content_type($filePath);
-            }
+            $filePath = $this->resolveStoredFilePath($document->file_path);
 
             if (!$filePath) {
                 return response()->json([
@@ -802,6 +782,14 @@ class DocumentController extends Controller
                     'message' => 'File tidak ditemukan di storage'
                 ], 404);
             }
+
+            Log::info('Document file accessed', [
+                'document_id' => $document->id,
+                'user_id' => $user->id,
+                'role' => $user->role?->name,
+            ]);
+
+            $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
 
             return response()->file($filePath, [
                 'Content-Type' => $mimeType,
@@ -824,11 +812,6 @@ class DocumentController extends Controller
     public function serveAttachment(Request $request, $documentId, $attachmentId)
     {
         try {
-            $token = $request->query('token');
-            if ($token) {
-                $request->headers->set('Authorization', 'Bearer ' . $token);
-            }
-
             /** @var User|null $user */
             $user = auth('sanctum')->user();
 
@@ -845,7 +828,7 @@ class DocumentController extends Controller
 
             $document = Document::with('user.roles', 'license')->findOrFail($documentId);
 
-            $accessCheck = $this->checkFileAccess($document, $user);
+            $accessCheck = $this->checkDirectFileAccess($document, $user);
             if ($accessCheck) return $accessCheck;
 
             if (!$attachment->file_path) {
@@ -855,23 +838,7 @@ class DocumentController extends Controller
                 ], 404);
             }
 
-            // Try to find file in different disks (for backward compatibility)
-            $disk = 'local'; // default: storage/app/private
-            $filePath = null;
-            $mimeType = null;
-
-            // First try the default 'local' disk (private storage)
-            if (Storage::disk('local')->exists($attachment->file_path)) {
-                $disk = 'local';
-                $filePath = Storage::disk('local')->path($attachment->file_path);
-                $mimeType = mime_content_type($filePath);
-            }
-            // Fallback to 'public' disk for old attachments
-            elseif (Storage::disk('public')->exists($attachment->file_path)) {
-                $disk = 'public';
-                $filePath = Storage::disk('public')->path($attachment->file_path);
-                $mimeType = mime_content_type($filePath);
-            }
+            $filePath = $this->resolveStoredFilePath($attachment->file_path);
 
             if (!$filePath) {
                 return response()->json([
@@ -879,6 +846,15 @@ class DocumentController extends Controller
                     'message' => 'File tidak ditemukan di storage'
                 ], 404);
             }
+
+            Log::info('Attachment file accessed', [
+                'document_id' => $documentId,
+                'attachment_id' => $attachmentId,
+                'user_id' => $user->id,
+                'role' => $user->role?->name,
+            ]);
+
+            $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
 
             return response()->file($filePath, [
                 'Content-Type' => $mimeType,
@@ -898,11 +874,119 @@ class DocumentController extends Controller
         }
     }
 
-    private function checkFileAccess(Document $document, User $user): ?JsonResponse
+    public function servePreview(Request $request, $id)
+    {
+        try {
+            /** @var User|null $user */
+            $user = auth('sanctum')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $document = Document::with('user.roles', 'license', 'authors')->findOrFail($id);
+
+            $accessCheck = $this->checkPreviewAccess($document, $user);
+            if ($accessCheck) return $accessCheck;
+
+            Log::info('Document preview accessed', [
+                'document_id' => $document->id,
+                'user_id' => $user->id,
+                'role' => $user->role?->name,
+            ]);
+
+            $authorNames = $document->authors
+                ->map(fn ($author) => trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? '')))
+                ->filter()
+                ->take(3)
+                ->implode(', ');
+
+            $title = e($document->title ?? 'Untitled Document');
+            $authorLine = e($authorNames ?: 'Penulis tidak tersedia');
+            $abstract = e(Str::limit((string) ($document->abstract_id ?: $document->abstract_en ?: 'Preview full text tidak tersedia untuk role Anda.'), 1400));
+
+            $html = <<<HTML
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview Dokumen</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }
+    .page { max-width: 840px; margin: 16px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .header { padding: 18px 20px; border-bottom: 1px solid #e2e8f0; }
+    .title { margin: 0 0 6px; font-size: 20px; line-height: 1.3; }
+    .meta { margin: 0; color: #475569; font-size: 13px; }
+    .content { position: relative; min-height: 540px; padding: 20px; line-height: 1.7; font-size: 14px; white-space: pre-wrap; }
+    .watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: rgba(15, 23, 42, 0.07); transform: rotate(-24deg); pointer-events: none; user-select: none; }
+    .footer { padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; color: #334155; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <article class="page">
+    <header class="header">
+      <h1 class="title">{$title}</h1>
+      <p class="meta">{$authorLine}</p>
+    </header>
+    <section class="content">
+      <div class="watermark">PREVIEW TERBATAS</div>
+      {$abstract}
+    </section>
+    <footer class="footer">
+      Preview ini adalah konten turunan dan bukan file dokumen asli. Untuk akses full text, ajukan permintaan dokumen.
+    </footer>
+  </article>
+</body>
+</html>
+HTML;
+
+            return response($html, 200, [
+                'Content-Type' => 'text/html; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+                'Pragma' => 'no-cache',
+                'X-Content-Type-Options' => 'nosniff',
+                'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'",
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error serving preview', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error serving preview: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function checkDirectFileAccess(Document $document, User $user): ?JsonResponse
     {
         $role = $user->role?->name;
 
-        if (in_array($role, ['admin', 'super_admin', 'reviewer'])) {
+        if (in_array($role, ['super_admin', 'reviewer'], true)) {
+            return null;
+        }
+
+        if ($document->user_id === $user->id) {
+            return null;
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Akses file asli dibatasi. Silakan ajukan permohonan download dokumen.',
+        ], 403);
+    }
+
+    private function checkPreviewAccess(Document $document, User $user): ?JsonResponse
+    {
+        $role = $user->role?->name;
+
+        if (in_array($role, ['super_admin', 'reviewer'])) {
             return null;
         }
 
@@ -944,5 +1028,18 @@ class DocumentController extends Controller
             default:
                 return null;
         }
+    }
+
+    private function resolveStoredFilePath(string $storedPath): ?string
+    {
+        if (Storage::disk('local')->exists($storedPath)) {
+            return Storage::disk('local')->path($storedPath);
+        }
+
+        if (Storage::disk('public')->exists($storedPath)) {
+            return Storage::disk('public')->path($storedPath);
+        }
+
+        return null;
     }
 }

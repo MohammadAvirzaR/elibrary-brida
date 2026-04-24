@@ -10,7 +10,6 @@ export interface UserRole {
 
 export const ROLES = {
   SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
   CONTRIBUTOR: 'contributor',
   REVIEWER: 'reviewer',
   GUEST: 'guest'
@@ -62,38 +61,38 @@ export function isSuperAdmin(): boolean {
 }
 
 /**
- * Check if user is admin (super_admin or admin)
+ * Check if user is admin-level (super_admin)
  */
 export function isAdmin(): boolean {
-  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN])
+  return hasRole(ROLES.SUPER_ADMIN)
 }
 
 /**
  * Check if user can manage users
  */
 export function canManageUsers(): boolean {
-  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN])
+  return hasRole(ROLES.SUPER_ADMIN)
 }
 
 /**
  * Check if user can manage documents
  */
 export function canManageDocuments(): boolean {
-  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER])
+  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.REVIEWER])
 }
 
 /**
  * Check if user can upload documents
  */
 export function canUploadDocuments(): boolean {
-  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTRIBUTOR])
+  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.CONTRIBUTOR])
 }
 
 /**
  * Check if user can review documents
  */
 export function canReviewDocuments(): boolean {
-  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER])
+  return hasAnyRole([ROLES.SUPER_ADMIN, ROLES.REVIEWER])
 }
 
 /**

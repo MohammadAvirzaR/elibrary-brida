@@ -125,7 +125,7 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/DashboardView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.REVIEWER],
+        roles: [ROLES.SUPER_ADMIN, ROLES.REVIEWER],
         title: 'Dashboard'
       }
     },
@@ -178,7 +178,7 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/ProfileManagementView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+        roles: [ROLES.SUPER_ADMIN],
         title: 'Profile Management'
       }
     },
@@ -211,7 +211,7 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/DownloadRequestsView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+        roles: [ROLES.SUPER_ADMIN],
         title: 'Download Requests'
       }
     },
@@ -309,7 +309,7 @@ router.beforeEach((to, from, next) => {
   } else if (to.name === 'login' && isAuthenticated) {
     const userRole = user?.role as RoleType
 
-    if (userRole === ROLES.SUPER_ADMIN || userRole === ROLES.ADMIN) {
+    if (userRole === ROLES.SUPER_ADMIN) {
       next({ name: 'dashboard' })
     } else {
       next({ name: 'my-dashboard' })

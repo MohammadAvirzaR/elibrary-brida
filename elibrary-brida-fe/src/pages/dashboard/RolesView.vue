@@ -69,7 +69,7 @@
 
         <!-- Profile Management - Admin & Super Admin -->
         <router-link
-          v-if="userRole === 'admin' || userRole === 'super_admin'"
+          v-if="userRole === 'super_admin'"
           to="/profile-management"
           class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
         >
@@ -364,7 +364,7 @@
               type="text"
               required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Super Admin, Admin, Contributor"
+              placeholder="e.g., Super Admin, Contributor, Reviewer"
             />
           </div>
 
@@ -863,3 +863,4 @@ onUnmounted(() => {
   }
 })
 </script>
+

@@ -18,10 +18,6 @@ class RoleSeeder extends Seeder
                 'description' => 'Memiliki akses penuh ke seluruh sistem, termasuk pengaturan user, dokumen, dan role lainnya.',
             ],
             [
-                'name' => 'admin',
-                'description' => 'Bertanggung jawab mengelola data dokumen dan pengguna dalam lingkup sistem tertentu.',
-            ],
-            [
                 'name' => 'contributor',
                 'description' => 'Menyumbang dokumen baru atau mengajukan perubahan pada dokumen yang ada.',
             ],

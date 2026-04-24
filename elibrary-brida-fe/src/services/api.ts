@@ -138,6 +138,31 @@ export const api = {
       return apiCall(`/documents/${id}`, { method: 'GET' }, hasToken)
     },
 
+    getPreviewBlobUrl: async (id: number): Promise<string> => {
+      const token = getAuthToken()
+
+      if (!token) {
+        throw new Error('401 - Anda harus login untuk melihat preview dokumen')
+      }
+
+      const response = await fetch(`${API_BASE_URL}/documents/${id}/preview`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/html',
+        },
+      })
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({})) as { message?: string }
+        const message = errorPayload.message || response.statusText || 'Request gagal'
+        throw new Error(`${response.status} - ${message}`)
+      }
+
+      const blob = await response.blob()
+      return URL.createObjectURL(blob)
+    },
+
     review: () => apiCall('/documents/review', { method: 'GET' }, true),
 
     getReviewHistory: () => apiCall('/documents/review-history', { method: 'GET' }, true),

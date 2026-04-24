@@ -39,7 +39,7 @@
 
             <button
               v-else-if="userRole === 'guest' && !hasPendingRequest"
-              @click="goToContributorRequest"
+              @click="openContributorWizard"
               class="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
             >
               <i-lucide-file-text class="w-4 h-4 sm:mr-2" />
@@ -375,6 +375,156 @@
         </div>
       </div>
     </div>
+
+    <!-- Become Contributor Wizard Modal -->
+    <div
+      v-if="showContributorWizard"
+      class="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      @click.self="closeContributorWizard"
+    >
+      <div class="absolute inset-0 bg-black/45 backdrop-blur-[1px]"></div>
+
+      <div class="relative z-10 w-full max-w-3xl rounded-2xl border border-neutral-200 bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white/95 px-5 py-4 backdrop-blur-sm">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-neutral-900">Ajukan Menjadi Kontributor</h2>
+            <p class="text-xs sm:text-sm text-neutral-500 mt-0.5">Langkah {{ contributorWizardStep }} dari 2</p>
+          </div>
+          <button
+            type="button"
+            class="rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 transition"
+            @click="closeContributorWizard"
+          >
+            <i-lucide-x class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="px-5 sm:px-6 py-5 sm:py-6">
+          <div class="mb-6 grid grid-cols-2 gap-2">
+            <div :class="['h-1.5 rounded-full transition-colors', contributorWizardStep >= 1 ? 'bg-blue-600' : 'bg-neutral-200']"></div>
+            <div :class="['h-1.5 rounded-full transition-colors', contributorWizardStep >= 2 ? 'bg-blue-600' : 'bg-neutral-200']"></div>
+          </div>
+
+          <div v-if="contributorWizardStep === 1" class="space-y-6">
+            <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+              <h3 class="text-2xl font-bold text-neutral-900 mb-5">Mengapa Menjadi Kontributor?</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="flex gap-3">
+                  <i-lucide-upload-cloud class="w-7 h-7 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <p class="font-bold text-neutral-900">Unggah Dokumen</p>
+                    <p class="text-sm text-neutral-600 mt-1">Berbagi pengetahuan dan dokumentasi dengan komunitas.</p>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <i-lucide-users class="w-7 h-7 text-fuchsia-600 flex-shrink-0" />
+                  <div>
+                    <p class="font-bold text-neutral-900">Kolaborasi</p>
+                    <p class="text-sm text-neutral-600 mt-1">Bekerja sama dengan profesional lainnya.</p>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <i-lucide-award class="w-7 h-7 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p class="font-bold text-neutral-900">Pengakuan</p>
+                    <p class="text-sm text-neutral-600 mt-1">Dapatkan pengakuan dan kredit atas kontribusi Anda.</p>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <i-lucide-trending-up class="w-7 h-7 text-orange-600 flex-shrink-0" />
+                  <div>
+                    <p class="font-bold text-neutral-900">Perkembangan</p>
+                    <p class="text-sm text-neutral-600 mt-1">Tingkatkan visibilitas dan jangkauan karya Anda.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="button"
+                class="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                @click="goToContributorWizardStep(2)"
+              >
+                Lanjut Isi Form
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="space-y-5">
+            <div v-if="contributorSuccessMessage" class="rounded-lg border border-green-200 bg-green-50 p-4">
+              <p class="text-sm font-medium text-green-800">{{ contributorSuccessMessage }}</p>
+            </div>
+            <div v-if="contributorErrorMessage" class="rounded-lg border border-red-200 bg-red-50 p-4">
+              <p class="text-sm font-medium text-red-700">{{ contributorErrorMessage }}</p>
+            </div>
+
+            <form @submit.prevent="submitContributorRequest" class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-neutral-700 mb-1.5">Nama Anda</label>
+                <input
+                  v-model="contributorForm.name"
+                  type="text"
+                  class="w-full rounded-lg border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-neutral-600"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-neutral-700 mb-1.5">E-mail Anda</label>
+                <input
+                  v-model="contributorForm.email"
+                  type="email"
+                  class="w-full rounded-lg border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-neutral-600"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-neutral-700 mb-1.5">
+                  Alasan Ingin Menjadi Kontributor <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                  v-model="contributorForm.message"
+                  rows="5"
+                  maxlength="1000"
+                  :disabled="isSubmittingContributor"
+                  class="w-full rounded-lg border border-neutral-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Tulis alasan Anda ingin menjadi kontributor"
+                />
+                <div class="mt-1 flex items-center justify-between text-xs text-neutral-500">
+                  <span>Minimal 10 karakter</span>
+                  <span>{{ contributorForm.message.length }} / 1000</span>
+                </div>
+              </div>
+
+              <div class="pt-2 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                <button
+                  type="button"
+                  class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-neutral-200 text-neutral-800 font-semibold hover:bg-neutral-300 transition"
+                  @click="goToContributorWizardStep(1)"
+                >
+                  Kembali
+                </button>
+                <button
+                  type="submit"
+                  :disabled="isSubmittingContributor || contributorForm.message.trim().length < 10"
+                  class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition"
+                >
+                  <span v-if="isSubmittingContributor" class="inline-flex items-center gap-2">
+                    <i-lucide-loader-2 class="w-4 h-4 animate-spin" />
+                    Mengirim...
+                  </span>
+                  <span v-else>Ajukan Permintaan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -393,6 +543,17 @@ const userRole = ref('')
 // UI State for navbar
 const showProfileMenu = ref(false)
 const hasPendingRequest = ref(false)
+const showContributorWizard = ref(false)
+const contributorWizardStep = ref<1 | 2>(1)
+const isSubmittingContributor = ref(false)
+const contributorErrorMessage = ref('')
+const contributorSuccessMessage = ref('')
+
+const contributorForm = ref({
+  name: '',
+  email: '',
+  message: ''
+})
 
 // Computed user initials
 const userInitials = computed(() => {
@@ -575,8 +736,54 @@ const goToLandingPage = () => {
   router.push('/')
 }
 
-const goToContributorRequest = () => {
-  router.push('/become-contributor')
+const openContributorWizard = () => {
+  contributorWizardStep.value = 1
+  contributorErrorMessage.value = ''
+  contributorSuccessMessage.value = ''
+  contributorForm.value.name = userName.value || 'User'
+  contributorForm.value.email = userEmail.value || ''
+  contributorForm.value.message = ''
+  showContributorWizard.value = true
+}
+
+const closeContributorWizard = () => {
+  if (isSubmittingContributor.value) return
+  showContributorWizard.value = false
+}
+
+const goToContributorWizardStep = (step: 1 | 2) => {
+  contributorWizardStep.value = step
+}
+
+const submitContributorRequest = async () => {
+  if (contributorForm.value.message.trim().length < 10) {
+    contributorErrorMessage.value = 'Alasan harus minimal 10 karakter.'
+    return
+  }
+
+  isSubmittingContributor.value = true
+  contributorErrorMessage.value = ''
+
+  try {
+    const response = await api.contributorRequests.submit(contributorForm.value.message) as {
+      success: boolean
+      message?: string
+    }
+
+    if (response.success) {
+      hasPendingRequest.value = true
+      contributorSuccessMessage.value = response.message || 'Permintaan berhasil dikirim. Tim super admin akan meninjau permintaan Anda.'
+      contributorForm.value.message = ''
+
+      setTimeout(() => {
+        showContributorWizard.value = false
+      }, 1000)
+    }
+  } catch (error) {
+    contributorErrorMessage.value = error instanceof Error ? error.message : 'Gagal mengirim permintaan.'
+  } finally {
+    isSubmittingContributor.value = false
+  }
 }
 
 const goToContributorDashboard = () => {

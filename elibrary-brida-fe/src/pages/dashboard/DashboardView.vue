@@ -70,7 +70,7 @@
 
         <!-- Profile Management - Admin & Super Admin -->
         <router-link
-          v-if="userRole === 'admin' || userRole === 'super_admin'"
+          v-if="userRole === 'super_admin'"
           to="/profile-management"
           class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
         >
@@ -1112,7 +1112,7 @@ const loadStats = async () => {
 const loadStatistics = async () => {
   try {
     console.log('📊 Loading statistics from API...')
-    const response = await api.statistics.getAll() as { 
+    const response = await api.statistics.getAll() as {
       success: boolean
       data: {
         total_research: number
@@ -1126,7 +1126,7 @@ const loadStatistics = async () => {
 
     if (response.success && response.data) {
       console.log('✅ API Response received:', response.data)
-      
+
       // Update statistics cards
       totalResearch.value = response.data.total_research
       bridaResearch.value = response.data.brida_research
@@ -1234,12 +1234,6 @@ onMounted(() => {
   const allowedRoles = ['reviewer', 'super_admin']
   if (!allowedRoles.includes(userRole.value.toLowerCase())) {
     console.warn('User does not have permission to view dashboard. Role:', userRole.value)
-
-    // Redirect admin to profile management
-    if (userRole.value.toLowerCase() === 'admin') {
-      router.push('/profile-management')
-      return
-    }
 
     toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk mengakses dashboard admin')
     router.push('/')
@@ -1428,3 +1422,4 @@ const deleteSelected = async () => {
   overflow: hidden;
 }
 </style>
+

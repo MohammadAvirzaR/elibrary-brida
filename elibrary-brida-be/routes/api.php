@@ -29,10 +29,6 @@ Route::post('register/google-complete', [AuthController::class, 'completeGoogleR
 Route::get('/documents/search', [DocumentController::class, 'search']);
 Route::get('/documents/featured-content', [DocumentController::class, 'featuredContent']);
 
-// Public file serving - works for both authenticated and guest users
-Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile']);
-Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment']);
-
 // View specific document (public access for approved documents) - place AFTER specific routes
 Route::get('/documents/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
 
@@ -70,24 +66,30 @@ Route::middleware('auth:sanctum')->group(function () {
     // Specific document routes (must come before /documents/{id})
     // Preview metadata (all authenticated users)
     Route::post('/documents/preview', [DocumentController::class, 'preview']);
+    Route::get('/documents/{id}/preview', [DocumentController::class, 'servePreview'])
+        ->middleware('throttle:30,1');
+    Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile'])
+        ->middleware('throttle:20,1');
+    Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment'])
+        ->middleware('throttle:20,1');
 
     // List dokumen milik user
     Route::get('/documents/my', [DocumentController::class, 'myDocuments']);
 
-    // Review route (Reviewer + Admin + Super Admin)
+    // Review route (Reviewer + Super Admin)
     Route::get('/documents/review', [DocumentController::class, 'review'])
-        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,admin,super_admin');
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':reviewer,super_admin');
 
-    // Review history endpoint (Admin + Super Admin)
+    // Review history endpoint (Super Admin)
     Route::get('/documents/review-history', [DocumentController::class, 'getReviewHistory'])
-        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':admin,super_admin');
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin');
 
-    // Upload document (Contributor + Admin + Super Admin)
+    // Upload document (Contributor + Super Admin)
     Route::post('/documents/upload', [DocumentController::class, 'upload'])
-        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin');
+        ->middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,super_admin');
 
-    // ========== ADMIN & SUPER ADMIN ==========
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin,admin')->group(function () {
+    // ========== SUPER ADMIN ==========
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super_admin')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::post('/users', [UserController::class, 'store']);
@@ -112,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store']);
     });
 
-    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,admin,super_admin,reviewer')->group(function () {
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,super_admin,reviewer')->group(function () {
         Route::put('/documents/{id}', [DocumentController::class, 'update']);
         Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
     });
