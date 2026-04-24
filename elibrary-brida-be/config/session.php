@@ -18,7 +18,9 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('APP_ENV') === 'local'
+        ? 'file'
+        : env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------

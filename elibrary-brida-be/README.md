@@ -159,6 +159,33 @@ Jika ingin jalankan semua seed dari DatabaseSeeder:
 php artisan db:seed
 ```
 
+## Troubleshooting
+
+### Login 500 dan log menampilkan query ke tabel `cache`
+Jika muncul error seperti:
+- `select * from cache where key in (...)`
+- atau `SQLSTATE[HY000] [1045] Access denied for user ...`
+
+Pastikan `.env` backend mengarah ke database yang benar dan untuk environment local gunakan cache/session berbasis file:
+
+```env
+CACHE_STORE=file
+SESSION_DRIVER=file
+```
+
+Lalu bersihkan config cache Laravel dan restart server:
+
+```bash
+php artisan optimize:clear
+```
+
+### Preview PDF tidak muncul (hanya fallback abstrak)
+Preview 1–2 halaman pertama PDF membutuhkan dependency OS-level:
+- PHP extension **Imagick**
+- **Ghostscript** (untuk membaca PDF via Imagick)
+
+Jika belum terpasang, endpoint preview akan fallback ke abstrak/metadata saja.
+
 ## Pola Coding Baru yang Wajib Dipakai
 
 ### 1. Assign role ke user

@@ -123,16 +123,7 @@
       <!-- Top Bar -->
       <header class="bg-gradient-to-r from-blue-400 to-blue-300 shadow-md sticky top-0 z-10">
         <div class="flex items-center justify-between px-8 py-4">
-          <!-- Search -->
-          <div class="relative w-96">
-            <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              v-model="topSearchQuery"
-              type="text"
-              placeholder="Search"
-              class="w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+
 
           <!-- User Info -->
           <div class="flex items-center gap-4">
@@ -652,7 +643,7 @@ interface User {
 const isSidebarOpen = ref(true)
 const username = ref('')
 const userRole = ref('')
-const topSearchQuery = ref('')
+// const topSearchQuery = ref('')
 
 // Auto-refresh interval
 let refreshInterval: number | null = null

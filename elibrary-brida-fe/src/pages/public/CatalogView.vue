@@ -186,7 +186,7 @@
 
                 <!-- Document Info -->
                 <div class="flex-1">
-                  <h3 class="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2 cursor-pointer">
+                  <h3 class="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2 ">
                     {{ document.title }}
                   </h3>
                   <p class="text-sm text-gray-600 mb-2">
@@ -237,7 +237,7 @@
                 </div>
 
                 <!-- Action Icons -->
-                <div class="flex-shrink-0 flex flex-col gap-3">
+                <!-- <div class="flex-shrink-0 flex flex-col gap-3">
                   <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Bookmark">
                     <i-lucide-bookmark class="w-5 h-5 text-gray-600" />
                   </button>
@@ -247,7 +247,7 @@
                   <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Citations">
                     <i-lucide-quote class="w-5 h-5 text-gray-600" />
                   </button>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
