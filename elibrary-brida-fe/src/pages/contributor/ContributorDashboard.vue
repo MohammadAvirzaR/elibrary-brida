@@ -376,6 +376,13 @@
       @uploaded="handleDocumentUploaded"
     />
 
+    <EditDocumentModal
+      v-if="showEditModal && docToEdit"
+      :document="docToEdit"
+      @close="showEditModal = false"
+      @updated="handleDocumentUpdated"
+    />
+
     <ConfirmModal
       :show="showDeleteConfirm"
       title="Hapus Dokumen"
@@ -393,6 +400,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import UploadDocumentModal from '@/components/UploadDocumentModal.vue'
+import EditDocumentModal from '@/components/EditDocumentModal.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useToast } from '@/composables/useToast'
 
@@ -406,6 +414,8 @@ const { toast } = useToast()
 // UI State for navbar
 const showProfileMenu = ref(false)
 const showUploadModal = ref(false)
+const showEditModal = ref(false)
+const docToEdit = ref<UploadedDocument | null>(null)
 const showDeleteConfirm = ref(false)
 const docToDelete = ref<UploadedDocument | null>(null)
 
@@ -688,8 +698,8 @@ const viewDocument = async (doc: UploadedDocument) => {
 }
 
 const editDocument = async (doc: UploadedDocument) => {
-  console.log('Edit dokumen:', doc)
-  toast.info('Info', 'Fitur edit akan segera tersedia. Untuk sementara, silakan hapus dan upload ulang.')
+  docToEdit.value = doc as any
+  showEditModal.value = true
 }
 
 const askDeleteDocument = (doc: UploadedDocument) => {
@@ -776,6 +786,18 @@ const handleDocumentUploaded = async (newDoc?: UploadedDocument) => {
     }, 100)
   } catch (error) {
     console.error('Error after document upload:', error)
+  }
+}
+
+const handleDocumentUpdated = async () => {
+  try {
+    docToEdit.value = null
+    await loadDocuments()
+    loadStats()
+    loadRecentActivities()
+    toast.success('Berhasil', 'Dokumen berhasil diperbarui')
+  } catch (error) {
+    console.error('Error after document update:', error)
   }
 }
 </script>
