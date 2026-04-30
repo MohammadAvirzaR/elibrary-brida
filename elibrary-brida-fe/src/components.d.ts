@@ -14,6 +14,7 @@ declare module 'vue' {
     AdvancedSearchModal: typeof import('./components/AdvancedSearchModal.vue')['default']
     BooksTable: typeof import('./components/BooksTable.vue')['default']
     ConfirmModal: typeof import('./components/ConfirmModal.vue')['default']
+    DashboardHeader: typeof import('./components/DashboardHeader.vue')['default']
     DropdownMenu: typeof import('./components/ui/dropdown-menu/DropdownMenu.vue')['default']
     DropdownMenuCheckboxItem: typeof import('./components/ui/dropdown-menu/DropdownMenuCheckboxItem.vue')['default']
     DropdownMenuContent: typeof import('./components/ui/dropdown-menu/DropdownMenuContent.vue')['default']

@@ -124,38 +124,25 @@
       ]"
     >
       <!-- Top Bar -->
-      <header class="bg-gradient-to-r from-blue-500 to-blue-400 shadow-md sticky top-0 z-10">
-        <div class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3 md:py-4">
-          <!-- Mobile Menu Button -->
+      <DashboardHeader
+        title="Dashboard"
+        :isSidebarOpen="isSidebarOpen"
+        :username="username"
+        :userRole="userRole"
+        openMarginClass="ml-0"
+        closedMarginClass="ml-0"
+        headerClass="sticky top-0 z-10"
+      >
+        <template #left>
           <button
             @click="toggleSidebar"
-            class="md:hidden p-2 hover:bg-blue-600 rounded-lg transition text-white"
+            class="md:hidden p-2 hover:bg-gray-100 rounded-lg transition text-gray-700"
+            title="Menu"
           >
             <i-lucide-menu class="w-5 h-5" />
           </button>
-
-          <!-- Search -->
-          <div class="relative flex-1 max-w-md mx-4">
-            <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search"
-              class="w-full pl-9 md:pl-10 pr-4 py-2 text-sm rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          </div>
-
-          <!-- User Info -->
-          <div class="flex items-center gap-2 md:gap-4">
-            <div class="text-right hidden sm:block">
-              <p class="font-bold text-gray-900 text-sm md:text-base">{{ username || 'Admin BRIDA' }}</p>
-              <p class="text-xs md:text-sm text-gray-700 capitalize">{{ userRole || 'Super_admin' }}</p>
-            </div>
-            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-700 flex items-center justify-center text-white font-bold text-sm md:text-lg shadow-md">
-              {{ username ? username.charAt(0).toUpperCase() : 'A' }}
-            </div>
-          </div>
-        </div>
-      </header>
+        </template>
+      </DashboardHeader>
 
       <!-- Dashboard Content -->
       <main class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -697,6 +684,7 @@ import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import VueApexCharts from 'vue3-apexcharts'
 import ConfirmModal from '@/components/ConfirmModal.vue'
+import DashboardHeader from '@/components/DashboardHeader.vue'
 
 const router = useRouter()
 const { toast } = useToast()

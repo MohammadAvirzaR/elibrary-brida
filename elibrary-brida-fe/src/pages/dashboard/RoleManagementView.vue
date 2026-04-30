@@ -35,17 +35,21 @@
       </nav>
     </aside>
 
+    <DashboardHeader
+      title="Role Management"
+      :isSidebarOpen="isSidebarOpen"
+      :username="username"
+      :userRole="userRole"
+      openMarginClass="ml-64"
+      closedMarginClass="ml-20"
+      headerClass="sticky top-0 z-10"
+    />
+
     <!-- Main Content -->
     <main :class="['transition-all duration-300', isSidebarOpen ? 'ml-64' : 'ml-20']">
-      <!-- Header -->
-      <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div class="px-8 py-6">
-          <h1 class="text-3xl font-bold text-gray-900">Role Management</h1>
-          <p class="text-gray-600 mt-1">Manage roles and permissions like Discord</p>
-        </div>
-      </header>
 
       <div class="p-8">
+        <p class="text-gray-600 mb-6">Manage roles and permissions like Discord</p>
         <div class="grid grid-cols-12 gap-6">
           <!-- Left Panel - Role List -->
           <div class="col-span-4">
@@ -273,11 +277,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import ConfirmModal from '@/components/ConfirmModal.vue'
+import DashboardHeader from '@/components/DashboardHeader.vue'
 
 const router = useRouter()
 const { toast } = useToast()
 
 const isSidebarOpen = ref(true)
+const username = ref('')
+const userRole = ref('')
 const showDeleteRoleConfirm = ref(false)
 const selectedRole = ref<Role | null>(null)
 const draggedRole = ref<Role | null>(null)
@@ -481,6 +488,18 @@ const logout = () => {
 }
 
 onMounted(() => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      username.value = user.name || 'Admin'
+      userRole.value = user.role || ''
+    } catch {
+      username.value = 'Admin'
+      userRole.value = ''
+    }
+  }
+
   // Load roles from API
   console.log('Role Management loaded')
 })

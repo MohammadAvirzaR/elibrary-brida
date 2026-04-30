@@ -114,45 +114,21 @@
     </aside>
 
     <!-- Main Content -->
-    <div
+    <DashboardHeader
+      title="Roles"
+      :isSidebarOpen="isSidebarOpen"
+      :username="username"
+      :userRole="userRole"
+      headerClass="sticky top-0 z-10"
+    />
+
+    <!-- Roles Content -->
+    <main
       :class="[
-        'transition-all duration-300 ease-in-out',
+        'transition-all duration-300 ease-in-out p-8',
         isSidebarOpen ? 'ml-60' : 'ml-20'
       ]"
     >
-      <!-- Top Bar -->
-      <header class="bg-gradient-to-r from-blue-400 to-blue-300 shadow-md sticky top-0 z-10">
-        <div class="flex items-center justify-between px-8 py-4">
-          <!-- Search -->
-          <div class="relative w-96">
-            <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              v-model="topSearchQuery"
-              type="text"
-              placeholder="Search"
-              class="w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <!-- User Info -->
-          <div class="flex items-center gap-4">
-            <div class="text-right">
-              <p class="font-bold text-gray-800">{{ username || 'Admin' }}</p>
-              <p class="text-sm text-gray-700 capitalize">{{ userRole || 'admin' }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-              {{ username ? username.charAt(0).toUpperCase() : 'A' }}
-            </div>
-          </div>
-        </div>
-        </header>
-
-      <!-- Roles Content -->
-      <main class="p-8">
-        <!-- Header -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900">Roles</h1>
-        </div>
 
         <!-- Search and Actions Bar -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -333,7 +309,6 @@
         </div>
       </div>
       </main>
-    </div>
 
     <!-- Add/Edit Role Modal -->
     <div
@@ -487,6 +462,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import DashboardHeader from '@/components/DashboardHeader.vue'
 
 const router = useRouter()
 const { toast } = useToast()
@@ -509,7 +485,7 @@ interface Permission {
 const isSidebarOpen = ref(true)
 const username = ref('')
 const userRole = ref('')
-const topSearchQuery = ref('')
+// const topSearchQuery = ref('')
 
 // Get user from localStorage
 onMounted(() => {

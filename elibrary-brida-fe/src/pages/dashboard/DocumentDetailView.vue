@@ -100,18 +100,18 @@
                   <p class="text-gray-500 text-sm mt-2">Mohon tunggu sebentar</p>
                 </div>
               </div>
-              <!-- PDF Preview - limited to ~2 pages for non-admin -->
-              <div v-else-if="pdfUrl" class="relative w-full bg-gray-100 rounded-lg overflow-hidden" style="height: 800px;">
+              <!-- Preview Dokumen (HTML dari backend). Untuk user non-authorized, backend hanya kirim 1–2 halaman pertama sebagai gambar. -->
+              <div v-else-if="pdfUrl" class="relative w-full bg-gray-100 rounded-lg overflow-auto" style="height: 800px;">
                 <iframe
                   :src="pdfUrl"
-                  class="w-full border-0"
-                  style="height: 1700px;"
+                  class="w-full border-0 block"
+                  style="height: 800px;"
                   title="Document Preview"
                 />
-                <!-- Gradient overlay for guest/contributor: block full view -->
+                <!-- Overlay CTA untuk user yang tidak punya akses full-text -->
                 <div
                   v-if="!canDirectDownload"
-                  class="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-gray-100 via-gray-100/90 to-transparent flex flex-col items-center justify-end pb-6 gap-3"
+                  class="sticky inset-x-0 bottom-0 h-44 bg-gradient-to-t from-gray-100 via-gray-100/95 to-transparent flex flex-col items-center justify-end pb-5 gap-3"
                 >
                   <p class="text-sm text-gray-600 font-medium">Preview terbatas — 2 halaman pertama</p>
                   <button

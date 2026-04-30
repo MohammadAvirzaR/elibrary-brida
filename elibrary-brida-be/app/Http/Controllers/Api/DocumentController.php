@@ -908,7 +908,32 @@ class DocumentController extends Controller
 
             $title = e($document->title ?? 'Untitled Document');
             $authorLine = e($authorNames ?: 'Penulis tidak tersedia');
-            $abstract = e(Str::limit((string) ($document->abstract_id ?: $document->abstract_en ?: 'Preview full text tidak tersedia untuk role Anda.'), 1400));
+
+            $previewPagesHtml = '';
+            $pdfPath = null;
+
+            if ($document->file_path && str_ends_with(strtolower((string) $document->file_path), '.pdf')) {
+                $pdfPath = $this->resolveStoredFilePath($document->file_path);
+            }
+
+            if ($pdfPath) {
+                $dataUris = $this->renderPdfPreviewDataUris($pdfPath, 2);
+
+                if (count($dataUris) > 0) {
+                    $pageBlocks = [];
+                    foreach ($dataUris as $i => $dataUri) {
+                        $pageNo = $i + 1;
+                        $pageBlocks[] = "<div class=\"pdf-page\"><div class=\"pdf-meta\">Halaman {$pageNo}</div><div class=\"pdf-watermark\">PREVIEW TERBATAS</div><img src=\"{$dataUri}\" alt=\"Preview halaman {$pageNo}\" /></div>";
+                    }
+                    $previewPagesHtml = implode("\n", $pageBlocks);
+                }
+            }
+
+            if (!$previewPagesHtml) {
+                // Fallback: abstrak / metadata saja (tetap strict karena tidak mengirim PDF asli)
+                $abstract = e(Str::limit((string) ($document->abstract_id ?: $document->abstract_en ?: 'Preview halaman tidak tersedia. Silakan ajukan permintaan dokumen untuk akses full text.'), 1400));
+                $previewPagesHtml = "<section class=\"content\"><div class=\"watermark\">PREVIEW TERBATAS</div>{$abstract}</section>";
+            }
 
             $html = <<<HTML
 <!doctype html>
@@ -919,13 +944,19 @@ class DocumentController extends Controller
   <title>Preview Dokumen</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }
-    .page { max-width: 840px; margin: 16px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .page { max-width: 900px; margin: 16px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
     .header { padding: 18px 20px; border-bottom: 1px solid #e2e8f0; }
     .title { margin: 0 0 6px; font-size: 20px; line-height: 1.3; }
     .meta { margin: 0; color: #475569; font-size: 13px; }
     .content { position: relative; min-height: 540px; padding: 20px; line-height: 1.7; font-size: 14px; white-space: pre-wrap; }
     .watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: rgba(15, 23, 42, 0.07); transform: rotate(-24deg); pointer-events: none; user-select: none; }
     .footer { padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; color: #334155; font-size: 12px; }
+
+    .pdf-wrap { padding: 16px; background: #f8fafc; }
+    .pdf-page { position: relative; margin: 0 auto 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06); }
+    .pdf-page img { display: block; width: 100%; height: auto; }
+    .pdf-meta { position: absolute; top: 10px; left: 10px; z-index: 2; background: rgba(15, 23, 42, 0.75); color: #fff; font-size: 12px; padding: 6px 10px; border-radius: 999px; }
+    .pdf-watermark { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 800; color: rgba(15, 23, 42, 0.08); transform: rotate(-22deg); pointer-events: none; user-select: none; }
   </style>
 </head>
 <body>
@@ -934,12 +965,11 @@ class DocumentController extends Controller
       <h1 class="title">{$title}</h1>
       <p class="meta">{$authorLine}</p>
     </header>
-    <section class="content">
-      <div class="watermark">PREVIEW TERBATAS</div>
-      {$abstract}
-    </section>
+    <div class="pdf-wrap">
+      {$previewPagesHtml}
+    </div>
     <footer class="footer">
-      Preview ini adalah konten turunan dan bukan file dokumen asli. Untuk akses full text, ajukan permintaan dokumen.
+      Preview ini adalah konten turunan (hanya 1–2 halaman pertama) dan bukan file dokumen asli. Untuk akses full text, ajukan permintaan dokumen.
     </footer>
   </article>
 </body>
@@ -963,6 +993,70 @@ HTML;
                 'success' => false,
                 'message' => 'Error serving preview: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Render PDF halaman awal menjadi data URI (base64) supaya iframe tidak perlu request tambahan
+     * (dan kita tidak perlu auth header di <img> tag).
+     */
+    private function renderPdfPreviewDataUris(string $pdfFilePath, int $maxPages = 2): array
+    {
+        try {
+            if (!is_file($pdfFilePath)) {
+                return [];
+            }
+
+            if (!class_exists(\Spatie\PdfToImage\Pdf::class) || !class_exists(\Imagick::class)) {
+                // Dependency OS-level (Imagick/Ghostscript) mungkin belum ada
+                return [];
+            }
+
+            $tmpBase = storage_path('app/tmp/pdf-previews');
+            if (!is_dir($tmpBase)) {
+                @mkdir($tmpBase, 0775, true);
+            }
+
+            $tmpDir = $tmpBase . DIRECTORY_SEPARATOR . 'doc_' . sha1($pdfFilePath . '|' . microtime(true));
+            @mkdir($tmpDir, 0775, true);
+
+            $pdf = new \Spatie\PdfToImage\Pdf($pdfFilePath);
+            if (method_exists($pdf, 'setResolution')) {
+                $pdf->setResolution(144);
+            }
+
+            $dataUris = [];
+            for ($page = 1; $page <= $maxPages; $page++) {
+                $out = $tmpDir . DIRECTORY_SEPARATOR . "page-{$page}.jpg";
+
+                try {
+                    $pdf->setPage($page)->saveImage($out);
+                } catch (\Throwable $e) {
+                    // Page di luar jumlah halaman / gagal render, stop
+                    break;
+                }
+
+                if (!is_file($out)) {
+                    break;
+                }
+
+                $bytes = @file_get_contents($out);
+                if ($bytes === false) {
+                    break;
+                }
+
+                $dataUris[] = 'data:image/jpeg;base64,' . base64_encode($bytes);
+            }
+
+            // best-effort cleanup
+            foreach (glob($tmpDir . DIRECTORY_SEPARATOR . '*') ?: [] as $f) {
+                @unlink($f);
+            }
+            @rmdir($tmpDir);
+
+            return $dataUris;
+        } catch (\Throwable $e) {
+            return [];
         }
     }
 
