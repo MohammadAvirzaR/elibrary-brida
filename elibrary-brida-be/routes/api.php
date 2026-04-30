@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ContributorRequestController;
 use App\Http\Controllers\Api\DocumentDownloadRequestController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\DebugController;
+use App\Http\Controllers\Api\UniversityController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
 Route::post('register', [AuthController::class, 'register'])
@@ -36,6 +37,9 @@ Route::get('/filters', [FilterController::class, 'index']);
 
 // Download requests — public (no auth needed so guests can request)
 Route::post('/download-requests', [DocumentDownloadRequestController::class, 'store']);
+
+// Get all universities (public, untuk dropdown di form upload)
+Route::get('/universities', [UniversityController::class, 'index']);
 
 // Auth Sanctum routes
 Route::middleware('auth:sanctum')->group(function () {

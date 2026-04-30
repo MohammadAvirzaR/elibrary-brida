@@ -170,6 +170,18 @@
                 </select>
                 <p v-if="errors.subject" class="text-red-500 text-sm mt-1">{{ errors.subject }}</p>
               </div>
+
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                  Universitas <span class="text-red-500">*</span>
+                </label>
+                <select name="university" id="university" v-model.number="form.university_id" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option :value="null" disabled>Pilih Universitas</option>
+                  <option v-for="univ in universities" :key="univ.id" :value="univ.id">
+                    {{ univ.name }}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <!-- Optional Fields -->
@@ -572,6 +584,7 @@ const currentUserName = ref('') // Nama user yang sedang login
 const subjects = ref<Array<{ id: number; subject_name: string }>>([])
 const documentTypes = ref<Array<{ id: number; type_name: string }>>([])
 const licenses = ref<Array<{ id: number; license_name: string }>>([])
+const universities = ref<Array<{ id: number; name: string }>>([])
 
 const form = reactive({
   // Step 1 - Metadata
@@ -582,6 +595,7 @@ const form = reactive({
   keywords: '',
   subject: null as number | null,
   documentType: null as number | null,
+  university_id: null as number | null,
   advisor: '',
   description: '',
   translatedAbstract: '',
@@ -1040,6 +1054,11 @@ const submitForm = async () => {
       formData.append('type_id', form.documentType.toString())
     }
 
+    // University ID
+    if (form.university_id) {
+      formData.append('university_id', form.university_id.toString())
+    }
+
     // Subject ID (single)
     if (form.subject) {
       formData.append('subject_id', form.subject.toString())
@@ -1193,6 +1212,17 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load filters:', error)
     toast.error('Gagal Memuat Data', 'Tidak dapat memuat daftar subjek dan jenis dokumen')
+  }
+
+  // Fetch universities list from API
+  try {
+    const response = await api.universities.getAll() as { success: boolean; data: Array<{ id: number; name: string }> }
+    if (response.success && response.data) {
+      universities.value = response.data
+      console.log('Universities loaded:', universities.value.length)
+    }
+  } catch (error) {
+    console.error('Failed to load universities:', error)
   }
 })
 </script>

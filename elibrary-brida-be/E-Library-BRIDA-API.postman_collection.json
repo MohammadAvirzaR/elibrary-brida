@@ -1,5 +1,7 @@
 {
+  "_postman_id": "elibrary-brida-api-collection",
   "info": {
+    "_postman_id": "elibrary-brida-api-info",
     "name": "E-Library BRIDA API",
     "description": "API collection untuk E-Library BRIDA application dengan authentication, documents, users, dan admin management.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -421,7 +423,241 @@
           }
         },
         {
-          "name": "My Documents",
+          "name": "Create Document (Contributor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Document created', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Dokumen Baru",
+                  "type": "text"
+                },
+                {
+                  "key": "publisher",
+                  "value": "Penerbit Contoh",
+                  "type": "text"
+                },
+                {
+                  "key": "year_published",
+                  "value": "2024",
+                  "type": "text"
+                },
+                {
+                  "key": "type_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "subject_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "language",
+                  "value": "id",
+                  "type": "text"
+                },
+                {
+                  "key": "keywords",
+                  "value": "teknologi, perpustakaan, digital",
+                  "type": "text"
+                },
+                {
+                  "key": "abstract_id",
+                  "value": "Ringkasan dokumen dalam bahasa Indonesia",
+                  "type": "text"
+                },
+                {
+                  "key": "abstract_en",
+                  "value": "Document summary in English",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Documents for Review (Reviewer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/review?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "review"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review History (Super Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/review-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "review-history"]
+            }
+          }
+        },
+        {
+          "name": "Download Document File (Authenticated)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/1/file",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "1", "file"]
+            }
+          }
+        },
+        {
+          "name": "Preview Document File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/1/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "1", "preview"]
+            }
+          }
+        },
           "event": [
             {
               "listen": "test",
@@ -561,7 +797,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Title\",\n  \"description\": \"Updated description\",\n  \"category\": \"Science\"\n}"
+              "raw": "{\n  \"title\": \"Judul Dokumen Updated\",\n  \"publisher\": \"Penerbit Contoh\",\n  \"year_published\": 2024,\n  \"type_id\": 1,\n  \"subject_id\": 1,\n  \"language\": \"id\",\n  \"keywords\": \"contoh, dokumen, perpustakaan\",\n  \"abstract_id\": \"Ini adalah ringkasan dokumen dalam bahasa Indonesia\",\n  \"abstract_en\": \"This is the document summary in English\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/documents/1",
@@ -1688,12 +1924,32 @@
     {
       "key": "baseUrl",
       "value": "http://127.0.0.1:8000",
-      "type": "string"
+      "type": "string",
+      "enabled": true
     },
     {
       "key": "token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "documentId",
+      "value": "1",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "requestId",
+      "value": "1",
+      "type": "string",
+      "enabled": true
     }
   ]
 }
