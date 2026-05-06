@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             TypesSeeder::class,
             LicensesSeeder::class,
             UnitsSeeder::class,
+            UniversitySeeder::class,
         ]);
     }
 }

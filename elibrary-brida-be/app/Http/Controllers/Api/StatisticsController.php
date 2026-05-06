@@ -85,23 +85,51 @@ class StatisticsController extends Controller
             Log::info('Trend data collected', ['years' => $trendData->count()]);
 
             // 4. INSTITUTION DATA (Bar Chart - Top 10)
-            // Get institutions from document_authors (join with documents to filter by approved status)
-            $institutionData = DB::table('document_authors')
-                ->join('documents', 'document_authors.document_id', '=', 'documents.id')
+            // Get institutions from documents.university_id (primary source)
+            $institutionData = DB::table('documents')
+                ->leftJoin('university', 'documents.university_id', '=', 'university.id')
                 ->where('documents.status', 'approved')
-                ->selectRaw('document_authors.institution, COUNT(*) as total')
-                ->whereNotNull('document_authors.institution')
-                ->where('document_authors.institution', '!=', '')
-                ->groupBy('document_authors.institution')
+                ->selectRaw('COALESCE(university.university_name, "Tanpa Instansi") as institution_name, COUNT(documents.id) as total')
+                ->whereNotNull('documents.university_id')
+                ->groupBy('institution_name')
                 ->orderBy('total', 'desc')
                 ->limit(10)
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'institution' => $item->institution,
-                        'count' => $item->total
-                    ];
-                });
+                ->get();
+
+            // If no data from documents, fallback to document_authors
+            if ($institutionData->isEmpty()) {
+                $institutionData = DB::table('document_authors')
+                    ->leftJoin('university', 'document_authors.university_id', '=', 'university.id')
+                    ->join('documents', 'document_authors.document_id', '=', 'documents.id')
+                    ->where('documents.status', 'approved')
+                    ->selectRaw('COALESCE(university.university_name, document_authors.institution) as institution_name, COUNT(DISTINCT document_authors.document_id) as total')
+                    ->whereRaw('COALESCE(university.university_name, document_authors.institution) IS NOT NULL AND COALESCE(university.university_name, document_authors.institution) != ""')
+                    ->groupBy('institution_name')
+                    ->orderBy('total', 'desc')
+                    ->limit(10)
+                    ->get();
+            }
+
+            // If still no data, try document_supervisors
+            if ($institutionData->isEmpty()) {
+                $institutionData = DB::table('document_supervisors')
+                    ->leftJoin('university', 'document_supervisors.university_id', '=', 'university.id')
+                    ->join('documents', 'document_supervisors.document_id', '=', 'documents.id')
+                    ->where('documents.status', 'approved')
+                    ->selectRaw('COALESCE(university.university_name, document_supervisors.institution) as institution_name, COUNT(DISTINCT document_supervisors.document_id) as total')
+                    ->whereRaw('COALESCE(university.university_name, document_supervisors.institution) IS NOT NULL AND COALESCE(university.university_name, document_supervisors.institution) != ""')
+                    ->groupBy('institution_name')
+                    ->orderBy('total', 'desc')
+                    ->limit(10)
+                    ->get();
+            }
+
+            $institutionData = $institutionData->map(function ($item) {
+                return [
+                    'institution' => $item->institution_name,
+                    'count' => $item->total
+                ];
+            });
 
             Log::info('Institution data collected', ['count' => $institutionData->count()]);
 

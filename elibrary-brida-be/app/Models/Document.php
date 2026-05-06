@@ -18,6 +18,7 @@ class Document extends Model
         'year_published',
         'type_id',
         'unit_id',
+        'university_id',
         'language',
         'email',
          'subject_id',
@@ -65,6 +66,11 @@ class Document extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function university()
+    {
+        return $this->belongsTo(University::class);
     }
 
     public function license()

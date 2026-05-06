@@ -11,10 +11,16 @@ class DocumentSupervisor extends Model
         'name',
         'email',
         'institution',
+        'university_id',
     ];
 
     public function document()
     {
         return $this->belongsTo(Document::class);
+    }
+
+    public function university()
+    {
+        return $this->belongsTo(University::class);
     }
 }

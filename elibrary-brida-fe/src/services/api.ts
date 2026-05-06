@@ -351,6 +351,12 @@ export const api = {
     // Get all statistics data for dashboard
     getAll: () => apiCall('/statistics', { method: 'GET' }, true),
   },
+
+  // Universities
+  universities: {
+    // Get all universities (public - no auth needed)
+    getAll: () => apiCall('/universities', { method: 'GET' }, false),
+  },
 }
 
 export default api
