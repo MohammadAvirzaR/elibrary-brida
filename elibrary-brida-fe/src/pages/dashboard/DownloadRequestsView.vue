@@ -10,7 +10,9 @@
         </button>
         <div>
           <h1 class="text-xl font-bold text-gray-900">Permintaan Unduh Dokumen</h1>
-          <p class="text-sm text-gray-500 mt-0.5">Kelola permintaan download dari pengguna</p>
+          <p class="text-sm text-gray-500 mt-0.5">
+            {{ isOwnerMode ? 'Kelola permintaan unduh pada dokumen Anda' : 'Kelola permintaan download dari pengguna' }}
+          </p>
         </div>
       </div>
 
@@ -73,7 +75,7 @@
                   class="px-2 py-1 rounded-full text-xs font-semibold"
                   :class="{
                     'bg-yellow-100 text-yellow-700': req.status === 'pending',
-                    'bg-green-100 text-green-700': req.status === 'sent',
+                    'bg-green-100 text-green-700': req.status === 'sent' || req.status === 'approved',
                     'bg-red-100 text-red-700': req.status === 'rejected',
                   }"
                 >{{ statusLabel(req.status) }}</span>
@@ -82,12 +84,12 @@
               <td class="px-4 py-3 text-right">
                 <div v-if="req.status === 'pending'" class="flex justify-end gap-2">
                   <button
-                    @click="sendDocument(req)"
+                    @click="isOwnerMode ? approveRequest(req.id) : sendDocument(req)"
                     :disabled="processingId === req.id"
                     class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
                   >
-                    <i-lucide-send class="w-3 h-3" />
-                    Kirim
+                    <i-lucide-check class="w-3 h-3" />
+                    {{ isOwnerMode ? 'Setujui' : 'Kirim' }}
                   </button>
                   <button
                     @click="rejectRequest(req.id)"
@@ -97,7 +99,7 @@
                     Tolak
                   </button>
                 </div>
-                <span v-else-if="req.status === 'sent'" class="text-xs text-gray-400">
+                <span v-else-if="req.status === 'sent' || req.status === 'approved'" class="text-xs text-gray-400">
                   Terkirim {{ req.sent_at }}
                 </span>
               </td>
@@ -164,6 +166,14 @@ interface DownloadRequest {
 }
 
 const requests = ref<DownloadRequest[]>([])
+const isOwnerMode = computed(() => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    return String(user.role || '').toLowerCase() === 'kontributor'
+  } catch {
+    return false
+  }
+})
 const isLoading = ref(true)
 const activeTab = ref('pending')
 const processingId = ref<number | null>(null)
@@ -174,9 +184,9 @@ const isSending = ref(false)
 
 const tabs = [
   { label: 'Menunggu', value: 'pending' },
-  { label: 'Terkirim', value: 'sent' },
+  ...(isOwnerMode.value ? [] : [{ label: 'Terkirim', value: 'sent' }]),
   { label: 'Ditolak', value: 'rejected' },
-  { label: 'Semua', value: 'all' },
+  ...(isOwnerMode.value ? [] : [{ label: 'Semua', value: 'all' }]),
 ]
 
 const pendingCount = computed(() => requests.value.filter(r => r.status === 'pending').length)
@@ -189,13 +199,16 @@ const filteredRequests = computed(() => {
 const statusLabel = (status: string) => ({
   pending: 'Menunggu',
   sent: 'Terkirim',
+  approved: 'Disetujui',
   rejected: 'Ditolak',
 }[status] || status)
 
 const loadRequests = async () => {
   isLoading.value = true
   try {
-    const res = await api.downloadRequests.getAll() as { success: boolean; data: DownloadRequest[] }
+    const res = (isOwnerMode.value
+      ? await api.downloadRequests.ownerPending()
+      : await api.downloadRequests.getAll()) as { success: boolean; data: DownloadRequest[] }
     requests.value = res.data || []
   } catch {
     toast.error('Gagal Memuat', 'Tidak dapat memuat daftar permintaan')
@@ -228,8 +241,25 @@ const confirmSend = async () => {
 const rejectRequest = async (id: number) => {
   processingId.value = id
   try {
-    await api.downloadRequests.reject(id)
+    if (isOwnerMode.value) {
+      await api.downloadRequests.ownerReject(id)
+    } else {
+      await api.downloadRequests.reject(id)
+    }
     toast.success('Ditolak', 'Permintaan berhasil ditolak')
+    await loadRequests()
+  } catch {
+    toast.error('Gagal', 'Terjadi kesalahan')
+  } finally {
+    processingId.value = null
+  }
+}
+
+const approveRequest = async (id: number) => {
+  processingId.value = id
+  try {
+    await api.downloadRequests.ownerApprove(id)
+    toast.success('Disetujui', 'Permintaan berhasil disetujui dan link download dikirim')
     await loadRequests()
   } catch {
     toast.error('Gagal', 'Terjadi kesalahan')

@@ -25,6 +25,7 @@
     "lucide-react": "^0.546.0",
     "lucide-vue-next": "^0.545.0",
     "pinia": "^3.0.3",
+    "pdfjs-dist": "^4.8.69",
     "reka-ui": "^2.6.0",
     "shadcn-vue": "^2.3.2",
     "simple-icons": "^15.17.0",

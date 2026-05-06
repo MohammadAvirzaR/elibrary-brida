@@ -211,7 +211,7 @@ const router = createRouter({
       component: () => import('@/pages/dashboard/DownloadRequestsView.vue'),
       meta: {
         requiresAuth: true,
-        roles: [ROLES.SUPER_ADMIN],
+        roles: [ROLES.SUPER_ADMIN, ROLES.CONTRIBUTOR],
         title: 'Download Requests'
       }
     },

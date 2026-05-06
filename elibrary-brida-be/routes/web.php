@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DocumentDownloadRequestController;
 
 Route::get('/', function () {
     return response()->json([
@@ -23,3 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
+Route::get('/download-request/{id}/approve', [DocumentDownloadRequestController::class, 'approveViaToken']);
+Route::get('/download-request/{id}/reject', [DocumentDownloadRequestController::class, 'rejectViaToken']);
+Route::get('/download/{token}', [DocumentDownloadRequestController::class, 'secureDownloadByToken']);

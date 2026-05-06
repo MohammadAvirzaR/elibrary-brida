@@ -58,7 +58,7 @@
             <button @click="handleUploadClick" class="hover:text-neutral-800 transition cursor-pointer"
               >Unggah Mandiri</button>
           </li>
-          <li><a href="#" class="hover:text-neutral-800 transition">FAQ</a></li>
+          <li><router-link to="/faq" class="hover:text-neutral-800 transition">FAQ</router-link></li>
           <li><router-link to="/login" class="hover:text-neutral-800 transition">Login</router-link></li>
           <li>
             <router-link to="/register" class="hover:text-neutral-800 transition">Register</router-link>

@@ -140,17 +140,16 @@ export const api = {
 
     getPreviewBlobUrl: async (id: number): Promise<string> => {
       const token = getAuthToken()
-
-      if (!token) {
-        throw new Error('401 - Anda harus login untuk melihat preview dokumen')
+      const headers: Record<string, string> = {
+        'Accept': 'application/pdf',
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
       }
 
-      const response = await fetch(`${API_BASE_URL}/documents/${id}/preview`, {
+      const response = await fetch(`${API_BASE_URL}/content/${id}/preview`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'text/html',
-        },
+        headers,
       })
 
       if (!response.ok) {
@@ -213,6 +212,24 @@ export const api = {
       console.log('✓ Upload successful:', result)
       return result
     },
+
+    uploadSecure: async (data: FormData) => {
+      const token = getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/documents/upload-secure`, {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.message || 'Secure upload failed')
+      }
+      return result
+    },
   },
 
   filters: {
@@ -269,6 +286,19 @@ export const api = {
 
     reject: (id: number, admin_notes?: string) =>
       apiCall(`/download-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
+
+    requestByContent: (contentId: number, data: {
+      requester_email: string
+      name?: string
+      institution?: string
+      purpose?: string
+    }) => apiCall(`/content/${contentId}/request-download`, { method: 'POST', body: JSON.stringify(data) }),
+
+    ownerPending: () => apiCall('/download-requests/owner/pending', { method: 'GET' }, true),
+
+    ownerApprove: (id: number) => apiCall(`/download-requests/${id}/owner-approve`, { method: 'POST' }, true),
+
+    ownerReject: (id: number) => apiCall(`/download-requests/${id}/owner-reject`, { method: 'POST' }, true),
   },
 
   contributorRequests: {
@@ -284,6 +314,34 @@ export const api = {
 
     reject: (id: number, admin_notes: string) =>
       apiCall(`/contributor-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ admin_notes }) }, true),
+  },
+
+  content: {
+    create: async (data: FormData) => {
+      const token = getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/content`, {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.message || 'Create content failed')
+      }
+      return result
+    },
+    getById: (id: number) =>
+      apiCall(`/content/${id}`, { method: 'GET' }, true),
+  },
+
+  notifications: {
+    getUnread: () => apiCall('/notifications/unread', { method: 'GET' }, true),
+
+    markAsRead: (id: number) =>
+      apiCall(`/notifications/${id}/read`, { method: 'POST' }, true),
   },
 
   // TODO: Backend API - Implement statistics endpoint

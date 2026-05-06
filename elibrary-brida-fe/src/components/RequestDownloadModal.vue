@@ -21,7 +21,7 @@
           </div>
           <h3 class="text-lg font-bold text-neutral-900">Permohonan Terkirim!</h3>
           <p class="text-sm text-neutral-600">
-            Permintaan Anda telah diterima. Admin akan mengirimkan dokumen ke email
+            Permintaan Anda telah diterima. Pemilik dokumen akan meninjau permintaan dan sistem akan mengirim link unduh ke email
             <strong>{{ form.email }}</strong> setelah diverifikasi.
           </p>
           <button
@@ -183,13 +183,11 @@ const submitRequest = async () => {
 
   isSubmitting.value = true
   try {
-    await api.downloadRequests.submit({
-      document_id: props.documentId,
+    await api.downloadRequests.requestByContent(props.documentId, {
+      requester_email: form.email.trim(),
       name: form.name.trim(),
-      email: form.email.trim(),
       institution: form.institution.trim() || undefined,
       purpose: form.purpose.trim() || undefined,
-      agreed_to_terms: true,
     })
     submitted.value = true
   } catch {

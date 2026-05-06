@@ -11,6 +11,8 @@
         "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^2.10.1",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
         "spatie/laravel-permission": "^7.2",
         "spatie/pdf-to-image": "^1.2"
     },
@@ -21,7 +23,14 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
+        "phpunit/phpunit": "^11.5.50"
+    },
+    "conflict": {
+        "league/commonmark": "<2.8.2",
+        "phpseclib/phpseclib": "<1.0.28 || >=2.0.0,<2.0.53 || >=3.0.0,<3.0.51",
+        "psy/psysh": "<0.11.23 || >=0.12.0,<0.12.19",
+        "symfony/http-foundation": "<7.3.7",
+        "symfony/process": "<7.3.11"
     },
     "autoload": {
         "psr-4": {

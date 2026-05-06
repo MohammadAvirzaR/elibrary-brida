@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\ContributorRequestController;
 use App\Http\Controllers\Api\DocumentDownloadRequestController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\DebugController;
+use App\Http\Controllers\Api\DocumentFileController;
+use App\Http\Controllers\Api\NotificationController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
 Route::post('register', [AuthController::class, 'register'])
@@ -28,20 +30,28 @@ Route::post('register/google-complete', [AuthController::class, 'completeGoogleR
 // Public document routes (accessible without authentication)
 Route::get('/documents/search', [DocumentController::class, 'search']);
 Route::get('/documents/featured-content', [DocumentController::class, 'featuredContent']);
+Route::get('/documents/{id}/preview', [DocumentFileController::class, 'preview'])
+    ->middleware('throttle:30,1');
+Route::get('/content/{id}/preview', [DocumentFileController::class, 'preview'])
+    ->middleware('throttle:30,1');
 
 // View specific document (public access for approved documents) - place AFTER specific routes
 Route::get('/documents/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/content/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
 
 Route::get('/filters', [FilterController::class, 'index']);
 
 // Download requests — public (no auth needed so guests can request)
 Route::post('/download-requests', [DocumentDownloadRequestController::class, 'store']);
+Route::post('/content/{id}/request-download', [DocumentDownloadRequestController::class, 'requestByContent']);
 
 // Auth Sanctum routes
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 
     // Contributor request routes
     Route::post('/contributor-requests', [ContributorRequestController::class, 'store']);
@@ -66,8 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Specific document routes (must come before /documents/{id})
     // Preview metadata (all authenticated users)
     Route::post('/documents/preview', [DocumentController::class, 'preview']);
-    Route::get('/documents/{id}/preview', [DocumentController::class, 'servePreview'])
-        ->middleware('throttle:30,1');
+    Route::post('/documents/upload-secure', [DocumentFileController::class, 'upload']);
+    Route::get('/documents/{id}/download', [DocumentFileController::class, 'download'])
+        ->middleware('throttle:20,1');
     Route::get('/documents/{id}/file', [DocumentController::class, 'serveFile'])
         ->middleware('throttle:20,1');
     Route::get('/documents/{documentId}/attachments/{attachmentId}/file', [DocumentController::class, 'serveAttachment'])
@@ -75,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // List dokumen milik user
     Route::get('/documents/my', [DocumentController::class, 'myDocuments']);
+    Route::get('/download-requests/owner/pending', [DocumentDownloadRequestController::class, 'ownerPending']);
+    Route::post('/download-requests/{id}/owner-approve', [DocumentDownloadRequestController::class, 'ownerApprove']);
+    Route::post('/download-requests/{id}/owner-reject', [DocumentDownloadRequestController::class, 'ownerReject']);
 
     // Review route (Reviewer + Super Admin)
     Route::get('/documents/review', [DocumentController::class, 'review'])
@@ -112,6 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store']);
+        Route::post('/content', [DocumentController::class, 'store']);
     });
 
     Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':contributor,super_admin,reviewer')->group(function () {

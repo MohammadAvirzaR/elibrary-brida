@@ -7,11 +7,13 @@ use App\Models\Document;
 use App\Models\DocumentAttachment;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\LicensePolicyService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -19,6 +21,13 @@ use Illuminate\Validation\Rule;
 
 class DocumentController extends Controller
 {
+    private const LICENSE_TYPES = ['ARR', 'CC_BY', 'CC_BY_SA', 'CC_BY_NC', 'CC_BY_ND'];
+
+    public function __construct(
+        private readonly LicensePolicyService $licensePolicy
+    ) {
+    }
+
     public function search(Request $request): JsonResponse
     {
         $query = Document::query();
@@ -176,6 +185,9 @@ class DocumentController extends Controller
             'publisher' => 'nullable|string|max:255',
 
             'license_id' => 'nullable|exists:licenses,id',
+            'license_type' => ['nullable', Rule::in(self::LICENSE_TYPES)],
+            'license_version' => 'nullable|string|max:10',
+            'attribution_text' => 'required_if:license_type,CC_BY,CC_BY_SA,CC_BY_NC,CC_BY_ND|nullable|string',
 
             'access_right' => ['nullable', Rule::in(['open','public','internal','private','embargo'])],
             'embargo_until' => 'required_if:access_right,embargo|date|after:today',
@@ -201,7 +213,7 @@ class DocumentController extends Controller
 
         $mainPath = $request->file('file')->store('documents/main');
 
-        $document = Document::create([
+        $documentPayload = [
             'user_id' => auth('sanctum')->id(),
             'title' => $request->title,
             'year_published' => $request->year_published,
@@ -226,7 +238,15 @@ class DocumentController extends Controller
             'statement_agreed' => $request->has('statement_agreed') ? true : false,
 
             'status' => 'pending'
-        ]);
+        ];
+
+        if ($this->supportsCreativeCommonsColumns()) {
+            $documentPayload['license_type'] = $request->input('license_type', 'ARR');
+            $documentPayload['license_version'] = $request->input('license_version');
+            $documentPayload['attribution_text'] = $request->input('attribution_text');
+        }
+
+        $document = Document::create($documentPayload);
 
         Log::info('Document created successfully', [
             'document_id' => $document->id,
@@ -407,6 +427,9 @@ class DocumentController extends Controller
             'author' => 'required|string|max:255',
             'publisher' => 'nullable|string|max:255',
             'keywords' => 'nullable|string',
+            'license_type' => ['nullable', Rule::in(self::LICENSE_TYPES)],
+            'license_version' => 'nullable|string|max:10',
+            'attribution_text' => 'required_if:license_type,CC_BY,CC_BY_SA,CC_BY_NC,CC_BY_ND|nullable|string',
 
             'language' => 'nullable|string',
             'subject' => 'nullable|string',
@@ -427,7 +450,7 @@ class DocumentController extends Controller
 
         $typeId = $this->mapCategoryToTypeId($validated['category'] ?? null);
 
-        $document = Document::create([
+        $documentPayload = [
             'user_id' => $request->user()->id,
             'title' => $validated['title'],
             'abstract_id' => $validated['description'] ?? null,
@@ -447,7 +470,15 @@ class DocumentController extends Controller
             'research_location' => $validated['research_location'] ?? null,
             'upload_date' => now(),
             'statement_agreed' => true,
-        ]);
+        ];
+
+        if ($this->supportsCreativeCommonsColumns()) {
+            $documentPayload['license_type'] = $validated['license_type'] ?? 'ARR';
+            $documentPayload['license_version'] = $validated['license_version'] ?? null;
+            $documentPayload['attribution_text'] = $validated['attribution_text'] ?? null;
+        }
+
+        $document = Document::create($documentPayload);
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $index => $attachmentFile) {
@@ -546,6 +577,8 @@ class DocumentController extends Controller
                 }
             }
 
+            $this->appendLicenseMetadata($document, $user);
+
             return response()->json([
                 'success' => true,
                 'data' => $document
@@ -591,11 +624,14 @@ class DocumentController extends Controller
             'keywords' => 'sometimes|nullable|string',
             'abstract_id' => 'sometimes|nullable|string',
             'abstract_en' => 'sometimes|nullable|string',
-            
+            'license_type' => ['sometimes', 'nullable', Rule::in(self::LICENSE_TYPES)],
+            'license_version' => 'sometimes|nullable|string|max:10',
+            'attribution_text' => 'required_if:license_type,CC_BY,CC_BY_SA,CC_BY_NC,CC_BY_ND|nullable|string',
+
             // Legacy field support
             'description' => 'sometimes|string',
             'year' => 'sometimes|integer',
-            
+
             // Admin-only fields
             'status' => 'sometimes|in:pending,approved,rejected',
             'admin_notes' => 'sometimes|nullable|string',
@@ -1060,13 +1096,7 @@ HTML;
 
     private function checkDirectFileAccess(Document $document, User $user): ?JsonResponse
     {
-        $role = $user->role?->name;
-
-        if (in_array($role, ['super_admin', 'reviewer'], true)) {
-            return null;
-        }
-
-        if ($document->user_id === $user->id) {
+        if ($this->licensePolicy->canDownload($document, $user)) {
             return null;
         }
 
@@ -1122,6 +1152,26 @@ HTML;
             default:
                 return null;
         }
+    }
+
+    private function appendLicenseMetadata(Document $document, ?User $user): void
+    {
+        if (empty($document->attribution_text) && $this->licensePolicy->requiresAttribution($document)) {
+            $document->setAttribute('attribution_text', $this->licensePolicy->generateAttribution($document));
+        }
+
+        $document->setAttribute('license_capabilities', [
+            'can_download' => $this->licensePolicy->canDownload($document, $user),
+            'can_edit' => $this->licensePolicy->canEdit($document, $user),
+            'requires_attribution' => $this->licensePolicy->requiresAttribution($document),
+        ]);
+    }
+
+    private function supportsCreativeCommonsColumns(): bool
+    {
+        return Schema::hasColumn('documents', 'license_type')
+            && Schema::hasColumn('documents', 'license_version')
+            && Schema::hasColumn('documents', 'attribution_text');
     }
 
     private function resolveStoredFilePath(string $storedPath): ?string

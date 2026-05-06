@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContributorRequest;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -202,6 +203,14 @@ class ContributorRequestController extends Controller
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
                 'admin_notes' => $request->input('admin_notes'),
+            ]);
+
+            Notification::create([
+                'user_id' => $user->id,
+                'document_id' => null,
+                'message' => 'Permintaan Anda untuk menjadi contributor telah disetujui.',
+                'sent_at' => now(),
+                'status' => 'unread',
             ]);
 
             return response()->json([

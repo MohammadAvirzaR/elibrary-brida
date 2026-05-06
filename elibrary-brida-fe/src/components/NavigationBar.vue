@@ -99,13 +99,13 @@
                   Profile
                 </router-link> -->
                 <router-link
-                  v-if="userRole === 'Super Admin'"
+                  v-if="userRole === 'Super Admin' || userRole === 'Kontributor'"
                   to="/download-requests"
                   class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors"
                   @click="showProfileMenu = false"
                 >
                   <i-lucide-download class="w-4 h-4 inline mr-2" />
-                  Permintaan Download
+                  {{ userRole === 'Kontributor' ? 'Permintaan Unduh Saya' : 'Permintaan Download' }}
                 </router-link>
                 <hr class="my-2 border-neutral-200" />
                 <button
@@ -203,13 +203,13 @@
                 Profile
               </router-link>
               <router-link
-                v-if="userRole === 'Super Admin'"
+                v-if="userRole === 'Super Admin' || userRole === 'Kontributor'"
                 to="/download-requests"
                 @click="closeMobileMenu"
                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 <i-lucide-download class="w-4 h-4" />
-                Permintaan Download
+                {{ userRole === 'Kontributor' ? 'Permintaan Unduh Saya' : 'Permintaan Download' }}
               </router-link>
               <button @click="handleLogout" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <i-lucide-log-out class="w-4 h-4" />

@@ -74,7 +74,7 @@
             class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
           >
             <i-lucide-download class="w-3 h-3 sm:w-4 sm:h-4" />
-            {{ canDirectDownload ? 'Download' : 'Minta Dokumen' }}
+            {{ canDownloadFromLicense || canDirectDownload ? 'Download' : 'Minta Dokumen' }}
           </button>
         </div>
       </div>
@@ -100,20 +100,15 @@
                   <p class="text-gray-500 text-sm mt-2">Mohon tunggu sebentar</p>
                 </div>
               </div>
-              <!-- Preview Dokumen (HTML dari backend). Untuk user non-authorized, backend hanya kirim 1–2 halaman pertama sebagai gambar. -->
-              <div v-else-if="pdfUrl" class="relative w-full bg-gray-100 rounded-lg overflow-auto" style="height: 800px;">
-                <iframe
-                  :src="pdfUrl"
-                  class="w-full border-0 block"
-                  style="height: 800px;"
-                  title="Document Preview"
-                />
+              <!-- Preview Dokumen (PDF terbatas dari backend). -->
+              <div v-else-if="previewDocumentId" class="relative w-full bg-gray-100 rounded-lg overflow-auto" style="height: 800px;">
+                <PdfPreviewViewer :document-id="previewDocumentId" />
                 <!-- Overlay CTA untuk user yang tidak punya akses full-text -->
                 <div
-                  v-if="!canDirectDownload"
+                  v-if="!canDirectDownload && !canDownloadFromLicense"
                   class="sticky inset-x-0 bottom-0 h-44 bg-gradient-to-t from-gray-100 via-gray-100/95 to-transparent flex flex-col items-center justify-end pb-5 gap-3"
                 >
-                  <p class="text-sm text-gray-600 font-medium">Preview terbatas — 2 halaman pertama</p>
+                  <p class="text-sm text-gray-600 font-medium">Preview terbatas — hanya beberapa halaman awal</p>
                   <button
                     @click="showDownloadRequestModal = true"
                     class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 text-sm shadow"
@@ -132,7 +127,7 @@
                     @click="handleDownloadClick"
                     class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                   >
-                    {{ canDirectDownload ? 'Download untuk melihat' : 'Minta Dokumen' }}
+                    {{ canDirectDownload || canDownloadFromLicense ? 'Download untuk melihat' : 'Minta Dokumen' }}
                   </button>
                 </div>
               </div>
@@ -164,7 +159,7 @@
                     </div>
                   </div>
                   <button
-                    v-if="canDirectDownload"
+                    v-if="canDirectDownload || canDownloadFromLicense"
                     @click="downloadAttachment(attachment)"
                     class="p-1.5 sm:p-2 hover:bg-blue-100 rounded-lg transition flex-shrink-0"
                   >
@@ -343,6 +338,28 @@
                 </span>
               </div>
 
+              <div class="pt-4 border-t border-gray-200">
+                <label class="text-sm font-semibold text-gray-600 block mb-2">Lisensi Hak Cipta</label>
+                <div class="space-y-2">
+                  <LicenseBadge :license-type="document.license_type || 'ARR'" />
+                  <p class="text-sm text-gray-600">{{ getLicenseDescription(document.license_type || 'ARR') }}</p>
+                  <p v-if="isCreativeCommons(document.license_type)" class="text-xs text-gray-500">
+                    Versi: {{ document.license_version || '4.0' }}
+                  </p>
+                  <p v-if="isCreativeCommons(document.license_type) && document.attribution_text" class="text-sm text-gray-800 whitespace-pre-wrap">
+                    <span class="font-semibold">Atribusi:</span> {{ document.attribution_text }}
+                  </p>
+                  <button
+                    v-if="isCreativeCommons(document.license_type) && document.attribution_text"
+                    @click="copyAttribution"
+                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition"
+                  >
+                    <i-lucide-copy class="w-3.5 h-3.5" />
+                    Copy Attribution
+                  </button>
+                </div>
+              </div>
+
 
             </div>
           </div>
@@ -431,12 +448,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import RequestDownloadModal from '@/components/RequestDownloadModal.vue'
+import PdfPreviewViewer from '@/components/PdfPreviewViewer.vue'
+import LicenseBadge from '@/components/LicenseBadge.vue'
+import { getLicenseDescription, isCreativeCommons } from '@/utils/license'
 
 interface Author {
   id?: number
@@ -492,6 +512,14 @@ interface Document {
   keywords?: string
   status: string
   access_right?: string
+  license_type?: string
+  license_version?: string
+  attribution_text?: string
+  license_capabilities?: {
+    can_download: boolean
+    can_edit: boolean
+    requires_attribution: boolean
+  }
   admin_notes?: string
   created_at: string
   updated_at?: string
@@ -523,7 +551,7 @@ const rejectReason = ref('')
 const rejectError = ref('')
 
 const isPdfLoading = ref(false)
-const pdfUrl = ref<string | null>(null)
+const previewDocumentId = ref<number | null>(null)
 
 const userRole = ref('')
 const canReview = computed(() => {
@@ -541,8 +569,13 @@ const canDirectDownload = computed(() => {
   return document.value?.user?.id === currentUserId.value
 })
 
+const canDownloadFromLicense = computed(() => {
+  // Public users should request access first. Direct download is reserved for owner/admin/reviewer.
+  return false
+})
+
 const handleDownloadClick = () => {
-  if (canDirectDownload.value) {
+  if (canDirectDownload.value || canDownloadFromLicense.value) {
     downloadDocument()
   } else {
     showDownloadRequestModal.value = true
@@ -563,23 +596,12 @@ onMounted(async () => {
   await loadDocument()
 })
 
-onBeforeUnmount(() => {
-  if (pdfUrl.value) {
-    URL.revokeObjectURL(pdfUrl.value)
-  }
-})
-
-// No cleanup needed
-
 const loadDocument = async () => {
   try {
     isLoading.value = true
     isPdfLoading.value = true
 
-    if (pdfUrl.value) {
-      URL.revokeObjectURL(pdfUrl.value)
-      pdfUrl.value = null
-    }
+    previewDocumentId.value = null
 
     const documentId = route.params.id as string
 
@@ -601,13 +623,7 @@ const loadDocument = async () => {
 }
 
 const loadPreviewDocument = async (documentId: number) => {
-  try {
-    const previewBlobUrl = await api.documents.getPreviewBlobUrl(documentId)
-    pdfUrl.value = previewBlobUrl
-  } catch (err) {
-    console.error('Error loading preview:', err)
-    pdfUrl.value = null
-  }
+  previewDocumentId.value = documentId
 }
 
 const showApproveConfirm = ref(false)
@@ -684,7 +700,7 @@ const downloadDocument = async () => {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${baseUrl}/api/documents/${document.value.id}/file`, {
+    const response = await fetch(`${baseUrl}/api/documents/${document.value.id}/download`, {
       headers
     })
 
@@ -745,6 +761,18 @@ const downloadAttachment = (attachment: Attachment) => {
       console.error('Error downloading attachment:', err)
       toast.error('Download Gagal', 'Terjadi kesalahan saat mengunduh lampiran')
     })
+}
+
+const copyAttribution = async () => {
+  if (!document.value?.attribution_text) return
+
+  try {
+    await navigator.clipboard.writeText(document.value.attribution_text)
+    toast.success('Berhasil', 'Teks atribusi berhasil disalin')
+  } catch (error) {
+    console.error('Failed to copy attribution:', error)
+    toast.error('Gagal', 'Tidak dapat menyalin teks atribusi')
+  }
 }
 
 const getStatusClass = (status: string) => {

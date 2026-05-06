@@ -391,52 +391,48 @@
             <div class="bg-blue-50 rounded-lg p-6 space-y-5">
               <h3 class="text-lg font-bold text-neutral-900">Lisensi & Pernyataan</h3>
 
-              <!-- Pilih Lisensi -->
               <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">
-                  Pilih Lisensi <span class="text-red-500">*</span>
+                  Tipe Lisensi Hak Cipta <span class="text-red-500">*</span>
                 </label>
                 <select
-                  v-model="form.selectedLicense"
-                  class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  :class="errors.selectedLicense ? 'border-red-400' : 'border-neutral-300'"
-                >
-                  <option :value="null" disabled>-- Pilih lisensi --</option>
-                  <option v-for="l in licenses" :key="l.id" :value="l.id">{{ l.license_name }}</option>
-                </select>
-                <p v-if="errors.selectedLicense" class="mt-1 text-xs text-red-500">{{ errors.selectedLicense }}</p>
-              </div>
-
-              <!-- Pilih Hak Akses -->
-              <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-2">
-                  Hak Akses Dokumen <span class="text-red-500">*</span>
-                </label>
-                <select
-                  v-model="form.accessRight"
+                  v-model="form.licenseType"
                   class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="open">Open — Siapa saja bisa mengakses</option>
-                  <option value="public">Public — Pengguna terdaftar bisa mengakses</option>
-                  <option value="internal">Internal — Hanya pengguna non-tamu</option>
-                  <option value="private">Private — Hanya pemilik & admin</option>
-                  <option value="embargo">Embargo — Dikunci hingga tanggal tertentu</option>
+                  <option v-for="option in LICENSE_OPTIONS" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
                 </select>
+                <p class="mt-1 text-xs text-neutral-500">
+                  {{ getLicenseDescription(form.licenseType) }}
+                </p>
               </div>
 
-              <!-- Tanggal Embargo -->
-              <div v-if="form.accessRight === 'embargo'">
-                <label class="block text-sm font-medium text-neutral-700 mb-2">
-                  Dokumen dapat diakses mulai <span class="text-red-500">*</span>
-                </label>
-                <input
-                  v-model="form.embargoUntil"
-                  type="date"
-                  :min="new Date().toISOString().split('T')[0]"
-                  class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  :class="errors.embargoUntil ? 'border-red-400' : 'border-neutral-300'"
-                />
-                <p v-if="errors.embargoUntil" class="mt-1 text-xs text-red-500">{{ errors.embargoUntil }}</p>
+              <div v-if="isCreativeCommons(form.licenseType)" class="grid grid-cols-1 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-neutral-700 mb-2">
+                    Versi Creative Commons
+                  </label>
+                  <input
+                    v-model="form.licenseVersion"
+                    type="text"
+                    placeholder="4.0"
+                    class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-neutral-700 mb-2">
+                    Teks Atribusi <span class="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    v-model="form.attributionText"
+                    rows="3"
+                    placeholder="Contoh: Judul karya oleh Nama Penulis, CC BY 4.0"
+                    class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    :class="errors.attributionText ? 'border-red-400' : 'border-neutral-300'"
+                  />
+                  <p v-if="errors.attributionText" class="mt-1 text-xs text-red-500">{{ errors.attributionText }}</p>
+                </div>
               </div>
 
               <!-- Pernyataan -->
@@ -558,6 +554,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import { LICENSE_OPTIONS, getLicenseDescription, isCreativeCommons } from '@/utils/license'
 
 const emit = defineEmits(['close', 'uploaded'])
 const { toast } = useToast()
@@ -571,7 +568,6 @@ const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
 const currentUserName = ref('') // Nama user yang sedang login
 const subjects = ref<Array<{ id: number; subject_name: string }>>([])
 const documentTypes = ref<Array<{ id: number; type_name: string }>>([])
-const licenses = ref<Array<{ id: number; license_name: string }>>([])
 
 const form = reactive({
   // Step 1 - Metadata
@@ -594,9 +590,9 @@ const form = reactive({
   licenseAgreement: false,
   originalWork: false,
   permissionGranted: false,
-  selectedLicense: null as number | null,
-  accessRight: 'public',
-  embargoUntil: '',
+  licenseType: 'ARR' as 'ARR' | 'CC_BY' | 'CC_BY_SA' | 'CC_BY_NC' | 'CC_BY_ND',
+  licenseVersion: '4.0',
+  attributionText: '',
 
   // Legacy fields (keep for backward compatibility)
   category: '',
@@ -616,9 +612,7 @@ const errors = reactive({
   licenseAgreement: '',
   originalWork: '',
   permissionGranted: '',
-  selectedLicense: '',
-  accessRight: '',
-  embargoUntil: ''
+  attributionText: '',
 })
 
 const handleFileSelect = (event: Event) => {
@@ -899,11 +893,10 @@ const validateStep4 = () => {
   errors.licenseAgreement = ''
   errors.originalWork = ''
   errors.permissionGranted = ''
-  errors.selectedLicense = ''
-  errors.embargoUntil = ''
+  errors.attributionText = ''
 
-  if (!form.selectedLicense) {
-    errors.selectedLicense = 'Pilih lisensi untuk dokumen ini'
+  if (isCreativeCommons(form.licenseType) && !form.attributionText.trim()) {
+    errors.attributionText = 'Teks atribusi wajib diisi untuk lisensi Creative Commons'
     isValid = false
   }
 
@@ -920,13 +913,8 @@ const validateStep4 = () => {
     isValid = false
   }
 
-  if (form.accessRight === 'embargo' && !form.embargoUntil) {
-    errors.embargoUntil = 'Tanggal embargo harus diisi'
-    isValid = false
-  }
-
   if (!isValid) {
-    toast.error('Validasi Gagal', 'Lengkapi semua pernyataan lisensi dan pilih hak akses')
+    toast.error('Validasi Gagal', 'Lengkapi semua pernyataan lisensi')
   }
 
   return isValid
@@ -1069,13 +1057,12 @@ const submitForm = async () => {
       formData.append('supervisors[0][institution]', '')
     }
 
-    if (form.selectedLicense) {
-      formData.append('license_id', form.selectedLicense.toString())
+    formData.append('license_type', form.licenseType)
+    if (isCreativeCommons(form.licenseType)) {
+      formData.append('license_version', (form.licenseVersion || '4.0').trim())
+      formData.append('attribution_text', form.attributionText.trim())
     }
-    formData.append('access_right', form.accessRight)
-    if (form.accessRight === 'embargo' && form.embargoUntil) {
-      formData.append('embargo_until', form.embargoUntil)
-    }
+    formData.append('access_right', 'public')
     formData.append('statement_agreed', '1')
     form.attachments.forEach((file, index) => {
       if (file instanceof File) {
@@ -1185,11 +1172,9 @@ onMounted(async () => {
     const response = await api.filters.getAll() as {
       subjects: Array<{ id: number; subject_name: string }>
       types: Array<{ id: number; type_name: string }>
-      licenses: Array<{ id: number; license_name: string }>
     }
     subjects.value = response.subjects || []
     documentTypes.value = response.types || []
-    licenses.value = response.licenses || []
   } catch (error) {
     console.error('Failed to load filters:', error)
     toast.error('Gagal Memuat Data', 'Tidak dapat memuat daftar subjek dan jenis dokumen')

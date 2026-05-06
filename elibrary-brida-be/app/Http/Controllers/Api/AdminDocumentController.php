@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Document;
+use App\Models\Notification;
 use App\Models\Review;
 use Illuminate\Support\Facades\Log;
 
@@ -22,9 +23,9 @@ class AdminDocumentController extends Controller
                     'message' => 'Unauthenticated'
                 ], 401);
             }
-            
+
             Log::info("Approving document {$id} by user {$user->id}");
-            
+
             $doc->status = 'approved';
             $doc->save();
 
@@ -39,6 +40,14 @@ class AdminDocumentController extends Controller
             );
 
             Log::info("Review created/updated for document {$id}: Review ID = {$review->id}");
+
+            Notification::create([
+                'user_id' => $doc->user_id,
+                'document_id' => $doc->id,
+                'message' => "Dokumen '{$doc->title}' telah disetujui oleh admin.",
+                'sent_at' => now(),
+                'status' => 'unread',
+            ]);
 
             return response()->json(['success' => true, 'message' => 'Document approved.']);
         } catch (\Exception $e) {
@@ -63,9 +72,9 @@ class AdminDocumentController extends Controller
                     'message' => 'Unauthenticated'
                 ], 401);
             }
-            
+
             Log::info("Rejecting document {$id} by user {$user->id}");
-            
+
             $doc->status = 'rejected';
             $doc->save();
 
