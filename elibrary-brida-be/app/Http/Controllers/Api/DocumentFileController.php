@@ -24,7 +24,13 @@ class DocumentFileController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'file' => 'required|file|mimes:pdf|max:51200',
+            'file' => [
+                'required',
+                'file',
+                'max:51200',
+                'extensions:pdf',
+                'mimetypes:application/pdf,application/x-pdf,application/octet-stream',
+            ],
         ]);
 
         $paths = $this->documentService->storeOriginalAndGeneratePreview($request->file('file'));
@@ -85,7 +91,7 @@ class DocumentFileController extends Controller
                 ], 404);
             }
 
-            if (!str_ends_with(strtolower($absoluteSourcePath), '.pdf')) {
+            if (!$this->isPdfPath($absoluteSourcePath)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Preview hanya tersedia untuk file PDF.',
@@ -123,6 +129,7 @@ class DocumentFileController extends Controller
             'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
             'Pragma' => 'no-cache',
             'X-Content-Type-Options' => 'nosniff',
+            'X-Preview-Mode' => 'limited',
         ]);
     }
 
@@ -232,14 +239,29 @@ class DocumentFileController extends Controller
 
     private function resolveStoragePath(string $relativePath): ?string
     {
-        if (Storage::disk('local')->exists($relativePath)) {
-            return Storage::disk('local')->path($relativePath);
-        }
+        $normalized = ltrim($relativePath, '/');
+        $candidates = array_values(array_unique(array_filter([
+            $relativePath,
+            $normalized,
+            preg_replace('#^storage/#', '', $normalized),
+            preg_replace('#^public/#', '', $normalized),
+        ])));
 
-        if (Storage::disk('public')->exists($relativePath)) {
-            return Storage::disk('public')->path($relativePath);
+        foreach ($candidates as $candidate) {
+            if (Storage::disk('local')->exists($candidate)) {
+                return Storage::disk('local')->path($candidate);
+            }
+
+            if (Storage::disk('public')->exists($candidate)) {
+                return Storage::disk('public')->path($candidate);
+            }
         }
 
         return null;
+    }
+
+    private function isPdfPath(string $path): bool
+    {
+        return str_ends_with(strtolower($path), '.pdf');
     }
 }

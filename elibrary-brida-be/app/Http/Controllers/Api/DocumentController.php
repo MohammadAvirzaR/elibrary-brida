@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\DocumentAttachment;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\DocumentService;
 use App\Services\LicensePolicyService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +25,8 @@ class DocumentController extends Controller
     private const LICENSE_TYPES = ['ARR', 'CC_BY', 'CC_BY_SA', 'CC_BY_NC', 'CC_BY_ND'];
 
     public function __construct(
-        private readonly LicensePolicyService $licensePolicy
+        private readonly LicensePolicyService $licensePolicy,
+        private readonly DocumentService $documentService
     ) {
     }
 
@@ -195,7 +197,13 @@ class DocumentController extends Controller
 
             'statement_agreed' => 'nullable',  // Make it optional for wizard mode
 
-            'file' => 'required|file|mimes:pdf,doc,docx|max:50000',
+            'file' => [
+                'required',
+                'file',
+                'max:51200',
+                'extensions:pdf',
+                'mimetypes:application/pdf,application/x-pdf,application/octet-stream',
+            ],
 
             'authors' => 'required|array|min:1',
             'authors.*.first_name' => 'required|string',
@@ -212,7 +220,7 @@ class DocumentController extends Controller
             'attachments.*' => 'file|max:20000',
         ]);
 
-        $mainPath = $request->file('file')->store('documents/main');
+        $paths = $this->documentService->storeOriginalAndGeneratePreview($request->file('file'));
 
         $documentPayload = [
             'user_id' => auth('sanctum')->id(),
@@ -230,7 +238,9 @@ class DocumentController extends Controller
             'abstract_en' => $request->abstract_en,
             'publisher' => $request->publisher,
 
-            'file_path' => $mainPath,
+            'file_path' => $paths['original_path'],
+            'original_path' => $paths['original_path'],
+            'preview_path' => $paths['preview_path'],
             'upload_date' => now(),
 
             'license_id' => $request->license_id,
@@ -421,12 +431,23 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'file' => [
+                'required',
+                'file',
+                'max:51200',
+                'extensions:pdf',
+                'mimetypes:application/pdf,application/x-pdf,application/octet-stream',
+            ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string',
             'year' => 'nullable|integer',
-            'author' => 'required|string|max:255',
+            'author' => 'nullable|string|max:255',
+            'authors' => 'nullable|array|min:1',
+            'authors.*.first_name' => 'required_with:authors|string',
+            'authors.*.last_name' => 'nullable|string',
+            'authors.*.email' => 'nullable|email',
+            'authors.*.institution' => 'nullable|string',
             'publisher' => 'nullable|string|max:255',
             'keywords' => 'nullable|string',
             'license_type' => ['nullable', Rule::in(self::LICENSE_TYPES)],
@@ -434,21 +455,14 @@ class DocumentController extends Controller
             'attribution_text' => 'required_if:license_type,CC_BY,CC_BY_SA,CC_BY_NC,CC_BY_ND|nullable|string',
 
             'language' => 'nullable|string',
-            'subject' => 'nullable|string',
             'advisor' => 'nullable|string',
-            'funding' => 'nullable|string',
-            'research_location' => 'nullable|string',
+            'subject_id' => 'nullable|exists:subjects,id',
 
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:pdf|max:10240',
         ]);
 
-        $filePath = null;
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('documents', $filename, 'public');
-        }
+        $paths = $this->documentService->storeOriginalAndGeneratePreview($request->file('file'));
 
         $typeId = $this->mapCategoryToTypeId($validated['category'] ?? null);
 
@@ -456,20 +470,19 @@ class DocumentController extends Controller
             'user_id' => $request->user()->id,
             'title' => $validated['title'],
             'abstract_id' => $validated['description'] ?? null,
-            'author' => $validated['author'],
             'publisher' => $validated['publisher'] ?? null,
             'year_published' => $validated['year'] ?? now()->year,
             'keywords' => $validated['keywords'] ?? null,
-            'file_path' => $filePath,
+            'file_path' => $paths['original_path'],
+            'original_path' => $paths['original_path'],
+            'preview_path' => $paths['preview_path'],
             'status' => 'pending',
             'type_id' => $typeId,
+            'subject_id' => $validated['subject_id'] ?? null,
             'access_right' => 'public',
 
             'language' => $validated['language'] ?? null,
-            'subject' => $validated['subject'] ?? null,
             'advisor' => $validated['advisor'] ?? null,
-            'funding_program' => $validated['funding'] ?? null,
-            'research_location' => $validated['research_location'] ?? null,
             'upload_date' => now(),
             'statement_agreed' => true,
         ];
@@ -481,6 +494,29 @@ class DocumentController extends Controller
         }
 
         $document = Document::create($documentPayload);
+
+        if (!empty($validated['authors']) && is_array($validated['authors'])) {
+            foreach ($validated['authors'] as $authorItem) {
+                $document->authors()->create([
+                    'first_name' => $authorItem['first_name'],
+                    'last_name' => $authorItem['last_name'] ?? null,
+                    'email' => $authorItem['email'] ?? null,
+                    'institution' => $authorItem['institution'] ?? null,
+                ]);
+            }
+        } elseif (!empty($validated['author'])) {
+            $legacyAuthor = trim((string) $validated['author']);
+            if ($legacyAuthor !== '') {
+                $nameParts = preg_split('/\s+/', $legacyAuthor) ?: [];
+                $firstName = array_shift($nameParts) ?: $legacyAuthor;
+                $lastName = count($nameParts) > 0 ? implode(' ', $nameParts) : null;
+
+                $document->authors()->create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                ]);
+            }
+        }
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $index => $attachmentFile) {

@@ -308,7 +308,7 @@
             <ul class="space-y-3 text-sm text-neutral-700">
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Pastikan file dalam format PDF atau DOCX</span>
+                <span>Pastikan file dalam format PDF</span>
               </li>
               <li class="flex items-start gap-2">
                 <i-lucide-check class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />

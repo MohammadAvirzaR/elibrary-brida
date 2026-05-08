@@ -46,27 +46,27 @@ type FaqItem = {
 const faqItems: FaqItem[] = [
   {
     id: 1,
-    question: 'Bagaimana cara lorem ipsum dolor sit amet',
+    question: 'Bagaimana cara mencari dokumen berdasarkan judul, penulis, atau kata kunci?',
     answer:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc fringilla turpis tellus, sed faucibus eros sollicitudin quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin mollis ipsum sit amet accumsan venenatis. Nam vestibulum molestie ornare. Vivamus vel tempor libero.'
+      'Anda dapat menggunakan fitur pencarian di halaman katalog atau homepage. Ketikkan judul, nama penulis, atau kata kunci relevan di kolom pencarian. Sistem akan menampilkan hasil yang sesuai dengan kriteria pencarian Anda. Anda juga dapat memfilter hasil berdasarkan jenis dokumen, tahun publikasi, atau subjek untuk mempersempit pencarian.'
   },
   {
     id: 2,
-    question: 'Apakah saya lorem ipsum dolor sit amet',
+    question: 'Apakah saya harus login untuk melihat detail dokumen?',
     answer:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc fringilla turpis tellus, sed faucibus eros sollicitudin quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin mollis ipsum sit amet accumsan venenatis. Nam vestibulum molestie ornare. Vivamus vel tempor libero.'
+      'Tidak, Anda tidak perlu login untuk melihat informasi dasar dan preview terbatas dari dokumen yang telah disetujui. Namun, jika Anda ingin mengunduh dokumen secara lengkap atau melakukan aktivitas lainnya seperti mengajukan permintaan download, Anda perlu membuat akun dan login terlebih dahulu. Login juga diperlukan jika Anda ingin menjadi kontributor (pengunggah dokumen).'
   },
   {
     id: 3,
-    question: 'Mengapa lorem ipsum dolor sit amet',
+    question: 'Mengapa saya tidak bisa mengunduh dokumen secara langsung?',
     answer:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc fringilla turpis tellus, sed faucibus eros sollicitudin quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin mollis ipsum sit amet accumsan venenatis. Nam vestibulum molestie ornare. Vivamus vel tempor libero.'
+      'E-Library BRIDA menerapkan sistem permintaan download untuk melindungi hak kekayaan intelektual dokumen. Untuk mengunduh dokumen, Anda perlu mengajukan permintaan terlebih dahulu dengan menyertakan informasi Anda (nama, email, institusi) dan tujuan penggunaan. Pemilik dokumen akan meninjau permintaan Anda dan memberikan akses jika disetujui. Fitur ini memastikan dokumen digunakan sesuai dengan lisensi dan ketentuan yang berlaku.'
   },
   {
     id: 4,
-    question: 'Sistem kontribusi lorem ipsum dolor sit amet',
+    question: 'Bagaimana cara mengunggah dokumen sebagai kontributor?',
     answer:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc fringilla turpis tellus, sed faucibus eros sollicitudin quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin mollis ipsum sit amet accumsan venenatis. Nam vestibulum molestie ornare. Vivamus vel tempor libero.'
+      'Pertama, daftarkan akun Anda dan ajukan permohonan untuk menjadi kontributor. Setelah permohonan disetujui oleh admin, Anda dapat masuk ke dashboard kontributor. Di sana, klik tombol "Upload Dokumen" dan ikuti panduan wizard untuk mengisi metadata (judul, penulis, tahun publikasi, subjek, dll), memilih lisensi yang sesuai, serta mengunggah file PDF dokumen Anda. Dokumen akan diproses dan ditinjau oleh reviewer sebelum dipublikasikan di katalog.'
   }
 ]
 

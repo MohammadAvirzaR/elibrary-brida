@@ -683,22 +683,20 @@ const validateFile = (file: File) => {
 
   // Check file extension (more reliable than MIME type)
   const fileName = file.name.toLowerCase()
-  const allowedExtensions = ['.pdf', '.doc', '.docx']
+  const allowedExtensions = ['.pdf']
   const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
 
   // Check file type (MIME type)
   const allowedTypes = [
     'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ]
   const hasValidType = allowedTypes.includes(file.type) || file.type === ''
 
   // Accept if either extension OR type is valid (some browsers don't set MIME type correctly)
   if (!hasValidExtension && !hasValidType) {
-    errors.file = 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan'
+    errors.file = 'Hanya file PDF yang diperbolehkan'
     console.error('Invalid file type:', file.type, 'and extension:', fileName)
-    toast.error('Format File Tidak Valid', 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan')
+    toast.error('Format File Tidak Valid', 'Hanya file PDF yang diperbolehkan')
     return
   }
 
@@ -883,12 +881,12 @@ const validateStep3 = () => {
 
   // Validate file type
   const fileName = form.file.name.toLowerCase()
-  const allowedExtensions = ['.pdf', '.doc', '.docx']
+  const allowedExtensions = ['.pdf']
   const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
 
   if (!hasValidExtension) {
-    errors.file = 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan'
-    toast.error('Format File Tidak Valid', 'Hanya file PDF, DOC, atau DOCX yang diperbolehkan')
+    errors.file = 'Hanya file PDF yang diperbolehkan'
+    toast.error('Format File Tidak Valid', 'Hanya file PDF yang diperbolehkan')
     return false
   }
 
@@ -1151,8 +1149,10 @@ const submitForm = async () => {
         }
       } else if (error.message.includes('413') || error.message.includes('too large')) {
         errorMessage = 'Ukuran file terlalu besar. Maksimal 50MB untuk file utama dan 20MB untuk lampiran.'
+      } else if (error.message.includes('SQLSTATE') || error.message.includes('Unknown column')) {
+        errorMessage = 'Terjadi kesalahan pada server saat menyimpan data dokumen. Silakan coba lagi beberapa saat.'
       } else if (error.message.includes('file')) {
-        errorMessage = 'File tidak valid. Pastikan file adalah PDF, DOC, atau DOCX.'
+        errorMessage = 'File tidak valid. Pastikan file adalah PDF.'
       } else {
         errorMessage = error.message
       }
