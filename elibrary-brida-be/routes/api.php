@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\DocumentFileController;
 use App\Http\Controllers\Api\FilterController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\Api\AdminDocumentController;
 use App\Http\Controllers\Api\ContributorRequestController;
 use App\Http\Controllers\Api\DocumentDownloadRequestController;
 use App\Http\Controllers\Api\StatisticsController;
+use App\Http\Controllers\Api\UniversityController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DebugController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
@@ -38,6 +41,7 @@ Route::get('/documents/{id}', [DocumentController::class, 'show'])->where('id', 
 Route::get('/content/{id}', [DocumentController::class, 'show'])->where('id', '[0-9]+');
 
 Route::get('/filters', [FilterController::class, 'index']);
+Route::get('/universities', [UniversityController::class, 'index']);
 
 // Download requests — public (no auth needed so guests can request)
 Route::post('/download-requests', [DocumentDownloadRequestController::class, 'store']);
