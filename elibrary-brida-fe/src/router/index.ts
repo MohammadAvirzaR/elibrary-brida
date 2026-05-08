@@ -346,17 +346,20 @@ function getCurrentUser() {
 
 function checkAuth(): boolean {
   const token = localStorage.getItem('auth_token')
+  const user = localStorage.getItem('user')
 
-  if (token) {
-    try {
-      return true
-    } catch {
-      localStorage.removeItem('auth_token')
-      return false
-    }
+  if (!token || !user) {
+    return false
   }
 
-  return false
+  try {
+    const userData = JSON.parse(user)
+    return !!(token && userData)
+  } catch {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
+    return false
+  }
 }
 
 export default router

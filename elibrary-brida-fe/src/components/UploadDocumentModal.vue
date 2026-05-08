@@ -580,7 +580,7 @@ const isMyDocument = ref(false) // Checkbox untuk auto-fill nama penulis
 const currentUserName = ref('') // Nama user yang sedang login
 const subjects = ref<Array<{ id: number; subject_name: string }>>([])
 const documentTypes = ref<Array<{ id: number; type_name: string }>>([])
-const licenses = ref<Array<{ id: number; license_name: string }>>([])
+const universities = ref<Array<{ id: number; name: string }>>([])
 
 const form = reactive({
   // Step 1 - Metadata

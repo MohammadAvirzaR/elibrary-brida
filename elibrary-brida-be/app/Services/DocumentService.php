@@ -32,21 +32,21 @@ class DocumentService
     {
         $this->ensurePdfPreviewDependencies();
 
-        if (!Storage::disk('local')->exists($originalRelativePath)) {
+        $sourceAbsolutePath = $this->resolveSourceAbsolutePath($originalRelativePath);
+        if (!$sourceAbsolutePath) {
             throw new RuntimeException('Original PDF file not found.');
         }
 
         $previewRelativePath ??= $this->buildDefaultPreviewPath($originalRelativePath);
         $maxPages ??= max((int) config('documents.preview_pages', 5), 1);
 
-        $originalAbsolutePath = Storage::disk('local')->path($originalRelativePath);
         $previewAbsolutePath = Storage::disk('local')->path($previewRelativePath);
         $previewDirectory = dirname($previewRelativePath);
 
         Storage::disk('local')->makeDirectory($previewDirectory);
 
         $pdf = new Fpdi();
-        $pageCount = $pdf->setSourceFile($originalAbsolutePath);
+        $pageCount = $pdf->setSourceFile($sourceAbsolutePath);
         $limit = min($pageCount, $maxPages);
 
         for ($page = 1; $page <= $limit; $page++) {
@@ -77,5 +77,26 @@ class DocumentService
             );
         }
     }
-}
 
+    private function resolveSourceAbsolutePath(string $relativePath): ?string
+    {
+        $candidates = array_values(array_unique(array_filter([
+            $relativePath,
+            ltrim($relativePath, '/'),
+            preg_replace('#^storage/#', '', ltrim($relativePath, '/')),
+            preg_replace('#^public/#', '', ltrim($relativePath, '/')),
+        ])));
+
+        foreach ($candidates as $candidate) {
+            if (Storage::disk('local')->exists($candidate)) {
+                return Storage::disk('local')->path($candidate);
+            }
+
+            if (Storage::disk('public')->exists($candidate)) {
+                return Storage::disk('public')->path($candidate);
+            }
+        }
+
+        return null;
+    }
+}

@@ -19,7 +19,9 @@ export const getLicenseLabel = (licenseType?: string | null): string => {
 
 export const getLicenseDescription = (licenseType?: string | null): string => {
   const found = LICENSE_OPTIONS.find((item) => item.value === licenseType)
-  return found?.description || LICENSE_OPTIONS[0].description
+  const fallback = LICENSE_OPTIONS.find((item) => item.value === 'ARR')?.description
+    ?? 'Hak cipta dilindungi penuh. Penggunaan ulang dibatasi.'
+  return found?.description ?? fallback
 }
 
 export const generateAttributionText = (title: string, author: string, licenseType?: string | null, version = '4.0'): string => {
