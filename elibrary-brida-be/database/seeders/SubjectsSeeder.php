@@ -13,7 +13,7 @@ class SubjectsSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('subjects')->insert([
+        $subjects = [
             ['subject_name' => 'Ilmu Komputer'],
             ['subject_name' => 'Matematika'],
             ['subject_name' => 'Hukum'],
@@ -24,6 +24,10 @@ class SubjectsSeeder extends Seeder
             ['subject_name' => 'Pendidikan'],
             ['subject_name' => 'Teknik'],
             ['subject_name' => 'Lainnya'],
-        ]);
+        ];
+
+        foreach ($subjects as $subject) {
+            DB::table('subjects')->insertOrIgnore($subject);
+        }
     }
 }

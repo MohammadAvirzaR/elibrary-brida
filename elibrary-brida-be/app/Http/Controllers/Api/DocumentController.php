@@ -258,6 +258,7 @@ class DocumentController extends Controller
             $documentPayload['attribution_text'] = $request->input('attribution_text');
         }
 
+        $documentPayload = $this->filterDocumentPayloadBySchema($documentPayload);
         $document = Document::create($documentPayload);
 
         Log::info('Document created successfully', [
@@ -493,6 +494,7 @@ class DocumentController extends Controller
             $documentPayload['attribution_text'] = $validated['attribution_text'] ?? null;
         }
 
+        $documentPayload = $this->filterDocumentPayloadBySchema($documentPayload);
         $document = Document::create($documentPayload);
 
         if (!empty($validated['authors']) && is_array($validated['authors'])) {
@@ -1210,6 +1212,12 @@ HTML;
         return Schema::hasColumn('documents', 'license_type')
             && Schema::hasColumn('documents', 'license_version')
             && Schema::hasColumn('documents', 'attribution_text');
+    }
+
+    private function filterDocumentPayloadBySchema(array $payload): array
+    {
+        $documentColumns = array_flip(Schema::getColumnListing('documents'));
+        return array_intersect_key($payload, $documentColumns);
     }
 
     private function resolveStoredFilePath(string $storedPath): ?string

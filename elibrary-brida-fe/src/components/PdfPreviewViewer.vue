@@ -15,16 +15,21 @@
     </div>
 
     <div v-else class="space-y-4">
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+      <!-- <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
         Preview terbatas halaman awal dokumen. Tombol download/print dinonaktifkan pada mode preview.
-      </div>
+      </div> -->
       <div v-if="iframeSrc" class="h-[760px] rounded-lg border border-gray-200 bg-white overflow-hidden">
-        <iframe
-          :src="iframeSrc"
-          class="w-full h-[820px] -mt-[60px] bg-white"
-          sandbox="allow-same-origin allow-scripts"
-          title="PDF Preview"
-        />
+        <object
+          :data="iframeSrc"
+          type="application/pdf"
+          class="w-full h-full bg-white"
+        >
+          <iframe
+            :src="iframeSrc"
+            class="w-full h-full bg-white"
+            title="PDF Preview"
+          />
+        </object>
       </div>
     </div>
   </div>
