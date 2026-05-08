@@ -15,8 +15,6 @@ use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DebugController;
-use App\Http\Controllers\Api\DocumentFileController;
-use App\Http\Controllers\Api\NotificationController;
 
 // AUTH - dengan rate limiting untuk keamanan (update)
 Route::post('register', [AuthController::class, 'register'])
