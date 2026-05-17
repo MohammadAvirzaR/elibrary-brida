@@ -417,7 +417,9 @@ const handleCloseOtp = () => {
 }
 
 const handleGoogleLogin = () => {
-  window.location.href = 'http://127.0.0.1:8000/auth/google'
+  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+  const backendUrl = apiBaseUrl.replace('/api', '')
+  window.location.href = `${backendUrl}/auth/google`
 }
 
 const handleImageError = (event: Event) => {
