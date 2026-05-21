@@ -20,6 +20,7 @@ class DocumentService
 
         Storage::disk('local')->putFileAs('documents/original', $file, "{$baseName}.{$extension}");
 
+        // Attempt to generate preview, but don't fail if it can't
         $generatedPreviewPath = $this->generatePreview($originalRelativePath, $previewRelativePath);
 
         return [
@@ -28,39 +29,51 @@ class DocumentService
         ];
     }
 
-    public function generatePreview(string $originalRelativePath, ?string $previewRelativePath = null, ?int $maxPages = null): string
+    public function generatePreview(string $originalRelativePath, ?string $previewRelativePath = null, ?int $maxPages = null): ?string
     {
-        $this->ensurePdfPreviewDependencies();
+        try {
+            $this->ensurePdfPreviewDependencies();
 
-        $sourceAbsolutePath = $this->resolveSourceAbsolutePath($originalRelativePath);
-        if (!$sourceAbsolutePath) {
-            throw new RuntimeException('Original PDF file not found.');
+            $sourceAbsolutePath = $this->resolveSourceAbsolutePath($originalRelativePath);
+            if (!$sourceAbsolutePath) {
+                throw new RuntimeException('Original PDF file not found.');
+            }
+
+            $previewRelativePath ??= $this->buildDefaultPreviewPath($originalRelativePath);
+            $maxPages ??= max((int) config('documents.preview_pages', 5), 1);
+
+            $previewAbsolutePath = Storage::disk('local')->path($previewRelativePath);
+            $previewDirectory = dirname($previewRelativePath);
+
+            Storage::disk('local')->makeDirectory($previewDirectory);
+
+            $pdf = new Fpdi();
+            $pageCount = $pdf->setSourceFile($sourceAbsolutePath);
+            $limit = min($pageCount, $maxPages);
+
+            for ($page = 1; $page <= $limit; $page++) {
+                $templateId = $pdf->importPage($page);
+                $size = $pdf->getTemplateSize($templateId);
+                $orientation = ($size['width'] ?? 0) > ($size['height'] ?? 0) ? 'L' : 'P';
+
+                $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+
+            $pdf->Output('F', $previewAbsolutePath);
+
+            return $previewRelativePath;
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::warning('PDF preview generation failed', [
+                'original_path' => $originalRelativePath,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+
+            // Return null instead of throwing - allows document upload to proceed without preview
+            return null;
         }
-
-        $previewRelativePath ??= $this->buildDefaultPreviewPath($originalRelativePath);
-        $maxPages ??= max((int) config('documents.preview_pages', 5), 1);
-
-        $previewAbsolutePath = Storage::disk('local')->path($previewRelativePath);
-        $previewDirectory = dirname($previewRelativePath);
-
-        Storage::disk('local')->makeDirectory($previewDirectory);
-
-        $pdf = new Fpdi();
-        $pageCount = $pdf->setSourceFile($sourceAbsolutePath);
-        $limit = min($pageCount, $maxPages);
-
-        for ($page = 1; $page <= $limit; $page++) {
-            $templateId = $pdf->importPage($page);
-            $size = $pdf->getTemplateSize($templateId);
-            $orientation = ($size['width'] ?? 0) > ($size['height'] ?? 0) ? 'L' : 'P';
-
-            $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-            $pdf->useTemplate($templateId);
-        }
-
-        $pdf->Output('F', $previewAbsolutePath);
-
-        return $previewRelativePath;
     }
 
     public function buildDefaultPreviewPath(string $originalRelativePath): string

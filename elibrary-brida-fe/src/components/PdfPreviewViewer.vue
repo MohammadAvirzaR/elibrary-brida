@@ -8,9 +8,17 @@
     </div>
 
     <div v-else-if="errorMessage" class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-      <div class="text-center px-6">
+      <div class="text-center px-6 max-w-md">
         <i-lucide-file-warning class="w-10 h-10 text-amber-600 mx-auto mb-3" />
-        <p class="text-sm text-gray-700 font-medium">{{ errorMessage }}</p>
+        <p class="text-sm text-gray-700 font-medium mb-4">{{ errorMessage }}</p>
+        <button
+          v-if="showDownloadFallback"
+          @click="handleDownload"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <i-lucide-download class="w-4 h-4" />
+          Download Dokumen Asli
+        </button>
       </div>
     </div>
 
@@ -46,10 +54,16 @@ const loading = ref(false)
 const errorMessage = ref('')
 const previewUrl = ref('')
 const iframeSrc = ref('')
+const showDownloadFallback = ref(false)
 
 const getPreviewEndpoint = (documentId: number): string => {
   const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
   return `${apiBaseUrl}/content/${documentId}/preview`
+}
+
+const getDownloadEndpoint = (documentId: number): string => {
+  const apiBaseUrl = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+  return `${apiBaseUrl}/content/${documentId}/download`
 }
 
 const revokePreviewUrl = () => {
@@ -60,9 +74,37 @@ const revokePreviewUrl = () => {
   iframeSrc.value = ''
 }
 
+const handleDownload = async () => {
+  try {
+    const token = localStorage.getItem('auth_token')
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const response = await fetch(getDownloadEndpoint(props.documentId), { headers })
+    if (!response.ok) {
+      throw new Error('Gagal mengunduh dokumen.')
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `document-${props.documentId}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Download failed:', error)
+  }
+}
+
 const loadPreviewPdf = async () => {
   loading.value = true
   errorMessage.value = ''
+  showDownloadFallback.value = false
   revokePreviewUrl()
 
   try {
@@ -75,7 +117,9 @@ const loadPreviewPdf = async () => {
     const response = await fetch(getPreviewEndpoint(props.documentId), { headers })
     if (!response.ok) {
       const payload = await response.json().catch(() => ({})) as { message?: string }
-      throw new Error(payload.message || 'Preview tidak tersedia untuk dokumen ini.')
+      errorMessage.value = payload.message || 'Preview tidak tersedia untuk dokumen ini.'
+      showDownloadFallback.value = true
+      return
     }
 
     const blob = await response.blob()
@@ -86,6 +130,7 @@ const loadPreviewPdf = async () => {
     iframeSrc.value = `${previewUrl.value}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Gagal memuat PDF preview.'
+    showDownloadFallback.value = true
   } finally {
     loading.value = false
   }

@@ -45,6 +45,7 @@ Route::get('/universities', [UniversityController::class, 'index']);
 
 // Download requests — public (no auth needed so guests can request)
 Route::post('/download-requests', [DocumentDownloadRequestController::class, 'store']);
+Route::post('/content/{id}/request-download', [DocumentDownloadRequestController::class, 'requestByContent']);
 
 // Auth Sanctum routes
 Route::middleware('auth:sanctum')->group(function () {

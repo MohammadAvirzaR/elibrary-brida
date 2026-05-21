@@ -100,6 +100,16 @@ class DocumentFileController extends Controller
 
             try {
                 $previewRelativePath = $this->documentService->generatePreview($sourcePath);
+                
+                // Handle case when generatePreview returns null (unsupported compression)
+                if ($previewRelativePath === null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'PDF dokumen menggunakan teknik kompresi yang tidak didukung untuk preview. Silakan download dokumen asli untuk membacanya.',
+                        'fallback' => 'download',
+                    ], 422);
+                }
+                
                 $document->forceFill(['preview_path' => $previewRelativePath])->save();
                 $absolutePreviewPath = $this->resolveStoragePath($previewRelativePath);
             } catch (Throwable $exception) {
@@ -108,6 +118,12 @@ class DocumentFileController extends Controller
                     'source_path' => $sourcePath,
                     'error' => $exception->getMessage(),
                 ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Preview dokumen gagal diproses. Silakan download dokumen asli untuk membacanya.',
+                    'fallback' => 'download',
+                ], 422);
             }
         }
 

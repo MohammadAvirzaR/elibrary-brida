@@ -102,6 +102,23 @@
           </span>
         </router-link>
 
+        <!-- Download Requests - Super Admin & Contributor -->
+        <router-link
+          v-if="userRole === 'super_admin' || userRole === 'contributor'"
+          to="/download-requests"
+          class="flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition group"
+        >
+          <i-lucide-download class="w-5 h-5 flex-shrink-0" />
+          <span
+            :class="[
+              'font-semibold transition-opacity duration-300',
+              isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
+            ]"
+          >
+            {{ userRole === 'contributor' ? 'Permintaan Unduh' : 'Permintaan Download' }}
+          </span>
+        </router-link>
+
         <button @click="logout" class="w-full flex items-center gap-4 px-6 py-3 hover:bg-blue-800 transition mt-4 group">
           <i-lucide-log-out class="w-5 h-5 flex-shrink-0" />
           <span
@@ -471,6 +488,127 @@
                     <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Download Requests Section -->
+        <section v-if="(userRole === 'super_admin' || userRole === 'contributor') && downloadRequests.length > 0" class="mb-12">
+          <div class="flex items-start md:items-center justify-between mb-6 flex-col md:flex-row gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <i-lucide-download class="w-6 h-6 text-green-600" />
+                Permintaan Download Pending
+              </h2>
+              <p class="text-gray-500 text-sm mt-1">
+                {{ userRole === 'contributor' ? 'Permintaan unduh dokumen Anda' : 'Kelola permintaan download dari pengguna' }}
+              </p>
+            </div>
+            <div class="text-sm font-semibold text-green-600">
+              {{ downloadRequests.filter(r => r.status === 'pending').length }} Pending
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Search -->
+            <div class="flex items-center gap-2 md:gap-4 p-3 md:p-5 border-b bg-gray-50">
+              <div class="relative flex-1 max-w-md">
+                <i-lucide-search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  v-model="downloadSearchQuery"
+                  type="text"
+                  placeholder="Cari pemohon atau dokumen..."
+                  class="w-full pl-9 md:pl-10 pr-4 py-2 md:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                />
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pemohon</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Dokumen</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Institusi</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal Permintaan</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  <tr v-if="paginatedDownloadRequests.length === 0" class="text-center">
+                    <td colspan="6" class="px-6 py-8 text-gray-500">
+                      <i-lucide-inbox class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p>Tidak ada permintaan pending</p>
+                    </td>
+                  </tr>
+                  <tr v-for="(req, index) in paginatedDownloadRequests" :key="req.id" class="hover:bg-green-50 transition-colors">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-500">{{ downloadStartIndex + index }}</td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                          {{ req.requester_name.split(' ').map(n => n[0]).join('').substring(0, 2) }}
+                        </div>
+                        <div>
+                          <div class="text-sm font-semibold text-gray-900">{{ req.requester_name }}</div>
+                          <div class="text-xs text-gray-500">{{ req.requester_email }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 max-w-xs">
+                      <p class="text-sm font-medium text-gray-900 line-clamp-2">{{ req.title }}</p>
+                    </td>
+                    <td class="px-6 py-4 max-w-xs">
+                      <p class="text-sm text-gray-600">{{ req.institution || '-' }}</p>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ req.created_at }}</td>
+                    <td class="px-6 py-4 text-right">
+                      <div class="flex justify-end gap-2">
+                        <button
+                          @click="approveDownloadRequest(req.id)"
+                          class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 shadow-sm hover:shadow"
+                        >
+                          <i-lucide-check class="w-3 h-3" />
+                          Setujui
+                        </button>
+                        <button
+                          @click="rejectDownloadRequest(req.id)"
+                          class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 shadow-sm hover:shadow"
+                        >
+                          <i-lucide-x class="w-3 h-3" />
+                          Tolak
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="downloadTotalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50">
+              <div class="text-xs sm:text-sm text-gray-600">
+                <span v-if="filteredDownloadRequests.length > 0">{{ downloadStartIndex }}-{{ downloadEndIndex }} of {{ filteredDownloadRequests.length }}</span>
+                <span v-else>No items</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="downloadPrevPage"
+                  :disabled="downloadCurrentPage === 1"
+                  class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <i-lucide-chevron-left class="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                <span class="text-xs sm:text-sm text-gray-600">{{ downloadCurrentPage }}/{{ downloadTotalPages || 1 }}</span>
+                <button
+                  @click="downloadNextPage"
+                  :disabled="downloadCurrentPage >= downloadTotalPages"
+                  class="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <i-lucide-chevron-right class="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
               </div>
             </div>
           </div>
@@ -913,7 +1051,23 @@ interface QueueItem {
   }
 }
 
+interface DownloadRequestItem {
+  id: number
+  requester_name: string
+  requester_email: string
+  title: string
+  institution?: string
+  purpose?: string
+  status: string
+  created_at: string
+}
+
 const queueReviews = ref<QueueItem[]>([])
+const downloadRequests = ref<DownloadRequestItem[]>([])
+const selectedDownloadRequests = ref<number[]>([])
+const downloadSearchQuery = ref('')
+const downloadRowsPerPage = ref(5)
+const downloadCurrentPage = ref(1)
 
 const loadPendingDocuments = async () => {
   try {
@@ -964,6 +1118,32 @@ const loadPendingDocuments = async () => {
   }
 }
 
+const loadPendingDownloadRequests = async () => {
+  try {
+    const response = userRole.value === 'contributor'
+      ? (await api.downloadRequests.ownerPending() as { success: boolean; data: any[] })
+      : (await api.downloadRequests.getAll() as { success: boolean; data: any[] })
+
+    if (response.success && response.data) {
+      // Filter hanya pending requests
+      const pendingRequests = response.data.filter((req: any) => req.status === 'pending')
+      downloadRequests.value = pendingRequests.map((req: any) => ({
+        id: req.id,
+        requester_name: req.requester_name || req.name || 'Unknown',
+        requester_email: req.requester_email || req.email || '',
+        title: req.title || 'N/A',
+        institution: req.institution,
+        purpose: req.purpose,
+        status: req.status,
+        created_at: new Date(req.created_at).toLocaleDateString('id-ID') + ' ' + new Date(req.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      }))
+    }
+  } catch (error) {
+    console.error('Gagal memuat permintaan download:', error)
+    downloadRequests.value = []
+  }
+}
+
 const filteredQueueReviews = computed(() => {
   if (!queueSearchQuery.value) return queueReviews.value
   const query = queueSearchQuery.value.toLowerCase()
@@ -991,6 +1171,76 @@ const queueStartIndex = computed(() => {
 const queueEndIndex = computed(() => {
   return Math.min(queueCurrentPage.value * queueRowsPerPage.value, filteredQueueReviews.value.length)
 })
+
+const filteredDownloadRequests = computed(() => {
+  if (!downloadSearchQuery.value) return downloadRequests.value
+  const query = downloadSearchQuery.value.toLowerCase()
+  return downloadRequests.value.filter(item =>
+    item.requester_name.toLowerCase().includes(query) ||
+    item.requester_email.toLowerCase().includes(query) ||
+    item.title.toLowerCase().includes(query)
+  )
+})
+
+const paginatedDownloadRequests = computed(() => {
+  const start = (downloadCurrentPage.value - 1) * downloadRowsPerPage.value
+  const end = start + downloadRowsPerPage.value
+  return filteredDownloadRequests.value.slice(start, end)
+})
+
+const downloadTotalPages = computed(() => {
+  return Math.ceil(filteredDownloadRequests.value.length / downloadRowsPerPage.value)
+})
+
+const downloadStartIndex = computed(() => {
+  return (downloadCurrentPage.value - 1) * downloadRowsPerPage.value + 1
+})
+
+const downloadEndIndex = computed(() => {
+  return Math.min(downloadCurrentPage.value * downloadRowsPerPage.value, filteredDownloadRequests.value.length)
+})
+
+const downloadPrevPage = () => {
+  if (downloadCurrentPage.value > 1) {
+    downloadCurrentPage.value--
+  }
+}
+
+const downloadNextPage = () => {
+  if (downloadCurrentPage.value < downloadTotalPages.value) {
+    downloadCurrentPage.value++
+  }
+}
+
+const approveDownloadRequest = async (id: number) => {
+  try {
+    if (userRole.value === 'contributor') {
+      await api.downloadRequests.ownerApprove(id)
+    } else {
+      await api.downloadRequests.send(id)
+    }
+    toast.success('Berhasil', 'Permintaan disetujui dan link sudah dikirim')
+    await loadPendingDownloadRequests()
+  } catch (error) {
+    console.error('Error approving download request:', error)
+    toast.error('Gagal', 'Terjadi kesalahan saat menyetujui permintaan')
+  }
+}
+
+const rejectDownloadRequest = async (id: number) => {
+  try {
+    if (userRole.value === 'contributor') {
+      await api.downloadRequests.ownerReject(id)
+    } else {
+      await api.downloadRequests.reject(id)
+    }
+    toast.success('Berhasil', 'Permintaan ditolak')
+    await loadPendingDownloadRequests()
+  } catch (error) {
+    console.error('Error rejecting download request:', error)
+    toast.error('Gagal', 'Terjadi kesalahan saat menolak permintaan')
+  }
+}
 
 const queuePrevPage = () => {
   if (queueCurrentPage.value > 1) {
@@ -1232,12 +1482,14 @@ onMounted(() => {
   loadHistory()
   loadStats()
   loadStatistics()
+  loadPendingDownloadRequests()
 
   refreshInterval = setInterval(() => {
     loadPendingDocuments()
     loadHistory()
     loadStats()
     loadStatistics()
+    loadPendingDownloadRequests()
   }, 30000)
 })
 
